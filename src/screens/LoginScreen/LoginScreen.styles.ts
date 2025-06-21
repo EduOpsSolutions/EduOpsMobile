@@ -1,0 +1,126 @@
+import { StyleSheet } from "react-native";
+
+export const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#fffdf2",
+  },
+  header: {
+    width: "100%",
+    height: 57,
+    backgroundColor: "#de0000",
+    borderBottomWidth: 1,
+    borderBottomColor: "#700a06",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  headerLogo: {
+    width: 130,
+    height: 38,
+    marginTop: 8,
+  },
+  main: {
+    flex: 1,
+    alignItems: "center",
+    marginTop: 50,
+  },
+  card: {
+    width: 336,
+    backgroundColor: "#700A06",
+    borderRadius: 8,
+    padding: 16,
+    alignItems: "center",
+  },
+  welcomeText: {
+    marginTop: 26,
+    fontWeight: "bold",
+    color: "#fff",
+    fontSize: 16,
+    textAlign: "center",
+  },
+  logo: {
+    width: 239,
+    height: 60,
+    marginTop: 8,
+  },
+  inputWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: 233,
+    height: 37,
+    marginTop: 20,
+    backgroundColor: "#fff",
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "#000",
+    paddingHorizontal: 8,
+  },
+  inputIcon: {
+    marginRight: 8,
+  },
+  input: {
+    flex: 1,
+    height: "100%",
+    color: "#6d6d6d",
+    fontSize: 14,
+  },
+  eyeButton: {
+    padding: 4,
+  },
+  forgotWrapper: {
+    width: "100%",
+    alignItems: "flex-end",
+    marginTop: 8,
+    paddingRight: 24,
+  },
+  forgotText: {
+    color: "#ffcf00",
+    fontWeight: "bold",
+    fontSize: 11,
+    textDecorationLine: "underline",
+  },
+  loginButton: {
+    width: 130,
+    height: 31,
+    marginTop: 20,
+    backgroundColor: "#dd0000",
+    borderRadius: 5,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  loginButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 15,
+  },
+  signupWrapper: {
+    flexDirection: "row",
+    marginTop: 16,
+    alignItems: "center",
+  },
+  signupText: {
+    color: "#fffdf2",
+    fontSize: 10,
+  },
+  signupLink: {
+    color: "#ffcf00",
+    fontSize: 10,
+    marginLeft: 4,
+    textDecorationLine: "underline",
+  },
+  termsText: {
+    marginTop: 8,
+    color: "#fffdf2",
+    fontSize: 10,
+    textAlign: "center",
+  },
+  termsLink: {
+    color: "#ffcf00",
+    textDecorationLine: "underline",
+  },
+});
