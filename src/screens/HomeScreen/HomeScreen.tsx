@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { styles } from './Homescreen.styles'; 
+import { useRouter, useSegments } from "expo-router";
 const {width} = Dimensions.get('window');
 
 interface PostProps {
@@ -53,6 +54,11 @@ const PostCard: React.FC<PostProps> = ({
 };
 
 export const HomeScreen = (): React.JSX.Element => {
+
+  const router = useRouter();
+  const segments = useSegments();
+  const currentRoute = '/' + (segments[segments.length - 1] || '');
+
   const posts: PostProps[] = [
     {
       id: '1',
@@ -119,14 +125,26 @@ export const HomeScreen = (): React.JSX.Element => {
 
       {/* Bottom Navigation */}
       <View style={styles.bottomNavigation}>
-        <TouchableOpacity style={styles.navItem}>
-          <Icon name="home" size={24} color="#de0000" />
-          <Text style={[styles.navText, styles.activeNavText]}>Home</Text>
+        <TouchableOpacity
+          style={styles.navItem}
+          onPress={() => router.replace('/home')}
+        >
+          <Icon name="home" size={24} color={currentRoute === '/home' ? "#de0000" : "#666"} />
+          <Text style={[
+            styles.navText,
+            currentRoute === '/home' && styles.activeNavText
+          ]}>Home</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Icon name="school" size={24} color="#666" />
-          <Text style={styles.navText}>Enrollment</Text>
-        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.navItem}
+          onPress={() => router.replace('/enrollment')}
+        >
+          <Icon name="school" size={24} color={currentRoute === '/enrollment' ? "#de0000" : "#666"} />
+          <Text style={[
+            styles.navText,
+            currentRoute === '/enrollment' && styles.activeNavText
+          ]}>Enrollment</Text>
+        </TouchableOpacity> 
         <TouchableOpacity style={styles.navItem}>
           <Icon name="grade" size={24} color="#666" />
           <Text style={styles.navText}>Grades</Text>
