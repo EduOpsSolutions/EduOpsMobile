@@ -12,8 +12,9 @@ import {
   Dimensions,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { styles } from './EnrollmentScreen.styles';
+import { styles } from './EnrollmentFormScreen.styles';
 import { useRouter, useSegments } from "expo-router";
+import { EnrollmentDropdown } from '../../../components/EnrollmentDropdown';
 
 const {width} = Dimensions.get('window');
 
@@ -56,13 +57,12 @@ const Dropdown: React.FC<DropdownProps> = ({placeholder, value, onValueChange, o
   );
 };
 
-export const EnrollmentScreen = (): 
-React.JSX.Element => {
-    const router = useRouter();
-    const segments = useSegments();
-    const currentRoute = '/' + (segments[segments.length - 1] || '');
-    
-    const [formData, setFormData] = useState({
+export const EnrollmentFormScreen = (): React.JSX.Element => {
+  const router = useRouter();
+  const segments = useSegments();
+  const currentRoute = '/' + (segments[segments.length - 1] || '');
+  
+  const [formData, setFormData] = useState({
     firstName: '',
     middleName: '',
     lastName: '',
@@ -86,6 +86,8 @@ React.JSX.Element => {
   const sexOptions = ['Male', 'Female'];
   const civilStatusOptions = ['Single', 'Married', 'Divorced', 'Widowed'];
   const referredByOptions = ['Friend', 'Family', 'Online', 'Advertisement', 'Other'];
+
+  const isEnrollmentActive = currentRoute === '/enrollment' || currentRoute === '/enrollment-status' || currentRoute === '/schedule';
 
   return (
     <SafeAreaView style={styles.container}>
@@ -111,7 +113,6 @@ React.JSX.Element => {
           </View>
         </View>
       </View>
-
 
       {/* Main Content */}
       <ScrollView style={styles.mainContent} showsVerticalScrollIndicator={false}>
@@ -287,7 +288,10 @@ React.JSX.Element => {
             </View>
 
             {/* Next Button */}
-            <TouchableOpacity style={styles.nextButton}>
+            <TouchableOpacity 
+              style={styles.nextButton}
+              onPress={() => router.replace('/enrollment-status')}
+            >
               <Text style={styles.nextButtonText}>Next</Text>
             </TouchableOpacity>
           </View>
@@ -306,16 +310,9 @@ React.JSX.Element => {
             currentRoute === '/home' && styles.activeNavText
           ]}>Home</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => router.replace('/enrollment')}
-        >
-          <Icon name="school" size={24} color={currentRoute === '/enrollment' ? "#de0000" : "#666"} />
-          <Text style={[
-            styles.navText,
-            currentRoute === '/enrollment' && styles.activeNavText
-          ]}>Enrollment</Text>
-        </TouchableOpacity>
+        
+        <EnrollmentDropdown isActive={isEnrollmentActive} />
+        
         <TouchableOpacity style={styles.navItem}>
           <Icon name="grade" size={24} color="#666" />
           <Text style={styles.navText}>Grades</Text>
@@ -332,5 +329,3 @@ React.JSX.Element => {
     </SafeAreaView>
   );
 };
-
-

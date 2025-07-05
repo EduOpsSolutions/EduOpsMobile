@@ -10,8 +10,10 @@ import {
   Dimensions,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { styles } from './Homescreen.styles'; 
 import { useRouter, useSegments } from "expo-router";
+import { styles } from './Homescreen.styles';
+import { EnrollmentDropdown } from '../../../components/EnrollmentDropdown';
+
 const {width} = Dimensions.get('window');
 
 interface PostProps {
@@ -54,7 +56,6 @@ const PostCard: React.FC<PostProps> = ({
 };
 
 export const HomeScreen = (): React.JSX.Element => {
-
   const router = useRouter();
   const segments = useSegments();
   const currentRoute = '/' + (segments[segments.length - 1] || '');
@@ -88,6 +89,8 @@ export const HomeScreen = (): React.JSX.Element => {
       avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=1',
     },
   ];
+
+  const isEnrollmentActive = currentRoute === '/enrollment' || currentRoute === '/enrollment-status' || currentRoute === '/schedule';
 
   return (
     <SafeAreaView style={styles.container}>
@@ -135,16 +138,9 @@ export const HomeScreen = (): React.JSX.Element => {
             currentRoute === '/home' && styles.activeNavText
           ]}>Home</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => router.replace('/enrollment')}
-        >
-          <Icon name="school" size={24} color={currentRoute === '/enrollment' ? "#de0000" : "#666"} />
-          <Text style={[
-            styles.navText,
-            currentRoute === '/enrollment' && styles.activeNavText
-          ]}>Enrollment</Text>
-        </TouchableOpacity> 
+        
+        <EnrollmentDropdown isActive={isEnrollmentActive} />
+        
         <TouchableOpacity style={styles.navItem}>
           <Icon name="grade" size={24} color="#666" />
           <Text style={styles.navText}>Grades</Text>
