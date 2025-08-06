@@ -69,7 +69,10 @@ export const EnrollmentStatusScreen = (): React.JSX.Element => {
             <TouchableOpacity style={styles.iconButton}>
               <Icon name="notifications" size={24} color="white" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.profileButton}>
+            <TouchableOpacity 
+              style={styles.profileButton}
+              onPress={() => router.push('/profile')}
+            >
               <Text style={styles.profileText}>PD</Text>
             </TouchableOpacity>
           </View>
