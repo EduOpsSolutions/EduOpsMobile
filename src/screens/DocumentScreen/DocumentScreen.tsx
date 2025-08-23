@@ -47,12 +47,12 @@ const DocumentItem: React.FC<DocumentProps> = ({
 
   return (
     <View style={styles.documentRow}>
-      <Text style={styles.feeText}>{fee}</Text>
-      <Text style={styles.nameText}>{name}</Text>
+      <Text style={styles.feeText} numberOfLines={1} ellipsizeMode="tail">{fee}</Text>
+      <Text style={styles.nameText} numberOfLines={1} ellipsizeMode="tail">{name}</Text>
       <View style={styles.actionContainer}>
         {getActionButton()}
       </View>
-      <Text style={styles.descriptionText}>{description}</Text>
+      <Text style={styles.descriptionText} numberOfLines={1} ellipsizeMode="tail">{description}</Text>
     </View>
   );
 };
@@ -145,66 +145,65 @@ export const DocumentScreen = (): React.JSX.Element => {
 
       {/* Main Content */}
       <View style={styles.mainContent}>
-        {/* Decorative Elements */}
-        <View style={styles.decorativeTop} />
-        <View style={styles.decorativeBottom} />
         
-        <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          <View style={styles.documentsContainer}>
-            {/* Documents Card */}
-            <View style={styles.documentsCard}>
-              {/* Header Section */}
-              <View style={styles.documentsHeader}>
-                <Icon name="description" size={24} color="#333" />
-                <Text style={styles.documentsTitle}>Documents</Text>
-              </View>
+        <View style={styles.documentsContainer}>
+          {/* Documents Card */}
+          <View style={styles.documentsCard}>
+            {/* Header Section */}
+            <View style={styles.documentsHeader}>
+              <Icon name="description" size={24} color="#333" />
+              <Text style={styles.documentsTitle}>Documents</Text>
+            </View>
 
-              {/* Search Section */}
-              <View style={styles.searchSection}>
-                <View style={styles.searchContainer}>
-                  <TextInput
-                    style={styles.searchInput}
-                    placeholder="Search documents"
-                    placeholderTextColor="#999"
-                    value={searchQuery}
-                    onChangeText={setSearchQuery}
-                  />
-                  <TouchableOpacity style={styles.searchButton}>
-                    <Icon name="search" size={20} color="#666" />
-                  </TouchableOpacity>
-                </View>
-                <TouchableOpacity style={styles.seeRequestsButton}>
-                  <Icon name="assignment" size={16} color="white" />
-                  <Text style={styles.seeRequestsText}>See Requests</Text>
+            {/* Search Section */}
+            <View style={styles.searchSection}>
+              <View style={styles.searchContainer}>
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="Search documents"
+                  placeholderTextColor="#999"
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                />
+                <TouchableOpacity style={styles.searchButton}>
+                  <Icon name="search" size={20} color="#666" />
                 </TouchableOpacity>
               </View>
+              <TouchableOpacity style={styles.seeRequestsButton}>
+                <Icon name="assignment" size={16} color="white" />
+                <Text style={styles.seeRequestsText}>See Requests</Text>
+              </TouchableOpacity>
+            </View>
 
-              {/* Table Header */}
-              <View style={styles.tableHeader}>
-                <Text style={styles.tableHeaderText}>FEE</Text>
-                <Text style={styles.tableHeaderText}>NAME</Text>
-                <Text style={styles.tableHeaderText}>ACTIONS</Text>
-                <Text style={styles.tableHeaderText}>DESCRIPTION</Text>
-              </View>
+            {/* Table Header */}
+            <View style={styles.tableHeader}>
+              <Text style={[styles.tableHeaderText, styles.tableHeaderFee]}>FEE</Text>
+              <Text style={[styles.tableHeaderText, styles.tableHeaderName]}>NAME</Text>
+              <Text style={[styles.tableHeaderText, styles.tableHeaderActions]}>ACTIONS</Text>
+              <Text style={styles.tableHeaderDescription}>DESCRIPTION</Text>
+            </View>
 
-              {/* Documents List */}
-              <View style={styles.documentsList}>
-                {documents.map((document) => (
-                  <DocumentItem
-                    key={document.id}
-                    {...document}
-                  />
-                ))}
-              </View>
+            {/* Documents List */}
+            <ScrollView
+              style={styles.documentsList}
+              contentContainerStyle={{ paddingBottom: 8 }}
+              showsVerticalScrollIndicator={false}
+            >
+              {documents.map((document) => (
+                <DocumentItem
+                  key={document.id}
+                  {...document}
+                />
+              ))}
+            </ScrollView>
 
-              {/* Version Info */}
-              <View style={styles.versionInfo}>
-                <Text style={styles.versionText}>Latest Version</Text>
-                <Text style={styles.versionDate}>4/16/2024</Text>
-              </View>
+            {/* Version Info */}
+            <View style={styles.versionInfo}>
+              <Text style={styles.versionText}>Latest Version</Text>
+              <Text style={styles.versionDate}>4/16/2024</Text>
             </View>
           </View>
-        </ScrollView>
+        </View>
       </View>
 
       {/* Bottom Navigation */}
