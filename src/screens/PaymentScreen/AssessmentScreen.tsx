@@ -194,7 +194,10 @@ export const AssessmentScreen = (): React.JSX.Element => {
                   <TouchableOpacity style={styles.historyButton}>
                     <Text style={styles.historyButtonText}>Transaction History</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.ledgerButton}>
+                  <TouchableOpacity 
+                    style={styles.ledgerButton}
+                    onPress={() => router.push('/ledger')}
+                  >
                     <Text style={styles.ledgerButtonText}>Ledger</Text>
                   </TouchableOpacity>
                 </View>
