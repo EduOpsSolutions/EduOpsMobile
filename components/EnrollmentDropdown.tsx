@@ -157,12 +157,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderTopLeftRadius: 8,
     borderTopRightRadius: 8,
-    
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 }, 
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 8, 
   },
   dropdownItem: {
     flexDirection: 'row',
