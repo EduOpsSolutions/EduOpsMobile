@@ -110,7 +110,9 @@ export const HomeScreen = (): React.JSX.Element => {
             <TouchableOpacity style={styles.iconButton}>
               <Icon name="notifications" size={24} color="white" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.profileButton}>
+            <TouchableOpacity 
+              style={styles.profileButton}
+            >
               <Text style={styles.profileText}>PD</Text>
             </TouchableOpacity>
           </View>
@@ -138,12 +140,16 @@ export const HomeScreen = (): React.JSX.Element => {
             currentRoute === '/home' && styles.activeNavText
           ]}>Home</Text>
         </TouchableOpacity>
-        
         <EnrollmentDropdown isActive={isEnrollmentActive} />
-        
-        <TouchableOpacity style={styles.navItem}>
-          <Icon name="grade" size={24} color="#666" />
-          <Text style={styles.navText}>Grades</Text>
+        <TouchableOpacity
+          style={styles.navItem}
+          onPress={() => router.replace('/grades')}
+        >
+          <Icon name="grade" size={24} color={currentRoute === '/grades' ? "#de0000" : "#666"} />
+          <Text style={[
+            styles.navText,
+            currentRoute === '/grades' && styles.activeNavText
+          ]}>Grades</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.navItem}>
           <Icon name="payment" size={24} color="#666" />
