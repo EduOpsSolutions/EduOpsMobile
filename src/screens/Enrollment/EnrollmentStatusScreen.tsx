@@ -12,6 +12,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useRouter, useSegments } from "expo-router";
 import { styles } from './EnrollmentStatusScreen.styles';
 import { EnrollmentDropdown } from '../../../components/EnrollmentDropdown';
+import { PaymentDropdown } from '../../../components/PaymentDropdown';
 
 interface StepProps {
   title: string;
@@ -50,6 +51,7 @@ export const EnrollmentStatusScreen = (): React.JSX.Element => {
   ];
 
   const isEnrollmentActive = currentRoute === '/enrollment' || currentRoute === '/enrollment-status' || currentRoute === '/schedule';
+  const isPaymentActive = currentRoute === '/payment' || currentRoute === '/payment-history';
 
   return (
     <SafeAreaView style={styles.container}>
@@ -69,7 +71,10 @@ export const EnrollmentStatusScreen = (): React.JSX.Element => {
             <TouchableOpacity style={styles.iconButton}>
               <Icon name="notifications" size={24} color="white" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.profileButton}>
+            <TouchableOpacity 
+              style={styles.profileButton}
+              onPress={() => router.push('/profile')}
+            >
               <Text style={styles.profileText}>PD</Text>
             </TouchableOpacity>
           </View>
@@ -116,7 +121,10 @@ export const EnrollmentStatusScreen = (): React.JSX.Element => {
             </View>
 
             {/* Action Button */}
-            <TouchableOpacity style={styles.actionButton}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => router.push('/paymentform')}
+            >
               <Text style={styles.actionButtonText}>Click here to proceed to payment</Text>
             </TouchableOpacity>
 
@@ -152,18 +160,19 @@ export const EnrollmentStatusScreen = (): React.JSX.Element => {
             styles.navText,
             currentRoute === '/home' && styles.activeNavText
           ]}>Home</Text>
-        </TouchableOpacity>
-        
+        </TouchableOpacity>       
         <EnrollmentDropdown isActive={isEnrollmentActive} />
-        
-        <TouchableOpacity style={styles.navItem}>
-          <Icon name="grade" size={24} color="#666" />
-          <Text style={styles.navText}>Grades</Text>
+        <TouchableOpacity
+          style={styles.navItem}
+          onPress={() => router.replace('/grades')}
+        >
+          <Icon name="grade" size={24} color={currentRoute === '/grades' ? "#de0000" : "#666"} />
+          <Text style={[
+            styles.navText,
+            currentRoute === '/grades' && styles.activeNavText
+          ]}>Grades</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Icon name="payment" size={24} color="#666" />
-          <Text style={styles.navText}>Payment</Text>
-        </TouchableOpacity>
+        <PaymentDropdown isActive={isPaymentActive} />
         <TouchableOpacity style={styles.navItem}>
           <Icon name="description" size={24} color="#666" />
           <Text style={styles.navText}>Documents</Text>
