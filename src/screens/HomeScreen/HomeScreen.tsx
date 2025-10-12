@@ -13,6 +13,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useRouter, useSegments } from "expo-router";
 import { styles } from './Homescreen.styles';
 import { EnrollmentDropdown } from '../../../components/EnrollmentDropdown';
+import { NotificationDropdown } from '../../../components/NotificationDropdown';
 import { PaymentDropdown } from '../../../components/PaymentDropdown';
 
 const {width} = Dimensions.get('window');
@@ -109,9 +110,8 @@ export const HomeScreen = (): React.JSX.Element => {
             />
           </View>
           <View style={styles.headerIcons}>
-            <TouchableOpacity style={styles.iconButton}>
-              <Icon name="notifications" size={24} color="white" />
-            </TouchableOpacity>
+            <NotificationDropdown />
+            <TouchableOpacity style={styles.profileButton}>
             <TouchableOpacity 
               style={styles.profileButton}
               onPress={() => router.replace('/profile')}
