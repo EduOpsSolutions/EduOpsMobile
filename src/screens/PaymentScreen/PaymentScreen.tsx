@@ -78,7 +78,9 @@ export const PaymentScreen = (): React.JSX.Element => {
     console.log('Payment form submitted:', formData);
   };
 
-  const isPaymentActive = true;
+  // Dynamically determine if payment is active based on current route
+  const currentRoute = router?.pathname || router?.route || '';
+  const isPaymentActive = currentRoute === '/payment';
 
   return (
     <SafeAreaView style={styles.container}>
