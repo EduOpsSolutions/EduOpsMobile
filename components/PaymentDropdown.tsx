@@ -9,11 +9,11 @@ import {
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useRouter, useSegments } from "expo-router";
 
-interface EnrollmentDropdownProps {
+interface PaymentDropdownProps {
   isActive: boolean;
 }
 
-export const EnrollmentDropdown: React.FC<EnrollmentDropdownProps> = ({ isActive }) => {
+export const PaymentDropdown: React.FC<PaymentDropdownProps> = ({ isActive }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [animation] = useState(new Animated.Value(0));
   const router = useRouter();
@@ -54,10 +54,10 @@ export const EnrollmentDropdown: React.FC<EnrollmentDropdownProps> = ({ isActive
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.navItem} onPress={toggleDropdown}>
-        <Icon name="school" size={24} color={isActive ? "#de0000" : "#666"} />
+        <Icon name="payment" size={24} color={isActive ? "#de0000" : "#666"} />
         <View style={styles.textContainer}>
           <Text style={[styles.navText, isActive && styles.activeNavText]}>
-            Enrollment
+            Payment
           </Text>
           <Animated.View style={{ transform: [{ rotate: rotateIcon }] }}>
             <Icon 
@@ -73,45 +73,45 @@ export const EnrollmentDropdown: React.FC<EnrollmentDropdownProps> = ({ isActive
         <TouchableOpacity
           style={[
             styles.dropdownItem,
-            currentRoute === '/enrollmentform' && styles.activeDropdownItem
+            currentRoute === '/paymentform' && styles.activeDropdownItem
           ]}
-          onPress={() => navigateToScreen('/enrollmentform')}
+          onPress={() => navigateToScreen('/paymentform')}
         >
           <Text style={[
             styles.dropdownText,
-            currentRoute === '/enrollmentform' && styles.activeDropdownText
+            currentRoute === '/paymentform' && styles.activeDropdownText
           ]}>
-            Form
+            Payment Form
           </Text>
         </TouchableOpacity>
         
         <TouchableOpacity
           style={[
             styles.dropdownItem,
-            currentRoute === '/studyload' && styles.activeDropdownItem
+            currentRoute === '/assessment' && styles.activeDropdownItem
           ]}
-          onPress={() => navigateToScreen('/studyload')}
+          onPress={() => navigateToScreen('/assessment')}
         >
           <Text style={[
             styles.dropdownText,
-            currentRoute === '/studyload' && styles.activeDropdownText
+            currentRoute === '/assessment' && styles.activeDropdownText
           ]}>
-            Study Load
+            Assessment
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[
             styles.dropdownItem,
-            currentRoute === '/schedule' && styles.activeDropdownItem
+            currentRoute === '/ledger' && styles.activeDropdownItem
           ]}
-          onPress={() => navigateToScreen('/schedule')}
+          onPress={() => navigateToScreen('/ledger')}
         >
           <Text style={[
             styles.dropdownText,
-            currentRoute === '/schedule' && styles.activeDropdownText
+            currentRoute === '/ledger' && styles.activeDropdownText
           ]}>
-            Schedule
+            Ledger
           </Text>
         </TouchableOpacity>
       </Animated.View>
@@ -157,12 +157,13 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderTopLeftRadius: 8,
     borderTopRightRadius: 8,
+    
   },
   dropdownItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-start',
-    paddingVertical: 14,
+    paddingVertical: 11,
     paddingHorizontal: 12,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.1)',
