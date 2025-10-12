@@ -156,9 +156,15 @@ export const HomeScreen = (): React.JSX.Element => {
           <Icon name="payment" size={24} color="#666" />
           <Text style={styles.navText}>Payment</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
+        <TouchableOpacity
+          style={styles.navItem}
+          onPress={() => router.replace('/document')}
+          >
           <Icon name="description" size={24} color="#666" />
-          <Text style={styles.navText}>Documents</Text>
+                    <Text style={[
+            styles.navText,
+            currentRoute === '/document' && styles.activeNavText
+          ]}>Documents</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
