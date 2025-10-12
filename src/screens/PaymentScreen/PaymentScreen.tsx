@@ -37,9 +37,9 @@ const Dropdown: React.FC<DropdownProps> = ({placeholder, value, onValueChange, o
       </TouchableOpacity>
       {isOpen && (
         <View style={styles.dropdownOptions}>
-          {options.map((option, index) => (
+          {options.map((option) => (
             <TouchableOpacity
-              key={index}
+              key={option}
               style={styles.dropdownOption}
               onPress={() => {
                 onValueChange(option);
