@@ -32,7 +32,7 @@ export const EnrollmentDropdown: React.FC<EnrollmentDropdownProps> = ({ isActive
   };
 
   const navigateToScreen = (route: string) => {
-    router.replace('/enrollmentform');
+    router.replace(route as any); 
     setIsOpen(false);
     Animated.timing(animation, {
       toValue: 0,
@@ -73,13 +73,13 @@ export const EnrollmentDropdown: React.FC<EnrollmentDropdownProps> = ({ isActive
         <TouchableOpacity
           style={[
             styles.dropdownItem,
-            currentRoute === '/enrollment' && styles.activeDropdownItem
+            currentRoute === '/enrollmentform' && styles.activeDropdownItem
           ]}
-          onPress={() => navigateToScreen('/enrollment')}
+          onPress={() => navigateToScreen('/enrollmentform')}
         >
           <Text style={[
             styles.dropdownText,
-            currentRoute === '/enrollment' && styles.activeDropdownText
+            currentRoute === '/enrollmentform' && styles.activeDropdownText
           ]}>
             Form
           </Text>
