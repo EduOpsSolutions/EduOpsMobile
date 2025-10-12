@@ -112,6 +112,7 @@ export const HomeScreen = (): React.JSX.Element => {
             </TouchableOpacity>
             <TouchableOpacity 
               style={styles.profileButton}
+              onPress={() => router.replace('/profile')}
             >
               <Text style={styles.profileText}>PD</Text>
             </TouchableOpacity>
