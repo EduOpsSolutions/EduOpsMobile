@@ -15,6 +15,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { styles } from './EnrollmentFormScreen.styles';
 import { useRouter, useSegments } from "expo-router";
 import { EnrollmentDropdown } from '../../../components/EnrollmentDropdown';
+import { PaymentDropdown } from '../../../components/PaymentDropdown';
 
 const {width} = Dimensions.get('window');
 
@@ -88,6 +89,7 @@ export const EnrollmentFormScreen = (): React.JSX.Element => {
   const referredByOptions = ['Friend', 'Family', 'Online', 'Advertisement', 'Other'];
 
   const isEnrollmentActive = currentRoute === '/enrollment' || currentRoute === '/enrollment-status' || currentRoute === '/schedule';
+  const isPaymentActive = currentRoute === '/payment' || currentRoute === '/payment-history';
 
   return (
     <SafeAreaView style={styles.container}>
@@ -324,10 +326,7 @@ export const EnrollmentFormScreen = (): React.JSX.Element => {
             currentRoute === '/grades' && styles.activeNavText
           ]}>Grades</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Icon name="payment" size={24} color="#666" />
-          <Text style={styles.navText}>Payment</Text>
-        </TouchableOpacity>
+        <PaymentDropdown isActive={isPaymentActive} />
         <TouchableOpacity style={styles.navItem}>
           <Icon name="description" size={24} color="#666" />
           <Text style={styles.navText}>Documents</Text>

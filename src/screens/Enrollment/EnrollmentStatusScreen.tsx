@@ -12,6 +12,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useRouter, useSegments } from "expo-router";
 import { styles } from './EnrollmentStatusScreen.styles';
 import { EnrollmentDropdown } from '../../../components/EnrollmentDropdown';
+import { PaymentDropdown } from '../../../components/PaymentDropdown';
 
 interface StepProps {
   title: string;
@@ -50,6 +51,7 @@ export const EnrollmentStatusScreen = (): React.JSX.Element => {
   ];
 
   const isEnrollmentActive = currentRoute === '/enrollment' || currentRoute === '/enrollment-status' || currentRoute === '/schedule';
+  const isPaymentActive = currentRoute === '/payment' || currentRoute === '/payment-history';
 
   return (
     <SafeAreaView style={styles.container}>
@@ -119,7 +121,10 @@ export const EnrollmentStatusScreen = (): React.JSX.Element => {
             </View>
 
             {/* Action Button */}
-            <TouchableOpacity style={styles.actionButton}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => router.push('/paymentform')}
+            >
               <Text style={styles.actionButtonText}>Click here to proceed to payment</Text>
             </TouchableOpacity>
 
@@ -167,10 +172,7 @@ export const EnrollmentStatusScreen = (): React.JSX.Element => {
             currentRoute === '/grades' && styles.activeNavText
           ]}>Grades</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Icon name="payment" size={24} color="#666" />
-          <Text style={styles.navText}>Payment</Text>
-        </TouchableOpacity>
+        <PaymentDropdown isActive={isPaymentActive} />
         <TouchableOpacity style={styles.navItem}>
           <Icon name="description" size={24} color="#666" />
           <Text style={styles.navText}>Documents</Text>
