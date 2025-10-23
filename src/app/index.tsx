@@ -1,3 +1,3 @@
-import { LoginScreen } from '../screens/LoginScreen';
+import { AuthWrapper } from "../components/AuthWrapper";
 
-export default LoginScreen;
+export default AuthWrapper;
