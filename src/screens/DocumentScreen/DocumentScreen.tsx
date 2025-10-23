@@ -12,7 +12,7 @@ import {
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
 import { styles } from './DocumentScreen.styles';
-import { EnrollmentDropdown } from '../../../components/EnrollmentDropdown';
+import { BottomNavigation } from '../../components/BottomNavigation';
 
 interface DocumentProps {
   id: string;
@@ -207,33 +207,10 @@ export const DocumentScreen = (): React.JSX.Element => {
       </View>
 
       {/* Bottom Navigation */}
-      <View style={styles.bottomNavigation}>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => router.push('/home')}
-        >
-          <Icon name="home" size={24} color="#666" />
-          <Text style={styles.navText}>Home</Text>
-        </TouchableOpacity>
-        
-        <EnrollmentDropdown isActive={false} />
-        
-        <TouchableOpacity 
-          style={styles.navItem}
-        //   onPress={() => router.push('/grades')}
-        >
-          <Icon name="grade" size={24} color="#666" />
-          <Text style={styles.navText}>Grades</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Icon name="payment" size={24} color="#666" />
-          <Text style={styles.navText}>Payment</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Icon name="description" size={24} color="#de0000" />
-          <Text style={[styles.navText, styles.activeNavText]}>Documents</Text>
-        </TouchableOpacity>
-      </View>
+      <BottomNavigation 
+        enrollmentActive={false}
+        paymentActive={false}
+      />
     </SafeAreaView>
   );
 };
