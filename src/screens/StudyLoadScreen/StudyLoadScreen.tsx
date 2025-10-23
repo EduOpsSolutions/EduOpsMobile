@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -7,11 +7,11 @@ import {
   SafeAreaView,
   StatusBar,
   ScrollView,
-} from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import { useRouter } from 'expo-router';
-import { styles } from './StudyLoadScreen.styles';
-import { EnrollmentDropdown } from '../../../components/EnrollmentDropdown';
+} from "react-native";
+import Icon from "react-native-vector-icons/MaterialIcons";
+import { useRouter } from "expo-router";
+import { styles } from "./StudyLoadScreen.styles";
+import { BottomNavigation } from "../../components/BottomNavigation";
 
 interface DropdownProps {
   placeholder: string;
@@ -20,14 +20,20 @@ interface DropdownProps {
   options: string[];
 }
 
-const Dropdown: React.FC<DropdownProps> = ({placeholder, value, onValueChange, options}) => {
+const Dropdown: React.FC<DropdownProps> = ({
+  placeholder,
+  value,
+  onValueChange,
+  options,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <View style={styles.dropdownContainer}>
       <TouchableOpacity
         style={styles.dropdownButton}
-        onPress={() => setIsOpen(!isOpen)}>
+        onPress={() => setIsOpen(!isOpen)}
+      >
         <Text style={[styles.dropdownText, !value && styles.placeholderText]}>
           {value || placeholder}
         </Text>
@@ -42,7 +48,8 @@ const Dropdown: React.FC<DropdownProps> = ({placeholder, value, onValueChange, o
               onPress={() => {
                 onValueChange(option);
                 setIsOpen(false);
-              }}>
+              }}
+            >
               <Text style={styles.dropdownOptionText}>{option}</Text>
             </TouchableOpacity>
           ))}
@@ -80,19 +87,24 @@ const ScheduleItem: React.FC<ScheduleItemProps> = ({
 
 export const StudyLoadScreen = (): React.JSX.Element => {
   const router = useRouter();
-  const [selectedPeriod, setSelectedPeriod] = useState('');
-  const [selectedYear, setSelectedYear] = useState('');
+  const [selectedPeriod, setSelectedPeriod] = useState("");
+  const [selectedYear, setSelectedYear] = useState("");
 
-  const periodOptions = ['1st Quarter', '2nd Quarter', '3rd Quarter', '4th Quarter'];
-  const yearOptions = ['2024', '2023', '2022', '2021'];
+  const periodOptions = [
+    "1st Quarter",
+    "2nd Quarter",
+    "3rd Quarter",
+    "4th Quarter",
+  ];
+  const yearOptions = ["2024", "2023", "2022", "2021"];
 
   const scheduleData: ScheduleItemProps[] = [
     {
-      course: 'A1',
-      schedule: 'TTH 6:30AM - 7:30PM',
-      adviser: 'Tricia Cruz',
-      hours: '12',
-      room: 'Room 01',
+      course: "A1",
+      schedule: "TTH 6:30AM - 7:30PM",
+      adviser: "Tricia Cruz",
+      hours: "12",
+      room: "Room 01",
     },
   ];
 
@@ -101,13 +113,13 @@ export const StudyLoadScreen = (): React.JSX.Element => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar backgroundColor="#de0000" barStyle="light-content" />
-      
+
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <View style={styles.logoContainer}>
             <Image
-              source={require('../../../assets/images/sprachins-logo-3.png')}
+              source={require("../../../assets/images/sprachins-logo-3.png")}
               style={styles.headerLogo}
               resizeMode="contain"
             />
@@ -116,9 +128,9 @@ export const StudyLoadScreen = (): React.JSX.Element => {
             <TouchableOpacity style={styles.iconButton}>
               <Icon name="notifications" size={24} color="white" />
             </TouchableOpacity>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.profileButton}
-            //   onPress={() => router.push('/profile')}
+              //   onPress={() => router.push('/profile')}
             >
               <Text style={styles.profileText}>PD</Text>
             </TouchableOpacity>
@@ -128,8 +140,10 @@ export const StudyLoadScreen = (): React.JSX.Element => {
 
       {/* Main Content */}
       <View style={styles.mainContent}>
-        
-        <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          style={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.scheduleContainer}>
             {/* Schedule Card */}
             <View style={styles.scheduleCard}>
@@ -197,36 +211,10 @@ export const StudyLoadScreen = (): React.JSX.Element => {
       </View>
 
       {/* Bottom Navigation */}
-      <View style={styles.bottomNavigation}>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => router.push('/home')}
-        >
-          <Icon name="home" size={24} color="#666" />
-          <Text style={styles.navText}>Home</Text>
-        </TouchableOpacity>
-        
-        <EnrollmentDropdown isActive={isScheduleActive} />
-        
-        <TouchableOpacity 
-          style={styles.navItem}
-          // onPress={() => router.push('/grades')}
-        >
-          <Icon name="grade" size={24} color="#666" />
-          <Text style={styles.navText}>Grades</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Icon name="payment" size={24} color="#666" />
-          <Text style={styles.navText}>Payment</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={styles.navItem}
-        //   onPress={() => router.push('/documents')}
-        >
-          <Icon name="description" size={24} color="#666" />
-          <Text style={styles.navText}>Documents</Text>
-        </TouchableOpacity>
-      </View>
+      <BottomNavigation
+        enrollmentActive={isScheduleActive}
+        paymentActive={false}
+      />
     </SafeAreaView>
   );
 };

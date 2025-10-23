@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -8,17 +8,17 @@ import {
   StatusBar,
   ScrollView,
   TextInput,
-} from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import { useRouter } from 'expo-router';
-import { styles } from './DocumentScreen.styles';
-import { EnrollmentDropdown } from '../../../components/EnrollmentDropdown';
+} from "react-native";
+import Icon from "react-native-vector-icons/MaterialIcons";
+import { useRouter } from "expo-router";
+import { styles } from "./DocumentScreen.styles";
+import { BottomNavigation } from "../../components/BottomNavigation";
 
 interface DocumentProps {
   id: string;
   fee: string;
   name: string;
-  actionType: 'Request' | 'Download';
+  actionType: "Request" | "Download";
   description: string;
 }
 
@@ -29,7 +29,7 @@ const DocumentItem: React.FC<DocumentProps> = ({
   description,
 }) => {
   const getActionButton = () => {
-    if (actionType === 'Request') {
+    if (actionType === "Request") {
       return (
         <TouchableOpacity style={styles.requestButton}>
           <Text style={styles.requestButtonText}>Request</Text>
@@ -47,69 +47,77 @@ const DocumentItem: React.FC<DocumentProps> = ({
 
   return (
     <View style={styles.documentRow}>
-      <Text style={styles.feeText} numberOfLines={1} ellipsizeMode="tail">{fee}</Text>
-      <Text style={styles.nameText} numberOfLines={1} ellipsizeMode="tail">{name}</Text>
-      <View style={styles.actionContainer}>
-        {getActionButton()}
-      </View>
-      <Text style={styles.descriptionText} numberOfLines={1} ellipsizeMode="tail">{description}</Text>
+      <Text style={styles.feeText} numberOfLines={1} ellipsizeMode="tail">
+        {fee}
+      </Text>
+      <Text style={styles.nameText} numberOfLines={1} ellipsizeMode="tail">
+        {name}
+      </Text>
+      <View style={styles.actionContainer}>{getActionButton()}</View>
+      <Text
+        style={styles.descriptionText}
+        numberOfLines={1}
+        ellipsizeMode="tail"
+      >
+        {description}
+      </Text>
     </View>
   );
 };
 
 export const DocumentScreen = (): React.JSX.Element => {
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
   const documents: DocumentProps[] = [
     {
-      id: '1',
-      fee: 'PHP 150',
-      name: 'Transcript of Records',
-      actionType: 'Request',
-      description: 'Free for 1st request',
+      id: "1",
+      fee: "PHP 150",
+      name: "Transcript of Records",
+      actionType: "Request",
+      description: "Free for 1st request",
     },
     {
-      id: '2',
-      fee: 'FREE',
-      name: 'Excuse Letter',
-      actionType: 'Download',
-      description: '',
+      id: "2",
+      fee: "FREE",
+      name: "Excuse Letter",
+      actionType: "Download",
+      description: "",
     },
     {
-      id: '3',
-      fee: 'FREE',
-      name: 'Examination Results',
-      actionType: 'Request',
-      description: '',
+      id: "3",
+      fee: "FREE",
+      name: "Examination Results",
+      actionType: "Request",
+      description: "",
     },
     {
-      id: '4',
-      fee: 'PHP 3000',
-      name: 'Certification of Fluency',
-      actionType: 'Request',
-      description: '',
+      id: "4",
+      fee: "PHP 3000",
+      name: "Certification of Fluency",
+      actionType: "Request",
+      description: "",
     },
     {
-      id: '5',
-      fee: 'FREE',
-      name: 'Student Manual 2024',
-      actionType: 'Download',
-      description: '',
+      id: "5",
+      fee: "FREE",
+      name: "Student Manual 2024",
+      actionType: "Download",
+      description: "",
     },
     {
-      id: '6',
-      fee: 'FREE',
-      name: 'Courses Catalog',
-      actionType: 'Download',
-      description: '',
+      id: "6",
+      fee: "FREE",
+      name: "Courses Catalog",
+      actionType: "Download",
+      description: "",
     },
     {
-      id: '7',
-      fee: 'FREE',
-      name: 'A1 - B2 Prospectus',
-      actionType: 'Download',
-      description: '',
+      id: "7",
+      fee: "FREE",
+      name: "A1 - B2 Prospectus",
+      actionType: "Download",
+      description: "",
     },
   ];
 
@@ -118,13 +126,13 @@ export const DocumentScreen = (): React.JSX.Element => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar backgroundColor="#de0000" barStyle="light-content" />
-      
+
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <View style={styles.logoContainer}>
             <Image
-              source={require('../../../assets/images/sprachins-logo-3.png')}
+              source={require("../../../assets/images/sprachins-logo-3.png")}
               style={styles.headerLogo}
               resizeMode="contain"
             />
@@ -133,9 +141,9 @@ export const DocumentScreen = (): React.JSX.Element => {
             <TouchableOpacity style={styles.iconButton}>
               <Icon name="notifications" size={24} color="white" />
             </TouchableOpacity>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.profileButton}
-            //   onPress={() => router.push('/profile')}
+              //   onPress={() => router.push('/profile')}
             >
               <Text style={styles.profileText}>PD</Text>
             </TouchableOpacity>
@@ -145,7 +153,6 @@ export const DocumentScreen = (): React.JSX.Element => {
 
       {/* Main Content */}
       <View style={styles.mainContent}>
-        
         <View style={styles.documentsContainer}>
           {/* Documents Card */}
           <View style={styles.documentsCard}>
@@ -177,9 +184,15 @@ export const DocumentScreen = (): React.JSX.Element => {
 
             {/* Table Header */}
             <View style={styles.tableHeader}>
-              <Text style={[styles.tableHeaderText, styles.tableHeaderFee]}>FEE</Text>
-              <Text style={[styles.tableHeaderText, styles.tableHeaderName]}>NAME</Text>
-              <Text style={[styles.tableHeaderText, styles.tableHeaderActions]}>ACTIONS</Text>
+              <Text style={[styles.tableHeaderText, styles.tableHeaderFee]}>
+                FEE
+              </Text>
+              <Text style={[styles.tableHeaderText, styles.tableHeaderName]}>
+                NAME
+              </Text>
+              <Text style={[styles.tableHeaderText, styles.tableHeaderActions]}>
+                ACTIONS
+              </Text>
               <Text style={styles.tableHeaderDescription}>DESCRIPTION</Text>
             </View>
 
@@ -190,10 +203,7 @@ export const DocumentScreen = (): React.JSX.Element => {
               showsVerticalScrollIndicator={false}
             >
               {documents.map((document) => (
-                <DocumentItem
-                  key={document.id}
-                  {...document}
-                />
+                <DocumentItem key={document.id} {...document} />
               ))}
             </ScrollView>
 
@@ -207,33 +217,7 @@ export const DocumentScreen = (): React.JSX.Element => {
       </View>
 
       {/* Bottom Navigation */}
-      <View style={styles.bottomNavigation}>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => router.push('/home')}
-        >
-          <Icon name="home" size={24} color="#666" />
-          <Text style={styles.navText}>Home</Text>
-        </TouchableOpacity>
-        
-        <EnrollmentDropdown isActive={false} />
-        
-        <TouchableOpacity 
-          style={styles.navItem}
-        //   onPress={() => router.push('/grades')}
-        >
-          <Icon name="grade" size={24} color="#666" />
-          <Text style={styles.navText}>Grades</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Icon name="payment" size={24} color="#666" />
-          <Text style={styles.navText}>Payment</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Icon name="description" size={24} color="#de0000" />
-          <Text style={[styles.navText, styles.activeNavText]}>Documents</Text>
-        </TouchableOpacity>
-      </View>
+      <BottomNavigation enrollmentActive={false} paymentActive={false} />
     </SafeAreaView>
   );
 };
