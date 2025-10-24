@@ -64,7 +64,7 @@ Create or update `.env` file in project root:
 ```env
 EXPO_PUBLIC_API_URL=http://localhost:5555/api/v1
 EXPO_PUBLIC_API_BASE=http://localhost:5555
-EXPO_PUBLIC_JWT_SECRET=3Du0p$2024
+JWT_SECRET=3Du0p$2024
 ```
 
 **Important:** Replace with your actual API URL and JWT secret in production.
@@ -128,7 +128,7 @@ src/
 ### 1. Login
 
 ```tsx
-import { useAuth } from '../hooks';
+import { useAuth } from "../hooks";
 
 function LoginScreen() {
   const { login, isLoading, error } = useAuth();
@@ -138,7 +138,7 @@ function LoginScreen() {
       await login(email, password);
       // Success - navigation handled automatically
     } catch (error) {
-      Alert.alert('Error', error.message);
+      Alert.alert("Error", error.message);
     }
   };
 
@@ -153,7 +153,7 @@ function LoginScreen() {
 ### 2. Logout
 
 ```tsx
-import { useAuth } from '../hooks';
+import { useAuth } from "../hooks";
 
 function ProfileScreen() {
   const { logout, user } = useAuth();
@@ -174,7 +174,7 @@ function ProfileScreen() {
 ### 3. Get User Data
 
 ```tsx
-import { useAuth } from '../hooks';
+import { useAuth } from "../hooks";
 
 function HomeScreen() {
   const { user, getUserFullName, isStudent, isAdmin } = useAuth();
@@ -196,7 +196,7 @@ function HomeScreen() {
 
 ```tsx
 // In app/_layout.tsx
-import { ProtectedRoute } from '../components/ProtectedRoute';
+import { ProtectedRoute } from "../components/ProtectedRoute";
 
 export default function Layout() {
   return (
@@ -213,15 +213,15 @@ export default function Layout() {
 ### 5. API Calls
 
 ```tsx
-import api from '../utils/api';
+import api from "../utils/api";
 
 // Get posts
 const posts = await api.posts.getPosts({ page: 1, limit: 10 });
 
 // Create enrollment
 const enrollment = await api.enrollment.createEnrollmentRequest({
-  program: 'Computer Science',
-  semester: 'Fall 2024',
+  program: "Computer Science",
+  semester: "Fall 2024",
 });
 
 // Get grades
@@ -229,14 +229,14 @@ const grades = await api.grades.getGrades();
 
 // Upload file
 const formData = new FormData();
-formData.append('file', file);
-const result = await api.file.uploadFile(formData, 'documents');
+formData.append("file", file);
+const result = await api.file.uploadFile(formData, "documents");
 ```
 
 ### 6. Change Password
 
 ```tsx
-import { useAuth } from '../hooks';
+import { useAuth } from "../hooks";
 
 function ChangePasswordScreen() {
   const { changePassword } = useAuth();
@@ -246,7 +246,7 @@ function ChangePasswordScreen() {
       await changePassword(currentPassword, newPassword);
       // Success alert shown automatically
     } catch (error) {
-      Alert.alert('Error', error.message);
+      Alert.alert("Error", error.message);
     }
   };
 
@@ -257,7 +257,7 @@ function ChangePasswordScreen() {
 ### 7. Forgot Password
 
 ```tsx
-import { useAuth } from '../hooks';
+import { useAuth } from "../hooks";
 
 function ForgotPasswordScreen() {
   const { forgotPassword } = useAuth();
@@ -267,7 +267,7 @@ function ForgotPasswordScreen() {
       await forgotPassword(email);
       // Success - reset link sent to email
     } catch (error) {
-      Alert.alert('Error', error.message);
+      Alert.alert("Error", error.message);
     }
   };
 
@@ -478,6 +478,7 @@ JWT tokens contain the following structure:
 Use these test credentials from the webapp:
 
 - **Student Account:**
+
   - Email: `student@example.com`
   - Password: (check with backend admin)
 

@@ -1,24 +1,28 @@
-import { jwtVerify, decodeJwt } from 'jose';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { jwtVerify, decodeJwt } from "jose";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Decode JWT token
 export const decodeToken = (token: string) => {
   try {
     return decodeJwt(token);
   } catch (error) {
-    console.error('Error decoding token:', error);
+    console.error("Error decoding token:", error);
     return null;
   }
 };
 
 // Verify JWT token
-export const verifyJWT = async (token: string): Promise<{ payload: any; expired: boolean }> => {
+export const verifyJWT = async (
+  token: string
+): Promise<{ payload: any; expired: boolean }> => {
   try {
-    const secret = new TextEncoder().encode(process.env.EXPO_PUBLIC_JWT_SECRET || '3Du0p$2024');
+    const secret = new TextEncoder().encode(
+      process.env.JWT_SECRET || "noJWTsecret"
+    );
     const { payload } = await jwtVerify(token, secret);
     return { payload, expired: false };
   } catch (error: any) {
-    if (error?.code === 'ERR_JWT_EXPIRED') {
+    if (error?.code === "ERR_JWT_EXPIRED") {
       return { payload: null, expired: true };
     }
     return { payload: null, expired: false };
@@ -41,27 +45,27 @@ export const isTokenExpired = (token: string): boolean => {
 // Token storage operations
 export const setToken = async (token: string): Promise<void> => {
   try {
-    await AsyncStorage.setItem('token', token);
+    await AsyncStorage.setItem("token", token);
   } catch (error) {
-    console.error('Error storing token:', error);
+    console.error("Error storing token:", error);
     throw error;
   }
 };
 
 export const getToken = async (): Promise<string | null> => {
   try {
-    return await AsyncStorage.getItem('token');
+    return await AsyncStorage.getItem("token");
   } catch (error) {
-    console.error('Error retrieving token:', error);
+    console.error("Error retrieving token:", error);
     return null;
   }
 };
 
 export const removeToken = async (): Promise<void> => {
   try {
-    await AsyncStorage.removeItem('token');
+    await AsyncStorage.removeItem("token");
   } catch (error) {
-    console.error('Error removing token:', error);
+    console.error("Error removing token:", error);
     throw error;
   }
 };
@@ -69,28 +73,28 @@ export const removeToken = async (): Promise<void> => {
 // User data storage operations
 export const setUser = async (user: any): Promise<void> => {
   try {
-    await AsyncStorage.setItem('user', JSON.stringify(user));
+    await AsyncStorage.setItem("user", JSON.stringify(user));
   } catch (error) {
-    console.error('Error storing user:', error);
+    console.error("Error storing user:", error);
     throw error;
   }
 };
 
 export const getUser = async (): Promise<any | null> => {
   try {
-    const userString = await AsyncStorage.getItem('user');
+    const userString = await AsyncStorage.getItem("user");
     return userString ? JSON.parse(userString) : null;
   } catch (error) {
-    console.error('Error retrieving user:', error);
+    console.error("Error retrieving user:", error);
     return null;
   }
 };
 
 export const removeUser = async (): Promise<void> => {
   try {
-    await AsyncStorage.removeItem('user');
+    await AsyncStorage.removeItem("user");
   } catch (error) {
-    console.error('Error removing user:', error);
+    console.error("Error removing user:", error);
     throw error;
   }
 };
@@ -101,10 +105,10 @@ export const clearAuthData = async (): Promise<void> => {
     await Promise.all([
       removeToken(),
       removeUser(),
-      AsyncStorage.removeItem('profileImageCache'),
+      AsyncStorage.removeItem("profileImageCache"),
     ]);
   } catch (error) {
-    console.error('Error clearing auth data:', error);
+    console.error("Error clearing auth data:", error);
     throw error;
   }
 };
