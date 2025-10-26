@@ -1,183 +1,346 @@
-import React from 'react';
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
-  Image,
   SafeAreaView,
   StatusBar,
   ScrollView,
-} from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import { useRouter, useSegments } from "expo-router";
-import { styles } from './EnrollmentStatusScreen.styles';
-import { EnrollmentDropdown } from '../../../components/EnrollmentDropdown';
-import { PaymentDropdown } from '../../../components/PaymentDropdown';
+  ActivityIndicator,
+  Alert,
+} from "react-native";
+import Icon from "react-native-vector-icons/MaterialIcons";
+import { RelativePathString, useRouter } from "expo-router";
+import { styles } from "./EnrollmentStatusScreen.styles";
+import { useEnrollmentStore } from "../../stores/enrollmentStore";
+import * as DocumentPicker from "expo-document-picker";
+import * as ImagePicker from "expo-image-picker";
+import { GuestNavbar } from "../../components/common/GuestNavbar";
 
 interface StepProps {
   title: string;
+  stepNumber: number;
   isCompleted: boolean;
-  isActive?: boolean;
+  isActive: boolean;
+  isPending: boolean;
 }
 
-const StepIndicator: React.FC<StepProps> = ({title, isCompleted, isActive = false}) => {
+const StepIndicator: React.FC<StepProps> = ({
+  title,
+  stepNumber,
+  isCompleted,
+  isActive,
+  isPending,
+}) => {
   return (
     <View style={styles.stepContainer}>
-      <View style={[
-        styles.stepCircle,
-        isCompleted && styles.completedCircle,
-        isActive && styles.activeCircle
-      ]}>
-        {isCompleted && (
+      <View
+        style={[
+          styles.stepCircle,
+          isCompleted && styles.completedCircle,
+          isActive && styles.activeCircle,
+          isPending && styles.pendingCircle,
+        ]}
+      >
+        {isCompleted ? (
           <Icon name="check" size={20} color="white" />
+        ) : (
+          <Text
+            style={[
+              styles.stepNumber,
+              isActive && styles.stepNumberActive,
+              isPending && styles.stepNumberPending,
+            ]}
+          >
+            {stepNumber}
+          </Text>
         )}
       </View>
-      <Text style={styles.stepTitle}>{title}</Text>
+      <Text style={[styles.stepTitle, isActive && styles.stepTitleActive]}>
+        {title}
+      </Text>
     </View>
   );
 };
 
 export const EnrollmentStatusScreen = (): React.JSX.Element => {
   const router = useRouter();
-  const segments = useSegments();
-  const currentRoute = '/' + (segments[segments.length - 1] || '');
+
+  const {
+    enrollmentId,
+    studentId,
+    enrollmentStatus,
+    remarkMsg,
+    currentStep,
+    completedSteps,
+    fullName,
+    coursesToEnroll,
+    courseName,
+    coursePrice,
+    createdAt,
+    hasPaymentProof,
+    isUploadingPaymentProof,
+    isStepCompleted,
+    isStepCurrent,
+    isStepPending,
+    fetchEnrollmentData,
+    setPaymentProof,
+    uploadPaymentProof,
+  } = useEnrollmentStore();
+
+  const [selectedFile, setSelectedFile] = useState<any>(null);
+
+  useEffect(() => {
+    fetchEnrollmentData();
+  }, []);
 
   const steps = [
-    { title: 'Enrollment Form', isCompleted: true },
-    { title: 'Payment Form', isCompleted: false },
-    { title: 'Verification', isCompleted: false },
-    { title: 'Revisions', isCompleted: false },
-    { title: 'Complete', isCompleted: false },
+    { title: "Enrollment Form", stepNumber: 1 },
+    { title: "Verification", stepNumber: 2 },
+    { title: "Payment", stepNumber: 3 },
+    { title: "Payment Verification", stepNumber: 4 },
+    { title: "Complete", stepNumber: 5 },
   ];
 
-  const isEnrollmentActive = currentRoute === '/enrollment' || currentRoute === '/enrollment-status' || currentRoute === '/schedule';
-  const isPaymentActive = currentRoute === '/payment' || currentRoute === '/payment-history';
+  const handleFileUpload = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: false,
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        const file = result.assets[0];
+        setSelectedFile(file);
+        setPaymentProof(file);
+
+        // Auto-upload
+        Alert.alert(
+          "Upload Payment Proof",
+          "Do you want to upload this file as your proof of payment?",
+          [
+            { text: "Cancel", style: "cancel" },
+            {
+              text: "Upload",
+              onPress: async () => {
+                await uploadPaymentProof();
+                setSelectedFile(null);
+              },
+            },
+          ]
+        );
+      }
+    } catch (error) {
+      console.error("Error picking file:", error);
+      Alert.alert("Error", "Failed to select file");
+    }
+  };
+
+  const getStatusBadgeStyle = () => {
+    switch (enrollmentStatus) {
+      case "COMPLETED":
+        return styles.statusBadgeCompleted;
+      case "APPROVED":
+        return styles.statusBadgeApproved;
+      case "VERIFIED":
+        return styles.statusBadgeVerified;
+      case "PAYMENT_PENDING":
+        return styles.statusBadgePaymentPending;
+      case "REJECTED":
+        return styles.statusBadgeRejected;
+      default:
+        return styles.statusBadgePending;
+    }
+  };
+
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar backgroundColor="#de0000" barStyle="light-content" />
-      
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <View style={styles.logoContainer}>
-            <Image
-              source={require('../../../assets/images/sprachins-logo-3.png')}
-              style={styles.headerLogo}
-              resizeMode="contain"
-            />
-          </View>
-          <View style={styles.headerIcons}>
-            <TouchableOpacity style={styles.iconButton}>
-              <Icon name="notifications" size={24} color="white" />
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.profileButton}
-              onPress={() => router.push('/profile')}
-            >
-              <Text style={styles.profileText}>PD</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
+
+      <GuestNavbar />
 
       {/* Main Content */}
-      <ScrollView style={styles.mainContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.statusContainer}>
-          <View style={styles.statusCard}>
-            {/* Status Header */}
-            <View style={styles.statusHeader}>
-              <Text style={styles.statusLabel}>Enrollment Status: </Text>
-              <Text style={styles.statusValue}>Pending</Text>
-            </View>
-
-            {/* Steps Grid */}
-            <View style={styles.stepsGrid}>
-              <View style={styles.stepsRow}>
-                <StepIndicator 
-                  title={steps[0].title} 
-                  isCompleted={steps[0].isCompleted} 
-                />
-                <StepIndicator 
-                  title={steps[1].title} 
-                  isCompleted={steps[1].isCompleted} 
-                />
-                <StepIndicator 
-                  title={steps[2].title} 
-                  isCompleted={steps[2].isCompleted} 
-                />
-              </View>
-              <View style={styles.stepsRow}>
-                <StepIndicator 
-                  title={steps[3].title} 
-                  isCompleted={steps[3].isCompleted} 
-                />
-                <StepIndicator 
-                  title={steps[4].title} 
-                  isCompleted={steps[4].isCompleted} 
-                />
-                <View style={styles.emptyStep} />
-              </View>
-            </View>
-
-            {/* Action Button */}
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={() => router.push('/paymentform')}
-            >
-              <Text style={styles.actionButtonText}>Click here to proceed to payment</Text>
-            </TouchableOpacity>
-
-            {/* Contact Information */}
-            <View style={styles.contactSection}>
-              <Text style={styles.contactTitle}>For enrollment concerns please contact:</Text>
-              <Text style={styles.contactNumber}>(049) 372-3632/33</Text>
-              <Text style={styles.contactEmail}>sprachins@sprachins.edu.ph</Text>
-            </View>
-
-            {/* Upload Section */}
-            <View style={styles.uploadSection}>
-              <Text style={styles.uploadTitle}>Upload Proof of Payment</Text>
-              <View style={styles.uploadContainer}>
-                <TouchableOpacity style={styles.uploadButton}>
-                  <Text style={styles.uploadButtonText}>Choose</Text>
+      <ScrollView
+        style={styles.mainContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {!enrollmentId ? (
+          <View style={styles.statusContainer}>
+            <View style={styles.statusCard}>
+              <View style={styles.noDataContainer}>
+                <Icon name="description" size={64} color="#ccc" />
+                <Text style={styles.noDataTitle}>No Enrollment Data Found</Text>
+                <Text style={styles.noDataText}>
+                  Please submit an enrollment form first or track your existing
+                  enrollment.
+                </Text>
+                <TouchableOpacity
+                  style={styles.actionButton}
+                  onPress={() =>
+                    router.replace(
+                      "/enrollment/form" as any as RelativePathString
+                    )
+                  }
+                >
+                  <Text style={styles.actionButtonText}>
+                    Go to Enrollment Form
+                  </Text>
                 </TouchableOpacity>
-                <Text style={styles.uploadText}>No file chosen</Text>
               </View>
             </View>
           </View>
-        </View>
-      </ScrollView>
+        ) : (
+          <View style={styles.statusContainer}>
+            <View style={styles.statusCard}>
+              {/* Enrollment Info Header */}
+              <View style={styles.infoSection}>
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>Enrollee ID:</Text>
+                  <Text style={styles.infoValue}>{enrollmentId}</Text>
+                </View>
+                {fullName && (
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Name:</Text>
+                    <Text style={styles.infoValue}>{fullName}</Text>
+                  </View>
+                )}
+                {(courseName || coursesToEnroll) && (
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Course:</Text>
+                    <Text style={styles.infoValue}>
+                      {courseName || coursesToEnroll}
+                    </Text>
+                  </View>
+                )}
+                {coursePrice && (
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Course Fee:</Text>
+                    <Text style={styles.infoPriceValue}>₱{coursePrice}</Text>
+                  </View>
+                )}
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>Status:</Text>
+                  <View style={[styles.statusBadge, getStatusBadgeStyle()]}>
+                    <Text style={styles.statusBadgeText}>
+                      {enrollmentStatus}
+                    </Text>
+                  </View>
+                </View>
+                {createdAt && (
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Applied:</Text>
+                    <Text style={styles.infoValue}>
+                      {formatDate(createdAt)}
+                    </Text>
+                  </View>
+                )}
+              </View>
 
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNavigation}>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => router.replace('/home')}
-        >
-          <Icon name="home" size={24} color={currentRoute === '/home' ? "#de0000" : "#666"} />
-          <Text style={[
-            styles.navText,
-            currentRoute === '/home' && styles.activeNavText
-          ]}>Home</Text>
-        </TouchableOpacity>       
-        <EnrollmentDropdown isActive={isEnrollmentActive} />
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => router.replace('/grades')}
-        >
-          <Icon name="grade" size={24} color={currentRoute === '/grades' ? "#de0000" : "#666"} />
-          <Text style={[
-            styles.navText,
-            currentRoute === '/grades' && styles.activeNavText
-          ]}>Grades</Text>
-        </TouchableOpacity>
-        <PaymentDropdown isActive={isPaymentActive} />
-        <TouchableOpacity style={styles.navItem}>
-          <Icon name="description" size={24} color="#666" />
-          <Text style={styles.navText}>Documents</Text>
-        </TouchableOpacity>
-      </View>
+              {/* Progress Section */}
+              <View style={styles.progressSection}>
+                <Text style={styles.sectionTitle}>Enrollment Progress</Text>
+                <View style={styles.stepsGrid}>
+                  {steps.map((step) => (
+                    <StepIndicator
+                      key={step.stepNumber}
+                      title={step.title}
+                      stepNumber={step.stepNumber}
+                      isCompleted={isStepCompleted(step.stepNumber)}
+                      isActive={isStepCurrent(step.stepNumber)}
+                      isPending={isStepPending(step.stepNumber)}
+                    />
+                  ))}
+                </View>
+              </View>
+
+              {/* Remarks Section */}
+              <View style={styles.remarksSection}>
+                <Text style={styles.sectionTitle}>Remarks</Text>
+                <Text style={styles.remarksText}>{remarkMsg}</Text>
+              </View>
+
+              {/* Upload Section - Show only on step 3 */}
+              {currentStep === 3 && (
+                <View style={styles.uploadSection}>
+                  <Text style={styles.uploadTitle}>
+                    Upload Proof of Payment
+                  </Text>
+                  <TouchableOpacity
+                    style={[
+                      styles.uploadButton,
+                      isUploadingPaymentProof && styles.uploadButtonDisabled,
+                    ]}
+                    onPress={handleFileUpload}
+                    disabled={isUploadingPaymentProof || hasPaymentProof}
+                  >
+                    {isUploadingPaymentProof ? (
+                      <ActivityIndicator color="#fff" />
+                    ) : (
+                      <Text style={styles.uploadButtonText}>
+                        {hasPaymentProof
+                          ? "Payment Proof Uploaded"
+                          : "Choose File"}
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                  {selectedFile && (
+                    <Text style={styles.uploadText}>
+                      {selectedFile.fileName || "File selected"}
+                    </Text>
+                  )}
+                  {hasPaymentProof && !selectedFile && (
+                    <Text style={styles.uploadSuccessText}>
+                      Payment proof uploaded. Verification in progress (1-2
+                      business days).
+                    </Text>
+                  )}
+                </View>
+              )}
+
+              {/* Payment Note - Step 3 */}
+              {currentStep === 3 && !hasPaymentProof && (
+                <View style={styles.noteSection}>
+                  <Text style={styles.noteTitle}>Note:</Text>
+                  <Text style={styles.noteText}>
+                    • Student ID: {studentId || "Pending..."}
+                  </Text>
+                  <Text style={styles.noteText}>
+                    • Use this Student ID in the payment form
+                  </Text>
+                  <Text style={styles.noteText}>
+                    • Upload payment receipt after payment
+                  </Text>
+                  <Text style={styles.noteText}>
+                    • Payment verification takes 1-2 business days
+                  </Text>
+                </View>
+              )}
+
+              {/* Contact Information */}
+              <View style={styles.contactSection}>
+                <Text style={styles.contactTitle}>
+                  For enrollment concerns please contact:
+                </Text>
+                <Text style={styles.contactNumber}>(+63) 97239232223</Text>
+                <Text style={styles.contactEmail}>
+                  info@sprachinstitut-cebu.inc
+                </Text>
+              </View>
+            </View>
+          </View>
+        )}
+      </ScrollView>
     </SafeAreaView>
   );
 };

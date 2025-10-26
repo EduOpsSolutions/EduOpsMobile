@@ -111,12 +111,34 @@ export const styles = StyleSheet.create({
   },
   activeCircle: {
     borderColor: '#de0000',
+    backgroundColor: '#de0000',
+  },
+  pendingCircle: {
+    borderColor: '#ccc',
+    backgroundColor: 'white',
+  },
+  stepNumber: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#999',
+  },
+  stepNumberActive: {
+    color: 'white',
+  },
+  stepNumberPending: {
+    color: '#999',
   },
   stepTitle: {
-    fontSize: 12,
-    color: '#333',
+    fontSize: 11,
+    color: '#666',
     textAlign: 'center',
-    fontWeight: '500',
+    fontWeight: '400',
+    marginTop: 4,
+    maxWidth: 80,
+  },
+  stepTitleActive: {
+    color: '#de0000',
+    fontWeight: '600',
   },
   emptyStep: {
     flex: 1,
@@ -183,6 +205,134 @@ export const styles = StyleSheet.create({
   uploadText: {
     fontSize: 11,
     color: '#666',
+    marginTop: 8,
+  },
+  uploadButtonDisabled: {
+    backgroundColor: '#999',
+    opacity: 0.6,
+  },
+  uploadSuccessText: {
+    fontSize: 11,
+    color: '#4CAF50',
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  noDataContainer: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  noDataTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  noDataText: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 24,
+    paddingHorizontal: 20,
+  },
+  infoSection: {
+    marginBottom: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  infoLabel: {
+    fontSize: 13,
+    color: '#666',
+    fontWeight: '500',
+    minWidth: 90,
+  },
+  infoValue: {
+    fontSize: 13,
+    color: '#333',
+    fontWeight: '600',
+    flex: 1,
+  },
+  infoPriceValue: {
+    fontSize: 13,
+    color: '#4CAF50',
+    fontWeight: 'bold',
+    flex: 1,
+  },
+  statusBadge: {
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+  },
+  statusBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: 'white',
+  },
+  statusBadgeCompleted: {
+    backgroundColor: '#4CAF50',
+  },
+  statusBadgeApproved: {
+    backgroundColor: '#2196F3',
+  },
+  statusBadgeVerified: {
+    backgroundColor: '#FFC107',
+  },
+  statusBadgePaymentPending: {
+    backgroundColor: '#FF9800',
+  },
+  statusBadgeRejected: {
+    backgroundColor: '#F44336',
+  },
+  statusBadgePending: {
+    backgroundColor: '#9E9E9E',
+  },
+  progressSection: {
+    marginBottom: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#de0000',
+    marginBottom: 16,
+  },
+  remarksSection: {
+    marginBottom: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  remarksText: {
+    fontSize: 13,
+    color: '#666',
+    lineHeight: 20,
+  },
+  noteSection: {
+    backgroundColor: '#E3F2FD',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 20,
+    borderLeftWidth: 4,
+    borderLeftColor: '#2196F3',
+  },
+  noteTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#1976D2',
+    marginBottom: 8,
+  },
+  noteText: {
+    fontSize: 12,
+    color: '#1565C0',
+    marginBottom: 4,
   },
   bottomNavigation: {
     position: 'absolute',

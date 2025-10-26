@@ -1,228 +1,307 @@
-import React, {useState} from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
-  Image,
-  StyleSheet,
   SafeAreaView,
   StatusBar,
   ScrollView,
-  Dimensions,
-} from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import { styles } from './EnrollmentFormScreen.styles';
-import { useRouter, useSegments } from "expo-router";
-import { EnrollmentDropdown } from '../../../components/EnrollmentDropdown';
-import { PaymentDropdown } from '../../../components/PaymentDropdown';
-
-const {width} = Dimensions.get('window');
+  Alert,
+  ActivityIndicator,
+  Platform,
+  Modal,
+} from "react-native";
+import Icon from "react-native-vector-icons/MaterialIcons";
+import { styles } from "./EnrollmentFormScreen.styles";
+import { RelativePathString, useRouter } from "expo-router";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { useEnrollmentStore } from "../../stores/enrollmentStore";
+import { EnrollmentFormData } from "../../types/enrollment";
+import { GuestNavbar } from "../../components/common/GuestNavbar";
 
 interface DropdownProps {
   placeholder: string;
   value: string;
   onValueChange: (value: string) => void;
   options: string[];
+  title?: string;
 }
 
-const Dropdown: React.FC<DropdownProps> = ({placeholder, value, onValueChange, options}) => {
+const Dropdown: React.FC<DropdownProps> = ({
+  placeholder,
+  value,
+  onValueChange,
+  options,
+  title,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <View style={styles.dropdownContainer}>
       <TouchableOpacity
         style={styles.dropdownButton}
-        onPress={() => setIsOpen(!isOpen)}>
+        onPress={() => setIsOpen(true)}
+      >
         <Text style={[styles.dropdownText, !value && styles.placeholderText]}>
           {value || placeholder}
         </Text>
         <Icon name="keyboard-arrow-down" size={20} color="#666" />
       </TouchableOpacity>
-      {isOpen && (
-        <View style={styles.dropdownOptions}>
-          {options.map((option, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.dropdownOption}
-              onPress={() => {
-                onValueChange(option);
-                setIsOpen(false);
-              }}>
-              <Text style={styles.dropdownOptionText}>{option}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
+
+      <Modal
+        visible={isOpen}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setIsOpen(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setIsOpen(false)}
+        >
+          <View
+            style={styles.modalContent}
+            onStartShouldSetResponder={() => true}
+          >
+            {title && <Text style={styles.modalTitle}>{title}</Text>}
+            <ScrollView style={styles.dropdownOptions}>
+              {options.map((option, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.dropdownOption}
+                  onPress={() => {
+                    onValueChange(option);
+                    setIsOpen(false);
+                  }}
+                >
+                  <Text style={styles.dropdownOptionText}>{option}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 };
 
-export const EnrollmentFormScreen = (): React.JSX.Element => {
+export default function EnrollmentFormScreen(): React.JSX.Element {
   const router = useRouter();
-  const segments = useSegments();
-  const currentRoute = '/' + (segments[segments.length - 1] || '');
-  
-  const [formData, setFormData] = useState({
-    firstName: '',
-    middleName: '',
-    lastName: '',
-    extensions: '',
-    honorific: '',
-    sex: '',
-    birthDate: '',
-    civilStatus: '',
-    referredBy: '',
-    currentAddress: '',
-    contactNumber: '',
-    alternateContactNumber: '',
-    emailAddress: '',
-    alternateEmailAddress: '',
+  const { createEnrollment } = useEnrollmentStore();
+  const [birthDateOpen, setBirthDateOpen] = useState(false);
+  const [formData, setFormData] = useState<EnrollmentFormData>({
+    firstName: "",
+    middleName: "",
+    lastName: "",
+    birthDate: new Date().toISOString(),
+    civilStatus: "",
+    address: "",
+    referredBy: "",
+    contactNumber: "",
+    altContactNumber: "",
+    preferredEmail: "",
+    altEmail: "",
+    motherName: "",
+    fatherName: "",
+    guardianName: "",
+    guardianContact: "",
+    coursesToEnroll: "",
   });
 
-  const updateFormData = (field: string, value: string) => {
-    setFormData(prev => ({...prev, [field]: value}));
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof EnrollmentFormData, string>>
+  >({});
+
+  const updateFormData = (field: keyof EnrollmentFormData, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
+    }
   };
 
-  const sexOptions = ['Male', 'Female'];
-  const civilStatusOptions = ['Single', 'Married', 'Divorced', 'Widowed'];
-  const referredByOptions = ['Friend', 'Family', 'Online', 'Advertisement', 'Other'];
+  const sexOptions = ["Male", "Female"];
+  const civilStatusOptions = ["Single", "Married", "Divorced", "Widowed"];
+  const referredByOptions = [
+    "Friend",
+    "Family",
+    "Online",
+    "Advertisement",
+    "Other",
+  ];
+  const courseOptions = [
+    "German Language Course",
+    "English Course",
+    "French Course",
+    "Spanish Course",
+  ];
 
-  const isEnrollmentActive = currentRoute === '/enrollment' || currentRoute === '/enrollment-status' || currentRoute === '/schedule';
-  const isPaymentActive = currentRoute === '/payment' || currentRoute === '/payment-history';
+  const validateForm = (): boolean => {
+    const newErrors: Partial<Record<keyof EnrollmentFormData, string>> = {};
+
+    // Required fields validation
+    if (!formData.firstName.trim())
+      newErrors.firstName = "First name is required";
+    if (!formData.lastName.trim()) newErrors.lastName = "Last name is required";
+    if (!formData.birthDate.trim())
+      newErrors.birthDate = "Birth date is required";
+    if (!formData.civilStatus)
+      newErrors.civilStatus = "Civil status is required";
+    if (!formData.address.trim()) newErrors.address = "Address is required";
+    if (!formData.referredBy) newErrors.referredBy = "Referred by is required";
+    if (!formData.contactNumber.trim())
+      newErrors.contactNumber = "Contact number is required";
+    if (!formData.preferredEmail.trim())
+      newErrors.preferredEmail = "Email is required";
+    if (!formData.coursesToEnroll)
+      newErrors.coursesToEnroll = "Please select a course";
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (formData.preferredEmail && !emailRegex.test(formData.preferredEmail)) {
+      newErrors.preferredEmail = "Please enter a valid email";
+    }
+    if (formData.altEmail && !emailRegex.test(formData.altEmail)) {
+      newErrors.altEmail = "Please enter a valid email";
+    }
+
+    // Phone validation (Philippine format)
+    const phoneRegex = /^(\+63|0)?9\d{9}$/;
+    if (
+      formData.contactNumber &&
+      !phoneRegex.test(formData.contactNumber.replace(/\s/g, ""))
+    ) {
+      newErrors.contactNumber = "Please enter a valid Philippine mobile number";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) {
+      Alert.alert(
+        "Validation Error",
+        "Please fill in all required fields correctly"
+      );
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await createEnrollment(formData);
+      // Navigate to enrollment status screen
+      router.replace("/enrollment/status" as any as RelativePathString);
+    } catch (error) {
+      // Error already handled in store
+      console.error("Submission error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar backgroundColor="#de0000" barStyle="light-content" />
-      
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <View style={styles.logoContainer}>
-            <Image
-              source={require('../../../assets/images/sprachins-logo-3.png')}
-              style={styles.headerLogo}
-              resizeMode="contain"
-            />
-          </View>
-          <View style={styles.headerIcons}>
-            <TouchableOpacity style={styles.iconButton}>
-              <Icon name="notifications" size={24} color="white" />
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.profileButton}
-              onPress={() => router.push('/profile')}
-            >
-              <Text style={styles.profileText}>PD</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
+
+      <GuestNavbar />
 
       {/* Main Content */}
-      <ScrollView style={styles.mainContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.mainContent}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.formContainer}>
           <View style={styles.formCard}>
             <Text style={styles.formTitle}>Enrollment Form</Text>
-            <Text style={styles.requiredText}>Items with (*) are required fields</Text>
+            <Text style={styles.requiredText}>
+              Items with (*) are required fields
+            </Text>
 
             {/* First Row - First Name and Middle Name */}
             <View style={styles.row}>
-              <View style={styles.halfWidth}>
+              <View style={styles.fieldContainer}>
                 <Text style={styles.label}>First Name*</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, errors.firstName && styles.inputError]}
                   value={formData.firstName}
-                  onChangeText={(value) => updateFormData('firstName', value)}
+                  onChangeText={(value) => updateFormData("firstName", value)}
                 />
+                {errors.firstName && (
+                  <Text style={styles.errorText}>{errors.firstName}</Text>
+                )}
               </View>
-              <View style={styles.halfWidth}>
-                <Text style={styles.label}>Middle Name*</Text>
+              <View style={styles.fieldContainer}>
+                <Text style={styles.label}>Middle Name</Text>
                 <TextInput
                   style={styles.input}
                   value={formData.middleName}
-                  onChangeText={(value) => updateFormData('middleName', value)}
+                  onChangeText={(value) => updateFormData("middleName", value)}
                 />
               </View>
             </View>
 
-            {/* Second Row - Last Name and Extensions */}
+            {/* Second Row - Last Name and Birth Date */}
             <View style={styles.row}>
-              <View style={styles.halfWidth}>
+              <View style={styles.fieldContainer}>
                 <Text style={styles.label}>Last Name*</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, errors.lastName && styles.inputError]}
                   value={formData.lastName}
-                  onChangeText={(value) => updateFormData('lastName', value)}
+                  onChangeText={(value) => updateFormData("lastName", value)}
                 />
+                {errors.lastName && (
+                  <Text style={styles.errorText}>{errors.lastName}</Text>
+                )}
               </View>
-              <View style={styles.halfWidth}>
-                <Text style={styles.label}>Extensions</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Jr., Sr., III"
-                  placeholderTextColor="#999"
-                  value={formData.extensions}
-                  onChangeText={(value) => updateFormData('extensions', value)}
-                />
+              <View style={styles.fieldContainer}>
+                <Text style={styles.label}>Birth Date*</Text>
+                <TouchableOpacity
+                  onPress={() => setBirthDateOpen(true)}
+                  style={styles.dateInputContainer}
+                >
+                  <Text style={styles.dateInput}>
+                    {formData.birthDate
+                      ? new Date(formData.birthDate).toLocaleDateString()
+                      : "Select birth date"}
+                  </Text>
+                  <Icon name="calendar-today" size={20} color="#666" />
+                </TouchableOpacity>
+                {errors.birthDate && (
+                  <Text style={styles.errorText}>{errors.birthDate}</Text>
+                )}
               </View>
             </View>
 
-            {/* Third Row - Honorific, Sex, Birth Date */}
+            {/* Civil Status and Referred By */}
             <View style={styles.row}>
-              <View style={styles.thirdWidth}>
-                <Text style={styles.label}>Honorific*</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Mr., Ms."
-                  placeholderTextColor="#999"
-                  value={formData.honorific}
-                  onChangeText={(value) => updateFormData('honorific', value)}
-                />
-              </View>
-              <View style={styles.thirdWidth}>
-                <Text style={styles.label}>Sex*</Text>
-                <Dropdown
-                  placeholder="M/F"
-                  value={formData.sex}
-                  onValueChange={(value) => updateFormData('sex', value)}
-                  options={sexOptions}
-                />
-              </View>
-              <View style={styles.thirdWidth}>
-                <Text style={styles.label}>Birth date*</Text>
-                <View style={styles.dateInputContainer}>
-                  <TextInput
-                    style={styles.dateInput}
-                    placeholder="MM / DD / YYYY"
-                    placeholderTextColor="#999"
-                    value={formData.birthDate}
-                    onChangeText={(value) => updateFormData('birthDate', value)}
-                  />
-                  <Icon name="calendar-today" size={16} color="#666" />
-                </View>
-              </View>
-            </View>
-
-            {/* Fourth Row - Civil Status and Referred By */}
-            <View style={styles.row}>
-              <View style={styles.halfWidth}>
+              <View style={styles.fieldContainer}>
                 <Text style={styles.label}>Civil Status*</Text>
                 <Dropdown
                   placeholder="Select"
                   value={formData.civilStatus}
-                  onValueChange={(value) => updateFormData('civilStatus', value)}
+                  onValueChange={(value) =>
+                    updateFormData("civilStatus", value)
+                  }
                   options={civilStatusOptions}
                 />
+                {errors.civilStatus && (
+                  <Text style={styles.errorText}>{errors.civilStatus}</Text>
+                )}
               </View>
-              <View style={styles.halfWidth}>
+              <View style={styles.fieldContainer}>
                 <Text style={styles.label}>Referred By*</Text>
                 <Dropdown
-                  placeholder="Family"
+                  placeholder="Select"
                   value={formData.referredBy}
-                  onValueChange={(value) => updateFormData('referredBy', value)}
+                  onValueChange={(value) => updateFormData("referredBy", value)}
                   options={referredByOptions}
                 />
+                {errors.referredBy && (
+                  <Text style={styles.errorText}>{errors.referredBy}</Text>
+                )}
               </View>
             </View>
 
@@ -230,108 +309,139 @@ export const EnrollmentFormScreen = (): React.JSX.Element => {
             <View style={styles.fullWidth}>
               <Text style={styles.label}>Current Address*</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, errors.address && styles.inputError]}
                 placeholder="Street, Barangay, City, Province, Zip Code"
                 placeholderTextColor="#999"
-                value={formData.currentAddress}
-                onChangeText={(value) => updateFormData('currentAddress', value)}
+                value={formData.address}
+                onChangeText={(value) => updateFormData("address", value)}
+                multiline
               />
+              {errors.address && (
+                <Text style={styles.errorText}>{errors.address}</Text>
+              )}
             </View>
 
             {/* Contact Numbers */}
             <View style={styles.row}>
-              <View style={styles.halfWidth}>
-                <Text style={styles.label}>Contact Number*</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="+63 9xxxxxxxxx"
-                  placeholderTextColor="#999"
-                  value={formData.contactNumber}
-                  onChangeText={(value) => updateFormData('contactNumber', value)}
-                  keyboardType="phone-pad"
-                />
-              </View>
-              <View style={styles.halfWidth}>
-                <Text style={styles.label}>Alternate Contact No.</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="+63 9xxxxxxxxx"
-                  placeholderTextColor="#999"
-                  value={formData.alternateContactNumber}
-                  onChangeText={(value) => updateFormData('alternateContactNumber', value)}
-                  keyboardType="phone-pad"
-                />
-              </View>
+              <Text style={styles.label}>Contact Number*</Text>
+              <TextInput
+                style={[
+                  styles.input,
+                  errors.contactNumber && styles.inputError,
+                ]}
+                placeholder="+63 9xxxxxxxxx"
+                placeholderTextColor="#999"
+                value={formData.contactNumber}
+                onChangeText={(value) => updateFormData("contactNumber", value)}
+                keyboardType="phone-pad"
+              />
+              {errors.contactNumber && (
+                <Text style={styles.errorText}>{errors.contactNumber}</Text>
+              )}
+              <Text style={styles.label}>Alternate Contact No.</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="+63 9xxxxxxxxx"
+                placeholderTextColor="#999"
+                value={formData.altContactNumber}
+                onChangeText={(value) =>
+                  updateFormData("altContactNumber", value)
+                }
+                keyboardType="phone-pad"
+              />
             </View>
 
             {/* Email Addresses */}
             <View style={styles.row}>
-              <View style={styles.halfWidth}>
-                <Text style={styles.label}>Email Address</Text>
+              <View style={styles.fieldContainer}>
+                <Text style={styles.label}>Email Address*</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[
+                    styles.input,
+                    errors.preferredEmail && styles.inputError,
+                  ]}
                   placeholder="johndoe@gmail.com"
                   placeholderTextColor="#999"
-                  value={formData.emailAddress}
-                  onChangeText={(value) => updateFormData('emailAddress', value)}
+                  value={formData.preferredEmail}
+                  onChangeText={(value) =>
+                    updateFormData("preferredEmail", value)
+                  }
                   keyboardType="email-address"
                   autoCapitalize="none"
                 />
+                {errors.preferredEmail && (
+                  <Text style={styles.errorText}>{errors.preferredEmail}</Text>
+                )}
               </View>
-              <View style={styles.halfWidth}>
+              <View style={styles.fieldContainer}>
                 <Text style={styles.label}>Alternate Email Address</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, errors.altEmail && styles.inputError]}
                   placeholder="example@gmail.com"
                   placeholderTextColor="#999"
-                  value={formData.alternateEmailAddress}
-                  onChangeText={(value) => updateFormData('alternateEmailAddress', value)}
+                  value={formData.altEmail}
+                  onChangeText={(value) => updateFormData("altEmail", value)}
                   keyboardType="email-address"
                   autoCapitalize="none"
                 />
+                {errors.altEmail && (
+                  <Text style={styles.errorText}>{errors.altEmail}</Text>
+                )}
               </View>
             </View>
 
-            {/* Next Button */}
-            <TouchableOpacity 
-              style={styles.nextButton}
-              onPress={() => router.replace('/enrollment-status')}
+            {/* Course Selection */}
+            <View style={styles.fullWidth}>
+              <Text style={styles.label}>Course to Enroll*</Text>
+              <Dropdown
+                placeholder="Select a course"
+                value={formData.coursesToEnroll}
+                onValueChange={(value) =>
+                  updateFormData("coursesToEnroll", value)
+                }
+                options={courseOptions}
+              />
+              {errors.coursesToEnroll && (
+                <Text style={styles.errorText}>{errors.coursesToEnroll}</Text>
+              )}
+            </View>
+
+            {/* Submit Button */}
+            <TouchableOpacity
+              style={[
+                styles.nextButton,
+                isSubmitting && styles.nextButtonDisabled,
+              ]}
+              onPress={handleSubmit}
+              disabled={isSubmitting}
             >
-              <Text style={styles.nextButtonText}>Next</Text>
+              {isSubmitting ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.nextButtonText}>Submit Enrollment</Text>
+              )}
             </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
 
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNavigation}>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => router.replace('/home')}
-        >
-          <Icon name="home" size={24} color={currentRoute === '/home' ? "#de0000" : "#666"} />
-          <Text style={[
-            styles.navText,
-            currentRoute === '/home' && styles.activeNavText
-          ]}>Home</Text>
-        </TouchableOpacity>       
-        <EnrollmentDropdown isActive={isEnrollmentActive} />        
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => router.replace('/grades')}
-        >
-          <Icon name="grade" size={24} color={currentRoute === '/grades' ? "#de0000" : "#666"} />
-          <Text style={[
-            styles.navText,
-            currentRoute === '/grades' && styles.activeNavText
-          ]}>Grades</Text>
-        </TouchableOpacity>
-        <PaymentDropdown isActive={isPaymentActive} />
-        <TouchableOpacity style={styles.navItem}>
-          <Icon name="description" size={24} color="#666" />
-          <Text style={styles.navText}>Documents</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Date Picker Modal */}
+      {birthDateOpen && (
+        <DateTimePicker
+          value={formData.birthDate ? new Date(formData.birthDate) : new Date()}
+          mode="date"
+          display={Platform.OS === "ios" ? "spinner" : "default"}
+          onChange={(event, selectedDate) => {
+            setBirthDateOpen(false);
+            if (selectedDate) {
+              setFormData({
+                ...formData,
+                birthDate: selectedDate.toISOString(),
+              });
+            }
+          }}
+        />
+      )}
     </SafeAreaView>
   );
-};
+}

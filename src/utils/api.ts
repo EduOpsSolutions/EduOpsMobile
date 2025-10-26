@@ -37,6 +37,18 @@ export const enrollmentApi = {
     }
   },
 
+  updatePaymentProof: async (enrollmentId: string, paymentProofPath: string) => {
+    try {
+      const response = await axiosInstance.patch('/enrollment/payment-proof', {
+        enrollmentId,
+        paymentProofPath,
+      });
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  },
+
   getEnrollmentStatus: async (enrollmentId: string) => {
     try {
       const response = await axiosInstance.get(`/enrollment/${enrollmentId}`);

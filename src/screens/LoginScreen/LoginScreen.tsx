@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { EyeIcon, Fullscreen, LockIcon, UserIcon } from "lucide-react-native";
 import { styles } from "./LoginScreen.styles";
-import { useRouter } from "expo-router";
+import { RelativePathString, useRouter } from "expo-router";
 import { useAuthStore } from "../../stores/authStore";
 
 export const LoginScreen = (): React.JSX.Element => {
@@ -128,23 +128,35 @@ export const LoginScreen = (): React.JSX.Element => {
           </TouchableOpacity>
 
           {/* Login button */}
-          <TouchableOpacity
-            style={[styles.loginButton, isLoading && { opacity: 0.6 }]}
-            onPress={handleLogin}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#fffdf2" />
-            ) : (
-              <Text style={styles.loginButtonText}>Login</Text>
-            )}
-          </TouchableOpacity>
+          <View style={styles.loginButtonWrapper}>
+            <TouchableOpacity
+              style={[styles.loginButton, isLoading && { opacity: 0.6 }]}
+              onPress={handleLogin}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="#fffdf2" />
+              ) : (
+                <Text style={styles.loginButtonText}>Login</Text>
+              )}
+            </TouchableOpacity>
+          </View>
 
-          {/* Sign up section */}
-          <View style={styles.signupWrapper}>
-            <Text style={styles.signupText}>Don&apos;t have an account?</Text>
-            <TouchableOpacity>
-              <Text style={styles.signupLink}>Sign up</Text>
+          <View style={styles.enrollButtonWrapper}>
+            <Text style={styles.enrollButtonText}>Don't have an account?</Text>
+            {/* Login button */}
+            <TouchableOpacity
+              style={[styles.loginButton, isLoading && { opacity: 0.6 }]}
+              onPress={() =>
+                router.replace("/enrollmentform" as any as RelativePathString)
+              }
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="#fffdf2" />
+              ) : (
+                <Text style={styles.loginButtonText}>Sign Up / Enroll</Text>
+              )}
             </TouchableOpacity>
           </View>
 

@@ -46,8 +46,8 @@ export const styles = StyleSheet.create({
   inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
-    width: 233,
-    height: 37,
+    width: "80%",
+    height: 60,
     marginTop: 20,
     backgroundColor: "#fff",
     borderRadius: 6,
@@ -62,7 +62,7 @@ export const styles = StyleSheet.create({
     flex: 1,
     height: "100%",
     color: "#6d6d6d",
-    fontSize: 14,
+    fontSize: 24,
   },
   eyeButton: {
     padding: 4,
@@ -76,12 +76,11 @@ export const styles = StyleSheet.create({
   forgotText: {
     color: "#ffcf00",
     fontWeight: "bold",
-    fontSize: 11,
+    fontSize: 18,
     textDecorationLine: "underline",
   },
   loginButton: {
-    width: 130,
-    height: 31,
+    width: "80%",
     marginTop: 20,
     backgroundColor: "#dd0000",
     borderRadius: 5,
@@ -92,11 +91,12 @@ export const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 4,
+    padding: 10,
   },
   loginButtonText: {
     color: "#fff",
     fontWeight: "bold",
-    fontSize: 15,
+    fontSize: 24,
   },
   signupWrapper: {
     flexDirection: "row",
@@ -114,13 +114,30 @@ export const styles = StyleSheet.create({
     textDecorationLine: "underline",
   },
   termsText: {
-    marginTop: 8,
+    marginTop: 30,
     color: "#fffdf2",
-    fontSize: 10,
+    fontSize: 18,
     textAlign: "center",
   },
   termsLink: {
     color: "#ffcf00",
     textDecorationLine: "underline",
+  },
+  enrollButtonWrapper: {
+    marginTop: 20,
+    width: "100%",
+    alignItems: "center",
+    borderTopWidth: 1,
+    borderTopColor: "#fff",
+    paddingTop: 10,
+  },
+  loginButtonWrapper: {
+    width: "100%",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  enrollButtonText: {
+    color: "#fffdf2",
+    fontSize: 15,
   },
 });
