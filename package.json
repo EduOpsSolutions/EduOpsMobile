@@ -28,11 +28,13 @@
     "expo-clipboard": "~7.0.1",
     "expo-constants": "~17.0.3",
     "expo-document-picker": "^14.0.7",
+    "expo-file-system": "~18.0.12",
     "expo-font": "~13.0.1",
     "expo-haptics": "~14.0.0",
     "expo-image-picker": "^17.0.8",
     "expo-linking": "~7.0.2",
     "expo-router": "~4.0.6",
+    "expo-sharing": "~13.0.1",
     "expo-splash-screen": "~0.29.11",
     "expo-status-bar": "~2.0.0",
     "expo-symbols": "~0.2.0",
@@ -54,9 +56,7 @@
     "react-native-web": "~0.19.13",
     "react-native-webview": "13.12.2",
     "tailwind-merge": "^3.3.1",
-    "zustand": "^5.0.8",
-    "expo-file-system": "~18.0.12",
-    "expo-sharing": "~13.0.1"
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
