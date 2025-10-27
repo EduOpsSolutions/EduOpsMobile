@@ -16,6 +16,7 @@ import { useEnrollmentStore } from "../../stores/enrollmentStore";
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import { GuestNavbar } from "../../components/common/GuestNavbar";
+import * as Clipboard from "expo-clipboard";
 
 interface StepProps {
   title: string;
@@ -66,6 +67,10 @@ const StepIndicator: React.FC<StepProps> = ({
 export const EnrollmentStatusScreen = (): React.JSX.Element => {
   const router = useRouter();
 
+  const copyToClipboard = async (string: string) => {
+    await Clipboard.setStringAsync(string);
+  };
+
   const {
     enrollmentId,
     studentId,
@@ -101,6 +106,12 @@ export const EnrollmentStatusScreen = (): React.JSX.Element => {
     { title: "Payment Verification", stepNumber: 4 },
     { title: "Complete", stepNumber: 5 },
   ];
+
+  const getLineColor = (index: number) => {
+    if (index >= steps.length - 1) return "#f0f0f0"; // No line after last step
+    const previousStepNumber = steps[index].stepNumber;
+    return isStepCompleted(previousStepNumber) ? "#4CAF50" : "#f0f0f0";
+  };
 
   const handleFileUpload = async () => {
     try {
@@ -207,8 +218,21 @@ export const EnrollmentStatusScreen = (): React.JSX.Element => {
               <View style={styles.infoSection}>
                 <View style={styles.infoRow}>
                   <Text style={styles.infoLabel}>Enrollee ID:</Text>
-                  <Text style={styles.infoValue}>{enrollmentId}</Text>
+                  <TouchableOpacity
+                    style={styles.infoValueCopyButton}
+                    onPress={async () => {
+                      await copyToClipboard(enrollmentId);
+                      Alert.alert(
+                        "Enrollee ID copied to clipboard",
+                        "You can now paste it in the payment form"
+                      );
+                    }}
+                  >
+                    <Text style={styles.infoValue}>{enrollmentId}</Text>
+                    <Icon name="content-copy" size={20} color="#000" />
+                  </TouchableOpacity>
                 </View>
+
                 {fullName && (
                   <View style={styles.infoRow}>
                     <Text style={styles.infoLabel}>Name:</Text>
@@ -233,7 +257,7 @@ export const EnrollmentStatusScreen = (): React.JSX.Element => {
                   <Text style={styles.infoLabel}>Status:</Text>
                   <View style={[styles.statusBadge, getStatusBadgeStyle()]}>
                     <Text style={styles.statusBadgeText}>
-                      {enrollmentStatus}
+                      {enrollmentStatus.toUpperCase()}
                     </Text>
                   </View>
                 </View>
@@ -251,15 +275,24 @@ export const EnrollmentStatusScreen = (): React.JSX.Element => {
               <View style={styles.progressSection}>
                 <Text style={styles.sectionTitle}>Enrollment Progress</Text>
                 <View style={styles.stepsGrid}>
-                  {steps.map((step) => (
-                    <StepIndicator
-                      key={step.stepNumber}
-                      title={step.title}
-                      stepNumber={step.stepNumber}
-                      isCompleted={isStepCompleted(step.stepNumber)}
-                      isActive={isStepCurrent(step.stepNumber)}
-                      isPending={isStepPending(step.stepNumber)}
-                    />
+                  {steps.map((step, index) => (
+                    <View key={step.stepNumber} style={styles.timelineStep}>
+                      <StepIndicator
+                        title={step.title}
+                        stepNumber={step.stepNumber}
+                        isCompleted={isStepCompleted(step.stepNumber)}
+                        isActive={isStepCurrent(step.stepNumber)}
+                        isPending={isStepPending(step.stepNumber)}
+                      />
+                      {index < steps.length - 1 && (
+                        <View
+                          style={[
+                            styles.timelineLine,
+                            { backgroundColor: getLineColor(index) },
+                          ]}
+                        />
+                      )}
+                    </View>
                   ))}
                 </View>
               </View>

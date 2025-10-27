@@ -3,13 +3,13 @@ import { Stack } from "expo-router";
 export default function RootLayout() {
   return (
     <Stack options={{ headerShown: false }} header={() => null}>
-      <Stack.Screen name="enrollmentform" options={{ headerShown: false }} />
+      <Stack.Screen name="enrollment/index" options={{ headerShown: false }} />
       <Stack.Screen name="enrollment/status" options={{ headerShown: false }} />
       <Stack.Screen name="enrollment/form" options={{ headerShown: false }} />
-      <Stack.Screen
+      {/* <Stack.Screen
         name="enrollment/_layout"
         options={{ headerShown: false }}
-      />
+      /> */}
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="home" options={{ headerShown: false }} />
       <Stack.Screen name="grades" options={{ headerShown: false }} />

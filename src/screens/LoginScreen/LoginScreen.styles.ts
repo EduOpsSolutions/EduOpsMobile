@@ -62,7 +62,7 @@ export const styles = StyleSheet.create({
     flex: 1,
     height: "100%",
     color: "#6d6d6d",
-    fontSize: 24,
+    fontSize: 18,
   },
   eyeButton: {
     padding: 4,
@@ -96,7 +96,7 @@ export const styles = StyleSheet.create({
   loginButtonText: {
     color: "#fff",
     fontWeight: "bold",
-    fontSize: 24,
+    fontSize: 18,
   },
   signupWrapper: {
     flexDirection: "row",
@@ -139,5 +139,34 @@ export const styles = StyleSheet.create({
   enrollButtonText: {
     color: "#fffdf2",
     fontSize: 15,
+  },
+  trackButtonWrapper: {
+    marginTop: 12,
+    width: "100%",
+    alignItems: "center",
+    paddingTop: 10,
+  },
+  trackLabelText: {
+    color: "#fffdf2",
+    fontSize: 15,
+  },
+  trackButton: {
+    width: "80%",
+    marginTop: 8,
+    backgroundColor: "#ffcf00",
+    borderRadius: 5,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 4,
+    padding: 10,
+  },
+  trackButtonText: {
+    color: "#700A06",
+    fontWeight: "bold",
+    fontSize: 18,
   },
 });

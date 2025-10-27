@@ -2,7 +2,30 @@ import axios from "axios";
 import { Alert } from "react-native";
 import { getToken, isTokenExpired, clearAuthData } from "./jwt";
 
-// Create axios instance with base URL from environment
+/**
+ * Axios instance configured for EduOps Mobile App
+ *
+ * IMPORTANT: This configuration works with the webClientValidator middleware on the backend.
+ * The middleware validates requests from authorized clients (web and mobile).
+ *
+ * Mobile App Origin Validation:
+ * - React Native automatically sends Origin: null (allowed by middleware)
+ * - App scheme: "eduopsmobile://" (configured in app.json, allowed by middleware)
+ * - User-Agent: React Native default (validated by middleware)
+ *
+ * Guest Endpoints:
+ * - Guest endpoints (like /upload/guest, /enrollment/enroll) use validateWebClientOrigin
+ * - Mobile apps are allowed because:
+ *   1. Origin is "null" (React Native default) - explicitly allowed
+ *   2. User-Agent check is skipped for mobile apps (origin === "null")
+ *
+ * Allowed Origins in Backend:
+ * - "null" (React Native/Expo default)
+ * - "exp://localhost:8081" (Expo dev)
+ * - "exp://localhost:19000" (Expo dev alternative)
+ * - "eduopsmobile://" (production app scheme)
+ * - "myapp://" (legacy scheme, also supported)
+ */
 const axiosInstance = axios.create({
   baseURL: process.env.EXPO_PUBLIC_API_URL || "http://172.20.10.7:5555/api/v1",
   headers: {

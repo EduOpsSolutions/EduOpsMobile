@@ -2,6 +2,9 @@ export interface EnrollmentFormData {
   firstName: string;
   middleName?: string;
   lastName: string;
+  extensions?: string;
+  honorific: string;
+  sex: string;
   birthDate: string;
   civilStatus: string;
   address: string;
@@ -11,10 +14,14 @@ export interface EnrollmentFormData {
   preferredEmail: string;
   altEmail?: string;
   motherName?: string;
+  motherContact?: string;
   fatherName?: string;
+  fatherContact?: string;
   guardianName?: string;
   guardianContact?: string;
   coursesToEnroll: string;
+  validIdPath?: string;
+  idPhotoPath?: string;
 }
 
 export interface EnrollmentData {

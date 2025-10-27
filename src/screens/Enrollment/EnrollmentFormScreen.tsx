@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -11,14 +11,18 @@ import {
   ActivityIndicator,
   Platform,
   Modal,
+  Image,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { styles } from "./EnrollmentFormScreen.styles";
 import { RelativePathString, useRouter } from "expo-router";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import * as ImagePicker from "expo-image-picker";
 import { useEnrollmentStore } from "../../stores/enrollmentStore";
 import { EnrollmentFormData } from "../../types/enrollment";
 import { GuestNavbar } from "../../components/common/GuestNavbar";
+import { checkOngoingEnrollmentPeriod } from "../../utils/enrollmentPeriodUtils";
+import { coursesApi, fileApi } from "../../utils/api";
 
 interface DropdownProps {
   placeholder: string;
@@ -26,6 +30,7 @@ interface DropdownProps {
   onValueChange: (value: string) => void;
   options: string[];
   title?: string;
+  error?: string;
 }
 
 const Dropdown: React.FC<DropdownProps> = ({
@@ -34,13 +39,14 @@ const Dropdown: React.FC<DropdownProps> = ({
   onValueChange,
   options,
   title,
+  error,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <View style={styles.dropdownContainer}>
       <TouchableOpacity
-        style={styles.dropdownButton}
+        style={[styles.dropdownButton, error && styles.inputError]}
         onPress={() => setIsOpen(true)}
       >
         <Text style={[styles.dropdownText, !value && styles.placeholderText]}>
@@ -86,6 +92,19 @@ const Dropdown: React.FC<DropdownProps> = ({
   );
 };
 
+interface Course {
+  id: string;
+  name: string;
+  price: number;
+  visibility: string;
+}
+
+interface EnrollmentPeriod {
+  id: string;
+  batchName: string;
+  endAt: string;
+}
+
 export default function EnrollmentFormScreen(): React.JSX.Element {
   const router = useRouter();
   const { createEnrollment } = useEnrollmentStore();
@@ -94,6 +113,9 @@ export default function EnrollmentFormScreen(): React.JSX.Element {
     firstName: "",
     middleName: "",
     lastName: "",
+    extensions: "",
+    honorific: "",
+    sex: "",
     birthDate: new Date().toISOString(),
     civilStatus: "",
     address: "",
@@ -103,16 +125,38 @@ export default function EnrollmentFormScreen(): React.JSX.Element {
     preferredEmail: "",
     altEmail: "",
     motherName: "",
+    motherContact: "",
     fatherName: "",
+    fatherContact: "",
     guardianName: "",
     guardianContact: "",
     coursesToEnroll: "",
+    validIdPath: "",
+    idPhotoPath: "",
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<
     Partial<Record<keyof EnrollmentFormData, string>>
   >({});
+
+  // File upload states
+  const [validId, setValidId] = useState<any>(null);
+  const [idPhoto, setIdPhoto] = useState<any>(null);
+  const [validIdUploading, setValidIdUploading] = useState(false);
+  const [idPhotoUploading, setIdPhotoUploading] = useState(false);
+
+  // Course states
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [coursesLoading, setCoursesLoading] = useState(false);
+
+  // Enrollment period states
+  const [enrollmentPeriodCheck, setEnrollmentPeriodCheck] = useState({
+    loading: true,
+    hasOngoingPeriod: false,
+    currentPeriod: null as EnrollmentPeriod | null,
+    error: null as string | null,
+  });
 
   const updateFormData = (field: keyof EnrollmentFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -122,21 +166,179 @@ export default function EnrollmentFormScreen(): React.JSX.Element {
     }
   };
 
+  const honorificOptions = ["Mr.", "Ms.", "Mrs."];
   const sexOptions = ["Male", "Female"];
   const civilStatusOptions = ["Single", "Married", "Divorced", "Widowed"];
   const referredByOptions = [
-    "Friend",
     "Family",
-    "Online",
-    "Advertisement",
+    "Colleague",
+    "Social Media",
+    "Website",
     "Other",
   ];
-  const courseOptions = [
-    "German Language Course",
-    "English Course",
-    "French Course",
-    "Spanish Course",
-  ];
+
+  // Fetch enrollment period
+  const checkEnrollmentPeriod = async () => {
+    try {
+      setEnrollmentPeriodCheck((prev) => ({
+        ...prev,
+        loading: true,
+        error: null,
+      }));
+
+      const result = await checkOngoingEnrollmentPeriod();
+
+      setEnrollmentPeriodCheck({
+        loading: false,
+        hasOngoingPeriod: result.hasOngoingPeriod,
+        currentPeriod: result.currentPeriod,
+        error: result.error,
+      });
+
+      return result;
+    } catch (error) {
+      console.error("Failed to check enrollment periods:", error);
+      const errorResult = {
+        hasOngoingPeriod: false,
+        currentPeriod: null,
+        error: "Failed to check enrollment availability",
+      };
+
+      setEnrollmentPeriodCheck({
+        loading: false,
+        ...errorResult,
+      });
+
+      return errorResult;
+    }
+  };
+
+  // Fetch courses
+  const fetchCourses = async () => {
+    try {
+      setCoursesLoading(true);
+      const response = await coursesApi.getCourses();
+      const visibleCourses = response.filter(
+        (course: Course) => course.visibility === "visible"
+      );
+      setCourses(visibleCourses);
+    } catch (error) {
+      console.error("Failed to fetch courses:", error);
+      Alert.alert(
+        "Error",
+        "Failed to load available courses. Please refresh the page."
+      );
+    } finally {
+      setCoursesLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const initializePage = async () => {
+      const periodCheck = await checkEnrollmentPeriod();
+
+      // Only fetch courses if enrollment is available
+      if (periodCheck.hasOngoingPeriod) {
+        await fetchCourses();
+      }
+    };
+
+    initializePage();
+  }, []);
+
+  // Request image picker permissions
+  useEffect(() => {
+    (async () => {
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission Required",
+          "Sorry, we need camera roll permissions to upload images."
+        );
+      }
+    })();
+  }, []);
+
+  // Handle image picking
+  const pickImage = async (type: "validId" | "idPhoto") => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: type === "idPhoto" ? [1, 1] : [4, 3],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        const asset = result.assets[0];
+
+        // Upload file
+        if (type === "validId") {
+          setValidIdUploading(true);
+          try {
+            const formData: any = {
+              uri: asset.uri,
+              type: "image/jpeg",
+              name: `valid_id_${Date.now()}.jpg`,
+            };
+
+            const uploadResult = await fileApi.guestUploadFile(
+              formData,
+              "proof-ids"
+            );
+
+            if (uploadResult.error) {
+              Alert.alert("Error", "Failed to upload Valid ID");
+              return;
+            }
+
+            setValidId(uploadResult.data.downloadURL);
+            setFormData((prev) => ({
+              ...prev,
+              validIdPath: uploadResult.data.downloadURL,
+            }));
+          } catch (error) {
+            Alert.alert("Error", "Failed to upload Valid ID");
+          } finally {
+            setValidIdUploading(false);
+          }
+        } else if (type === "idPhoto") {
+          setIdPhotoUploading(true);
+          try {
+            const formData: any = {
+              uri: asset.uri,
+              type: "image/jpeg",
+              name: `id_photo_${Date.now()}.jpg`,
+            };
+
+            const uploadResult = await fileApi.guestUploadFile(
+              formData,
+              "enrollment"
+            );
+
+            if (uploadResult.error) {
+              Alert.alert("Error", "Failed to upload 2x2 ID Photo");
+              return;
+            }
+
+            setIdPhoto(uploadResult.data.downloadURL);
+            setFormData((prev) => ({
+              ...prev,
+              idPhotoPath: uploadResult.data.downloadURL,
+            }));
+          } catch (error) {
+            Alert.alert("Error", "Failed to upload 2x2 ID Photo");
+          } finally {
+            setIdPhotoUploading(false);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error picking image:", error);
+      Alert.alert("Error", "Failed to pick image");
+    }
+  };
 
   const validateForm = (): boolean => {
     const newErrors: Partial<Record<keyof EnrollmentFormData, string>> = {};
@@ -145,6 +347,8 @@ export default function EnrollmentFormScreen(): React.JSX.Element {
     if (!formData.firstName.trim())
       newErrors.firstName = "First name is required";
     if (!formData.lastName.trim()) newErrors.lastName = "Last name is required";
+    if (!formData.honorific) newErrors.honorific = "Honorific is required";
+    if (!formData.sex) newErrors.sex = "Sex is required";
     if (!formData.birthDate.trim())
       newErrors.birthDate = "Birth date is required";
     if (!formData.civilStatus)
@@ -157,6 +361,9 @@ export default function EnrollmentFormScreen(): React.JSX.Element {
       newErrors.preferredEmail = "Email is required";
     if (!formData.coursesToEnroll)
       newErrors.coursesToEnroll = "Please select a course";
+    if (!formData.validIdPath) newErrors.validIdPath = "Valid ID is required";
+    if (!formData.idPhotoPath)
+      newErrors.idPhotoPath = "2x2 ID Photo is required";
 
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -167,13 +374,38 @@ export default function EnrollmentFormScreen(): React.JSX.Element {
       newErrors.altEmail = "Please enter a valid email";
     }
 
-    // Phone validation (Philippine format)
-    const phoneRegex = /^(\+63|0)?9\d{9}$/;
+    // Phone validation - numeric only, 11-15 characters
+    const phoneRegex = /^\d{11,15}$/;
+    if (formData.contactNumber && !phoneRegex.test(formData.contactNumber)) {
+      newErrors.contactNumber = "Contact number must be 11-15 digits";
+    }
     if (
-      formData.contactNumber &&
-      !phoneRegex.test(formData.contactNumber.replace(/\s/g, ""))
+      formData.altContactNumber &&
+      formData.altContactNumber.trim() !== "" &&
+      !phoneRegex.test(formData.altContactNumber)
     ) {
-      newErrors.contactNumber = "Please enter a valid Philippine mobile number";
+      newErrors.altContactNumber = "Alternate contact must be 11-15 digits";
+    }
+    if (
+      formData.motherContact &&
+      formData.motherContact.trim() !== "" &&
+      !phoneRegex.test(formData.motherContact)
+    ) {
+      newErrors.motherContact = "Mother's contact must be 11-15 digits";
+    }
+    if (
+      formData.fatherContact &&
+      formData.fatherContact.trim() !== "" &&
+      !phoneRegex.test(formData.fatherContact)
+    ) {
+      newErrors.fatherContact = "Father's contact must be 11-15 digits";
+    }
+    if (
+      formData.guardianContact &&
+      formData.guardianContact.trim() !== "" &&
+      !phoneRegex.test(formData.guardianContact)
+    ) {
+      newErrors.guardianContact = "Guardian's contact must be 11-15 digits";
     }
 
     setErrors(newErrors);
@@ -183,24 +415,124 @@ export default function EnrollmentFormScreen(): React.JSX.Element {
   const handleSubmit = async () => {
     if (!validateForm()) {
       Alert.alert(
-        "Validation Error",
+        "Incorrect Input",
         "Please fill in all required fields correctly"
       );
       return;
     }
 
+    // Check if uploads are still in progress
+    if (validIdUploading || idPhotoUploading) {
+      Alert.alert("Please Wait", "File uploads are still in progress");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      await createEnrollment(formData);
+      // Get selected course details (name and price) based on course ID
+      const selectedCourse = courses.find(
+        (course) => course.id === formData.coursesToEnroll
+      );
+
+      if (!selectedCourse) {
+        throw new Error("Selected course not found");
+      }
+
+      // Create enrollment data with course name (matching web app)
+      const enrollmentData = {
+        ...formData,
+        coursesToEnroll: selectedCourse.name,
+      };
+
+      const response = await createEnrollment(enrollmentData);
+
       // Navigate to enrollment status screen
       router.replace("/enrollment/status" as any as RelativePathString);
-    } catch (error) {
+    } catch (error: any) {
       // Error already handled in store
       console.error("Submission error:", error);
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  // Handle contact number input - only allow numbers
+  const handleContactNumberChange = (
+    field: keyof EnrollmentFormData,
+    value: string
+  ) => {
+    const numericValue = value.replace(/\D/g, "");
+    updateFormData(field, numericValue);
+  };
+
+  // Loading state
+  if (enrollmentPeriodCheck.loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar backgroundColor="#de0000" barStyle="light-content" />
+        <GuestNavbar />
+        <View style={styles.centerContainer}>
+          <ActivityIndicator size="large" color="#de0000" />
+          <Text style={styles.loadingText}>
+            Checking enrollment availability...
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // No ongoing enrollment period
+  if (!enrollmentPeriodCheck.hasOngoingPeriod) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar backgroundColor="#de0000" barStyle="light-content" />
+        <GuestNavbar />
+        <ScrollView
+          style={styles.mainContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.unavailableContainer}>
+            <Icon name="warning" size={80} color="#999" />
+            <Text style={styles.unavailableTitle}>
+              Enrollment Currently Unavailable
+            </Text>
+            <Text style={styles.unavailableText}>
+              We're sorry, enrollment has ended or has not yet started.
+            </Text>
+
+            {enrollmentPeriodCheck.error && (
+              <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>
+                  {enrollmentPeriodCheck.error}
+                </Text>
+              </View>
+            )}
+
+            <View style={styles.infoContainer}>
+              <Text style={styles.infoTitle}>What can you do?</Text>
+              <Text style={styles.infoItem}>
+                • Check back regularly for new enrollment period.
+              </Text>
+              <Text style={styles.infoItem}>
+                • Follow our social media for enrollment announcements.
+              </Text>
+              <Text style={styles.infoItem}>
+                • Contact us directly for information about upcoming
+                enrollments.
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={styles.homeButton}
+              onPress={() => router.replace("/" as any as RelativePathString)}
+            >
+              <Text style={styles.homeButtonText}>Return to Home</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -214,13 +546,35 @@ export default function EnrollmentFormScreen(): React.JSX.Element {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.formContainer}>
+          {/* Current Enrollment Period Info */}
+          {enrollmentPeriodCheck.currentPeriod && (
+            <View style={styles.periodInfoContainer}>
+              <Text style={styles.periodInfoTitle}>
+                Current Enrollment Period
+              </Text>
+              <Text style={styles.periodBatchName}>
+                Batch: {enrollmentPeriodCheck.currentPeriod.batchName}
+              </Text>
+              <Text style={styles.periodEndDate}>
+                Ends:{" "}
+                {new Date(
+                  enrollmentPeriodCheck.currentPeriod.endAt
+                ).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </Text>
+            </View>
+          )}
+
           <View style={styles.formCard}>
             <Text style={styles.formTitle}>Enrollment Form</Text>
             <Text style={styles.requiredText}>
               Items with (*) are required fields
             </Text>
 
-            {/* First Row - First Name and Middle Name */}
+            {/* First Row - First Name, Middle Name, Last Name */}
             <View style={styles.row}>
               <View style={styles.fieldContainer}>
                 <Text style={styles.label}>First Name*</Text>
@@ -243,7 +597,7 @@ export default function EnrollmentFormScreen(): React.JSX.Element {
               </View>
             </View>
 
-            {/* Second Row - Last Name and Birth Date */}
+            {/* Second Row - Last Name and Extensions */}
             <View style={styles.row}>
               <View style={styles.fieldContainer}>
                 <Text style={styles.label}>Last Name*</Text>
@@ -257,6 +611,46 @@ export default function EnrollmentFormScreen(): React.JSX.Element {
                 )}
               </View>
               <View style={styles.fieldContainer}>
+                <Text style={styles.label}>Extension</Text>
+                <TextInput
+                  style={styles.input}
+                  value={formData.extensions}
+                  onChangeText={(value) => updateFormData("extensions", value)}
+                  placeholder="Jr., Sr., III, etc."
+                  placeholderTextColor="#999"
+                />
+              </View>
+            </View>
+
+            {/* Third Row - Honorific, Sex, Birth Date */}
+            <View style={styles.row}>
+              <View style={styles.thirdFieldContainer}>
+                <Text style={styles.label}>Honorific*</Text>
+                <Dropdown
+                  placeholder="Select"
+                  value={formData.honorific}
+                  onValueChange={(value) => updateFormData("honorific", value)}
+                  options={honorificOptions}
+                  error={errors.honorific}
+                />
+                {errors.honorific && (
+                  <Text style={styles.errorText}>{errors.honorific}</Text>
+                )}
+              </View>
+              <View style={styles.thirdFieldContainer}>
+                <Text style={styles.label}>Sex*</Text>
+                <Dropdown
+                  placeholder="Select"
+                  value={formData.sex}
+                  onValueChange={(value) => updateFormData("sex", value)}
+                  options={sexOptions}
+                  error={errors.sex}
+                />
+                {errors.sex && (
+                  <Text style={styles.errorText}>{errors.sex}</Text>
+                )}
+              </View>
+              <View style={styles.thirdFieldContainer}>
                 <Text style={styles.label}>Birth Date*</Text>
                 <TouchableOpacity
                   onPress={() => setBirthDateOpen(true)}
@@ -286,6 +680,7 @@ export default function EnrollmentFormScreen(): React.JSX.Element {
                     updateFormData("civilStatus", value)
                   }
                   options={civilStatusOptions}
+                  error={errors.civilStatus}
                 />
                 {errors.civilStatus && (
                   <Text style={styles.errorText}>{errors.civilStatus}</Text>
@@ -298,6 +693,7 @@ export default function EnrollmentFormScreen(): React.JSX.Element {
                   value={formData.referredBy}
                   onValueChange={(value) => updateFormData("referredBy", value)}
                   options={referredByOptions}
+                  error={errors.referredBy}
                 />
                 {errors.referredBy && (
                   <Text style={styles.errorText}>{errors.referredBy}</Text>
@@ -323,32 +719,40 @@ export default function EnrollmentFormScreen(): React.JSX.Element {
 
             {/* Contact Numbers */}
             <View style={styles.row}>
-              <Text style={styles.label}>Contact Number*</Text>
-              <TextInput
-                style={[
-                  styles.input,
-                  errors.contactNumber && styles.inputError,
-                ]}
-                placeholder="+63 9xxxxxxxxx"
-                placeholderTextColor="#999"
-                value={formData.contactNumber}
-                onChangeText={(value) => updateFormData("contactNumber", value)}
-                keyboardType="phone-pad"
-              />
-              {errors.contactNumber && (
-                <Text style={styles.errorText}>{errors.contactNumber}</Text>
-              )}
-              <Text style={styles.label}>Alternate Contact No.</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="+63 9xxxxxxxxx"
-                placeholderTextColor="#999"
-                value={formData.altContactNumber}
-                onChangeText={(value) =>
-                  updateFormData("altContactNumber", value)
-                }
-                keyboardType="phone-pad"
-              />
+              <View style={styles.fieldContainer}>
+                <Text style={styles.label}>Contact Number*</Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    errors.contactNumber && styles.inputError,
+                  ]}
+                  placeholder="09xxxxxxxxx"
+                  placeholderTextColor="#999"
+                  value={formData.contactNumber}
+                  onChangeText={(value) =>
+                    handleContactNumberChange("contactNumber", value)
+                  }
+                  keyboardType="phone-pad"
+                  maxLength={15}
+                />
+                {errors.contactNumber && (
+                  <Text style={styles.errorText}>{errors.contactNumber}</Text>
+                )}
+              </View>
+              <View style={styles.fieldContainer}>
+                <Text style={styles.label}>Alternate Contact No.</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="09xxxxxxxxx"
+                  placeholderTextColor="#999"
+                  value={formData.altContactNumber}
+                  onChangeText={(value) =>
+                    handleContactNumberChange("altContactNumber", value)
+                  }
+                  keyboardType="phone-pad"
+                  maxLength={15}
+                />
+              </View>
             </View>
 
             {/* Email Addresses */}
@@ -390,19 +794,181 @@ export default function EnrollmentFormScreen(): React.JSX.Element {
               </View>
             </View>
 
+            {/* Mother's Information */}
+            <View style={styles.row}>
+              <View style={styles.fieldContainer}>
+                <Text style={styles.label}>Mother's Maiden Full Name</Text>
+                <TextInput
+                  style={styles.input}
+                  value={formData.motherName}
+                  onChangeText={(value) => updateFormData("motherName", value)}
+                />
+              </View>
+              <View style={styles.fieldContainer}>
+                <Text style={styles.label}>Contact Number</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="09xxxxxxxxx"
+                  placeholderTextColor="#999"
+                  value={formData.motherContact}
+                  onChangeText={(value) =>
+                    handleContactNumberChange("motherContact", value)
+                  }
+                  keyboardType="phone-pad"
+                  maxLength={15}
+                />
+              </View>
+            </View>
+
+            {/* Father's Information */}
+            <View style={styles.row}>
+              <View style={styles.fieldContainer}>
+                <Text style={styles.label}>Father's Full Name</Text>
+                <TextInput
+                  style={styles.input}
+                  value={formData.fatherName}
+                  onChangeText={(value) => updateFormData("fatherName", value)}
+                />
+              </View>
+              <View style={styles.fieldContainer}>
+                <Text style={styles.label}>Contact Number</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="09xxxxxxxxx"
+                  placeholderTextColor="#999"
+                  value={formData.fatherContact}
+                  onChangeText={(value) =>
+                    handleContactNumberChange("fatherContact", value)
+                  }
+                  keyboardType="phone-pad"
+                  maxLength={15}
+                />
+              </View>
+            </View>
+
+            {/* Guardian's Information */}
+            <View style={styles.row}>
+              <View style={styles.fieldContainer}>
+                <Text style={styles.label}>Guardian's Full Name</Text>
+                <TextInput
+                  style={styles.input}
+                  value={formData.guardianName}
+                  onChangeText={(value) =>
+                    updateFormData("guardianName", value)
+                  }
+                />
+              </View>
+              <View style={styles.fieldContainer}>
+                <Text style={styles.label}>Contact Number</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="09xxxxxxxxx"
+                  placeholderTextColor="#999"
+                  value={formData.guardianContact}
+                  onChangeText={(value) =>
+                    handleContactNumberChange("guardianContact", value)
+                  }
+                  keyboardType="phone-pad"
+                  maxLength={15}
+                />
+              </View>
+            </View>
+
             {/* Course Selection */}
             <View style={styles.fullWidth}>
               <Text style={styles.label}>Course to Enroll*</Text>
               <Dropdown
-                placeholder="Select a course"
-                value={formData.coursesToEnroll}
-                onValueChange={(value) =>
-                  updateFormData("coursesToEnroll", value)
+                placeholder={
+                  coursesLoading
+                    ? "Loading courses..."
+                    : courses.length > 0
+                    ? "Select a course"
+                    : "No courses available"
                 }
-                options={courseOptions}
+                value={
+                  courses.find((c) => c.id === formData.coursesToEnroll)
+                    ?.name || ""
+                }
+                onValueChange={(value) => {
+                  const selectedCourse = courses.find((c) => c.name === value);
+                  if (selectedCourse) {
+                    updateFormData("coursesToEnroll", selectedCourse.id);
+                  }
+                }}
+                options={courses.map((c) => c.name)}
+                error={errors.coursesToEnroll}
               />
               {errors.coursesToEnroll && (
                 <Text style={styles.errorText}>{errors.coursesToEnroll}</Text>
+              )}
+            </View>
+
+            {/* File Uploads */}
+            <View style={styles.fullWidth}>
+              <Text style={styles.label}>
+                Upload Valid ID (front and back)*
+              </Text>
+              <TouchableOpacity
+                style={[
+                  styles.uploadButton,
+                  errors.validIdPath && styles.inputError,
+                ]}
+                onPress={() => pickImage("validId")}
+                disabled={validIdUploading}
+              >
+                {validIdUploading ? (
+                  <ActivityIndicator color="#de0000" />
+                ) : validId ? (
+                  <>
+                    <Icon name="check-circle" size={20} color="#22c55e" />
+                    <Text style={styles.uploadButtonTextSuccess}>
+                      Valid ID Uploaded
+                    </Text>
+                  </>
+                ) : (
+                  <>
+                    <Icon name="cloud-upload" size={20} color="#666" />
+                    <Text style={styles.uploadButtonText}>Choose Valid ID</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+              {errors.validIdPath && (
+                <Text style={styles.errorText}>{errors.validIdPath}</Text>
+              )}
+            </View>
+
+            <View style={styles.fullWidth}>
+              <Text style={styles.label}>
+                Upload 2X2 ID Photo (white background)*
+              </Text>
+              <TouchableOpacity
+                style={[
+                  styles.uploadButton,
+                  errors.idPhotoPath && styles.inputError,
+                ]}
+                onPress={() => pickImage("idPhoto")}
+                disabled={idPhotoUploading}
+              >
+                {idPhotoUploading ? (
+                  <ActivityIndicator color="#de0000" />
+                ) : idPhoto ? (
+                  <>
+                    <Icon name="check-circle" size={20} color="#22c55e" />
+                    <Text style={styles.uploadButtonTextSuccess}>
+                      2x2 ID Photo Uploaded
+                    </Text>
+                  </>
+                ) : (
+                  <>
+                    <Icon name="cloud-upload" size={20} color="#666" />
+                    <Text style={styles.uploadButtonText}>
+                      Choose 2x2 ID Photo
+                    </Text>
+                  </>
+                )}
+              </TouchableOpacity>
+              {errors.idPhotoPath && (
+                <Text style={styles.errorText}>{errors.idPhotoPath}</Text>
               )}
             </View>
 
@@ -410,13 +976,16 @@ export default function EnrollmentFormScreen(): React.JSX.Element {
             <TouchableOpacity
               style={[
                 styles.nextButton,
-                isSubmitting && styles.nextButtonDisabled,
+                (isSubmitting || validIdUploading || idPhotoUploading) &&
+                  styles.nextButtonDisabled,
               ]}
               onPress={handleSubmit}
-              disabled={isSubmitting}
+              disabled={isSubmitting || validIdUploading || idPhotoUploading}
             >
               {isSubmitting ? (
                 <ActivityIndicator color="#fff" />
+              ) : validIdUploading || idPhotoUploading ? (
+                <Text style={styles.nextButtonText}>Uploading...</Text>
               ) : (
                 <Text style={styles.nextButtonText}>Submit Enrollment</Text>
               )}
