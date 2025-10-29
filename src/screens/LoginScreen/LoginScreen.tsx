@@ -11,13 +11,15 @@ import {
 } from "react-native";
 import { EyeIcon, Fullscreen, LockIcon, UserIcon } from "lucide-react-native";
 import { styles } from "./LoginScreen.styles";
-import { useRouter } from "expo-router";
+import { RelativePathString, useRouter } from "expo-router";
 import { useAuthStore } from "../../stores/authStore";
+import { TrackEnrollmentModal } from "../../components/modals";
 
 export const LoginScreen = (): React.JSX.Element => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [trackModalOpen, setTrackModalOpen] = useState(false);
   const router = useRouter();
 
   // Get login function and loading state from auth store
@@ -27,14 +29,14 @@ export const LoginScreen = (): React.JSX.Element => {
   const handleLogin = async () => {
     // Validate inputs
     if (!email || !password) {
-      Alert.alert("Validation Error", "Please enter both email and password");
+      Alert.alert("Incorrect Input", "Please enter both email and password");
       return;
     }
 
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      Alert.alert("Validation Error", "Please enter a valid email address");
+      Alert.alert("Incorrect Input", "Please enter a valid email address");
       return;
     }
 
@@ -128,23 +130,47 @@ export const LoginScreen = (): React.JSX.Element => {
           </TouchableOpacity>
 
           {/* Login button */}
-          <TouchableOpacity
-            style={[styles.loginButton, isLoading && { opacity: 0.6 }]}
-            onPress={handleLogin}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#fffdf2" />
-            ) : (
-              <Text style={styles.loginButtonText}>Login</Text>
-            )}
-          </TouchableOpacity>
+          <View style={styles.loginButtonWrapper}>
+            <TouchableOpacity
+              style={[styles.loginButton, isLoading && { opacity: 0.6 }]}
+              onPress={handleLogin}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="#fffdf2" />
+              ) : (
+                <Text style={styles.loginButtonText}>Login</Text>
+              )}
+            </TouchableOpacity>
+          </View>
 
-          {/* Sign up section */}
-          <View style={styles.signupWrapper}>
-            <Text style={styles.signupText}>Don&apos;t have an account?</Text>
-            <TouchableOpacity>
-              <Text style={styles.signupLink}>Sign up</Text>
+          <View style={styles.enrollButtonWrapper}>
+            <Text style={styles.enrollButtonText}>Don't have an account?</Text>
+            {/* Sign Up / Enroll button */}
+            <TouchableOpacity
+              style={[styles.loginButton, isLoading && { opacity: 0.6 }]}
+              onPress={() =>
+                router.replace("/enrollment/form" as any as RelativePathString)
+              }
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="#fffdf2" />
+              ) : (
+                <Text style={styles.loginButtonText}>Sign Up / Enroll</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          {/* Track Enrollment Section */}
+          <View style={styles.trackButtonWrapper}>
+            <Text style={styles.trackLabelText}>Already enrolled?</Text>
+            <TouchableOpacity
+              style={[styles.trackButton, isLoading && { opacity: 0.6 }]}
+              onPress={() => setTrackModalOpen(true)}
+              disabled={isLoading}
+            >
+              <Text style={styles.trackButtonText}>Track Enrollment</Text>
             </TouchableOpacity>
           </View>
 
@@ -156,6 +182,12 @@ export const LoginScreen = (): React.JSX.Element => {
           </Text>
         </View>
       </View>
+
+      {/* Track Enrollment Modal */}
+      <TrackEnrollmentModal
+        isOpen={trackModalOpen}
+        onClose={() => setTrackModalOpen(false)}
+      />
     </View>
   );
 };
