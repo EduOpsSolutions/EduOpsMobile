@@ -14,6 +14,7 @@ import { styles } from "./LoginScreen.styles";
 import { RelativePathString, useRouter } from "expo-router";
 import { useAuthStore } from "../../stores/authStore";
 import { TrackEnrollmentModal } from "../../components/modals";
+import { cn } from "../../utils/cn";
 
 export const LoginScreen = (): React.JSX.Element => {
   const [showPassword, setShowPassword] = useState(false);
@@ -154,11 +155,7 @@ export const LoginScreen = (): React.JSX.Element => {
               }
               disabled={isLoading}
             >
-              {isLoading ? (
-                <ActivityIndicator color="#fffdf2" />
-              ) : (
-                <Text style={styles.loginButtonText}>Sign Up / Enroll</Text>
-              )}
+              <Text style={styles.loginButtonText}>Sign Up / Enroll</Text>
             </TouchableOpacity>
           </View>
 
