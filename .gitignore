@@ -41,4 +41,6 @@ app-example
 
 /.claude
 /.idea
-/android
+
+android/my-upload-key.keystore
+android/gradle.properties
