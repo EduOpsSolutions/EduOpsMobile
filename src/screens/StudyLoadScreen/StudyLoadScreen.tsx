@@ -1,17 +1,8 @@
-import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Image,
-  SafeAreaView,
-  StatusBar,
-  ScrollView,
-} from "react-native";
-import Icon from "react-native-vector-icons/MaterialIcons";
-import { useRouter } from "expo-router";
-import { styles } from "./StudyLoadScreen.styles";
-import { BottomNavigation } from "../../components/BottomNavigation";
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import { styles } from './StudyLoadScreen.styles';
+import { AppLayout } from '../../components/common';
 
 interface DropdownProps {
   placeholder: string;
@@ -86,58 +77,35 @@ const ScheduleItem: React.FC<ScheduleItemProps> = ({
 };
 
 export const StudyLoadScreen = (): React.JSX.Element => {
-  const router = useRouter();
-  const [selectedPeriod, setSelectedPeriod] = useState("");
-  const [selectedYear, setSelectedYear] = useState("");
+  const [selectedPeriod, setSelectedPeriod] = useState('');
+  const [selectedYear, setSelectedYear] = useState('');
 
   const periodOptions = [
-    "1st Quarter",
-    "2nd Quarter",
-    "3rd Quarter",
-    "4th Quarter",
+    '1st Quarter',
+    '2nd Quarter',
+    '3rd Quarter',
+    '4th Quarter',
   ];
-  const yearOptions = ["2024", "2023", "2022", "2021"];
+  const yearOptions = ['2024', '2023', '2022', '2021'];
 
   const scheduleData: ScheduleItemProps[] = [
     {
-      course: "A1",
-      schedule: "TTH 6:30AM - 7:30PM",
-      adviser: "Tricia Cruz",
-      hours: "12",
-      room: "Room 01",
+      course: 'A1',
+      schedule: 'TTH 6:30AM - 7:30PM',
+      adviser: 'Tricia Cruz',
+      hours: '12',
+      room: 'Room 01',
     },
   ];
 
   const isScheduleActive = true;
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar backgroundColor="#de0000" barStyle="light-content" />
-
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <View style={styles.logoContainer}>
-            <Image
-              source={require("../../../assets/images/sprachins-logo-3.png")}
-              style={styles.headerLogo}
-              resizeMode="contain"
-            />
-          </View>
-          <View style={styles.headerIcons}>
-            <TouchableOpacity style={styles.iconButton}>
-              <Icon name="notifications" size={24} color="white" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.profileButton}
-              //   onPress={() => router.push('/profile')}
-            >
-              <Text style={styles.profileText}>PD</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-
+    <AppLayout
+      showNotifications={false}
+      enrollmentActive={isScheduleActive}
+      paymentActive={false}
+    >
       {/* Main Content */}
       <View style={styles.mainContent}>
         <ScrollView
@@ -209,12 +177,6 @@ export const StudyLoadScreen = (): React.JSX.Element => {
           </View>
         </ScrollView>
       </View>
-
-      {/* Bottom Navigation */}
-      <BottomNavigation
-        enrollmentActive={isScheduleActive}
-        paymentActive={false}
-      />
-    </SafeAreaView>
+    </AppLayout>
   );
 };

@@ -1,22 +1,22 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
   ScrollView,
   ActivityIndicator,
   Alert,
-} from "react-native";
-import Icon from "react-native-vector-icons/MaterialIcons";
-import { RelativePathString, useRouter } from "expo-router";
-import { styles } from "./EnrollmentStatusScreen.styles";
-import { useEnrollmentStore } from "../../stores/enrollmentStore";
-import * as DocumentPicker from "expo-document-picker";
-import * as ImagePicker from "expo-image-picker";
-import { GuestNavbar } from "../../components/common/GuestNavbar";
-import * as Clipboard from "expo-clipboard";
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import { RelativePathString, useRouter } from 'expo-router';
+import { styles } from './EnrollmentStatusScreen.styles';
+import { useEnrollmentStore } from '../../stores/enrollmentStore';
+import * as DocumentPicker from 'expo-document-picker';
+import * as ImagePicker from 'expo-image-picker';
+import { GuestNavbar } from '../../components/common/GuestNavbar';
+import * as Clipboard from 'expo-clipboard';
 
 interface StepProps {
   title: string;
@@ -100,17 +100,17 @@ export const EnrollmentStatusScreen = (): React.JSX.Element => {
   }, []);
 
   const steps = [
-    { title: "Enrollment Form", stepNumber: 1 },
-    { title: "Verification", stepNumber: 2 },
-    { title: "Payment", stepNumber: 3 },
-    { title: "Payment Verification", stepNumber: 4 },
-    { title: "Complete", stepNumber: 5 },
+    { title: 'Enrollment Form', stepNumber: 1 },
+    { title: 'Verification', stepNumber: 2 },
+    { title: 'Payment', stepNumber: 3 },
+    { title: 'Payment Verification', stepNumber: 4 },
+    { title: 'Complete', stepNumber: 5 },
   ];
 
   const getLineColor = (index: number) => {
-    if (index >= steps.length - 1) return "#f0f0f0"; // No line after last step
+    if (index >= steps.length - 1) return '#f0f0f0'; // No line after last step
     const previousStepNumber = steps[index].stepNumber;
-    return isStepCompleted(previousStepNumber) ? "#4CAF50" : "#f0f0f0";
+    return isStepCompleted(previousStepNumber) ? '#4CAF50' : '#f0f0f0';
   };
 
   const handleFileUpload = async () => {
@@ -128,12 +128,12 @@ export const EnrollmentStatusScreen = (): React.JSX.Element => {
 
         // Auto-upload
         Alert.alert(
-          "Upload Payment Proof",
-          "Do you want to upload this file as your proof of payment?",
+          'Upload Payment Proof',
+          'Do you want to upload this file as your proof of payment?',
           [
-            { text: "Cancel", style: "cancel" },
+            { text: 'Cancel', style: 'cancel' },
             {
-              text: "Upload",
+              text: 'Upload',
               onPress: async () => {
                 await uploadPaymentProof();
                 setSelectedFile(null);
@@ -143,22 +143,22 @@ export const EnrollmentStatusScreen = (): React.JSX.Element => {
         );
       }
     } catch (error) {
-      console.error("Error picking file:", error);
-      Alert.alert("Error", "Failed to select file");
+      console.error('Error picking file:', error);
+      Alert.alert('Error', 'Failed to select file');
     }
   };
 
   const getStatusBadgeStyle = () => {
     switch (enrollmentStatus) {
-      case "COMPLETED":
+      case 'COMPLETED':
         return styles.statusBadgeCompleted;
-      case "APPROVED":
+      case 'APPROVED':
         return styles.statusBadgeApproved;
-      case "VERIFIED":
+      case 'VERIFIED':
         return styles.statusBadgeVerified;
-      case "PAYMENT_PENDING":
+      case 'PAYMENT_PENDING':
         return styles.statusBadgePaymentPending;
-      case "REJECTED":
+      case 'REJECTED':
         return styles.statusBadgeRejected;
       default:
         return styles.statusBadgePending;
@@ -166,17 +166,17 @@ export const EnrollmentStatusScreen = (): React.JSX.Element => {
   };
 
   const formatDate = (dateString: string | null) => {
-    if (!dateString) return "";
+    if (!dateString) return '';
     const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
     });
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <StatusBar backgroundColor="#de0000" barStyle="light-content" />
 
       <GuestNavbar />
@@ -200,7 +200,7 @@ export const EnrollmentStatusScreen = (): React.JSX.Element => {
                   style={styles.actionButton}
                   onPress={() =>
                     router.replace(
-                      "/enrollment/form" as any as RelativePathString
+                      '/enrollment/form' as any as RelativePathString
                     )
                   }
                 >
@@ -223,8 +223,8 @@ export const EnrollmentStatusScreen = (): React.JSX.Element => {
                     onPress={async () => {
                       await copyToClipboard(enrollmentId);
                       Alert.alert(
-                        "Enrollee ID copied to clipboard",
-                        "You can now paste it in the payment form"
+                        'Enrollee ID copied to clipboard',
+                        'You can now paste it in the payment form'
                       );
                     }}
                   >
@@ -257,7 +257,7 @@ export const EnrollmentStatusScreen = (): React.JSX.Element => {
                   <Text style={styles.infoLabel}>Status:</Text>
                   <View style={[styles.statusBadge, getStatusBadgeStyle()]}>
                     <Text style={styles.statusBadgeText}>
-                      {enrollmentStatus.toUpperCase()}
+                      {enrollmentStatus.toUpperCase().replace('_', ' ')}
                     </Text>
                   </View>
                 </View>
@@ -322,14 +322,14 @@ export const EnrollmentStatusScreen = (): React.JSX.Element => {
                     ) : (
                       <Text style={styles.uploadButtonText}>
                         {hasPaymentProof
-                          ? "Payment Proof Uploaded"
-                          : "Choose File"}
+                          ? 'Payment Proof Uploaded'
+                          : 'Choose File'}
                       </Text>
                     )}
                   </TouchableOpacity>
                   {selectedFile && (
                     <Text style={styles.uploadText}>
-                      {selectedFile.fileName || "File selected"}
+                      {selectedFile.fileName || 'File selected'}
                     </Text>
                   )}
                   {hasPaymentProof && !selectedFile && (
@@ -346,7 +346,7 @@ export const EnrollmentStatusScreen = (): React.JSX.Element => {
                 <View style={styles.noteSection}>
                   <Text style={styles.noteTitle}>Note:</Text>
                   <Text style={styles.noteText}>
-                    • Student ID: {studentId || "Pending..."}
+                    • Student ID: {studentId || 'Pending...'}
                   </Text>
                   <Text style={styles.noteText}>
                     • Use this Student ID in the payment form

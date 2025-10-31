@@ -5,15 +5,16 @@ import {
   TextInput,
   TouchableOpacity,
   Image,
-  SafeAreaView,
   StatusBar,
   ScrollView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
 import { styles } from './AssessmentScreen.styles';
 import { EnrollmentDropdown } from '../../../components/EnrollmentDropdown';
 import { PaymentDropdown } from '../../../components/PaymentDropdown';
+import { UserAvatar } from '../../components/UserAvatar';
 
 interface DropdownProps {
   placeholder: string;
@@ -22,14 +23,20 @@ interface DropdownProps {
   options: string[];
 }
 
-const Dropdown: React.FC<DropdownProps> = ({placeholder, value, onValueChange, options}) => {
+const Dropdown: React.FC<DropdownProps> = ({
+  placeholder,
+  value,
+  onValueChange,
+  options,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <View style={styles.dropdownContainer}>
       <TouchableOpacity
         style={styles.dropdownButton}
-        onPress={() => setIsOpen(!isOpen)}>
+        onPress={() => setIsOpen(!isOpen)}
+      >
         <Text style={[styles.dropdownText, !value && styles.placeholderText]}>
           {value || placeholder}
         </Text>
@@ -44,7 +51,8 @@ const Dropdown: React.FC<DropdownProps> = ({placeholder, value, onValueChange, o
               onPress={() => {
                 onValueChange(option);
                 setIsOpen(false);
-              }}>
+              }}
+            >
               <Text style={styles.dropdownOptionText}>{option}</Text>
             </TouchableOpacity>
           ))}
@@ -70,7 +78,7 @@ const FeeItem: React.FC<FeeItemProps> = ({ description, amount }) => {
 
 export const AssessmentScreen = (): React.JSX.Element => {
   const router = useRouter();
-  
+
   const [searchData, setSearchData] = useState({
     course: '',
     batch: '',
@@ -78,7 +86,7 @@ export const AssessmentScreen = (): React.JSX.Element => {
   });
 
   const updateSearchData = (field: string, value: string) => {
-    setSearchData(prev => ({...prev, [field]: value}));
+    setSearchData((prev) => ({ ...prev, [field]: value }));
   };
 
   const courseOptions = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
@@ -99,13 +107,13 @@ export const AssessmentScreen = (): React.JSX.Element => {
     { description: 'INTERNET FEE', amount: '50.00' },
   ];
 
-    const isTuitionActive = true;
-    const isPaymentActive = true;
+  const isTuitionActive = true;
+  const isPaymentActive = true;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <StatusBar backgroundColor="#de0000" barStyle="light-content" />
-      
+
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
@@ -120,27 +128,30 @@ export const AssessmentScreen = (): React.JSX.Element => {
             <TouchableOpacity style={styles.iconButton}>
               <Icon name="notifications" size={24} color="white" />
             </TouchableOpacity>
-            <TouchableOpacity 
+            <UserAvatar
+              size={40}
+              onPress={() => router.replace('/profile')}
               style={styles.profileButton}
-            //   onPress={() => router.push('/profile')}
-            >
-              <Text style={styles.profileText}>PD</Text>
-            </TouchableOpacity>
+            />
           </View>
         </View>
       </View>
 
       {/* Main Content */}
       <View style={styles.mainContent}>
-        
-        <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          style={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.assessmentContainer}>
             {/* Search Section */}
             <View style={styles.searchCard}>
               {/* Search Header */}
               <View style={styles.searchHeader}>
                 <Icon name="search" size={20} color="#333" />
-                <Text style={styles.searchTitle}>SEARCH TUITION FEE ASSESSMENT</Text>
+                <Text style={styles.searchTitle}>
+                  SEARCH TUITION FEE ASSESSMENT
+                </Text>
               </View>
 
               {/* Search Form */}
@@ -151,7 +162,9 @@ export const AssessmentScreen = (): React.JSX.Element => {
                     <TextInput
                       style={styles.searchInput}
                       value={searchData.course}
-                      onChangeText={(value) => updateSearchData('course', value)}
+                      onChangeText={(value) =>
+                        updateSearchData('course', value)
+                      }
                       placeholder=""
                       placeholderTextColor="#999"
                     />
@@ -161,7 +174,9 @@ export const AssessmentScreen = (): React.JSX.Element => {
                     <Dropdown
                       placeholder="Select Batch"
                       value={searchData.batch}
-                      onValueChange={(value) => updateSearchData('batch', value)}
+                      onValueChange={(value) =>
+                        updateSearchData('batch', value)
+                      }
                       options={batchOptions}
                     />
                   </View>
@@ -177,7 +192,10 @@ export const AssessmentScreen = (): React.JSX.Element => {
                     />
                   </View>
                   <View style={styles.searchButtonContainer}>
-                    <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
+                    <TouchableOpacity
+                      style={styles.searchButton}
+                      onPress={handleSearch}
+                    >
                       <Text style={styles.searchButtonText}>Search</Text>
                     </TouchableOpacity>
                   </View>
@@ -192,9 +210,11 @@ export const AssessmentScreen = (): React.JSX.Element => {
                 <Text style={styles.courseTitle}>A1: Batch 1 | 2024</Text>
                 <View style={styles.courseActions}>
                   <TouchableOpacity style={styles.historyButton}>
-                    <Text style={styles.historyButtonText}>Transaction History</Text>
+                    <Text style={styles.historyButtonText}>
+                      Transaction History
+                    </Text>
                   </TouchableOpacity>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.ledgerButton}
                     onPress={() => router.push('/ledger')}
                   >
@@ -212,7 +232,7 @@ export const AssessmentScreen = (): React.JSX.Element => {
                   <Text style={styles.feesHeaderText}>Description</Text>
                   <Text style={styles.feesHeaderText}>Amount</Text>
                 </View>
-                
+
                 <View style={styles.feesList}>
                   {fees.map((fee, index) => (
                     <FeeItem
@@ -241,8 +261,8 @@ export const AssessmentScreen = (): React.JSX.Element => {
               </View>
 
               {/* Proceed Button */}
-              <TouchableOpacity 
-                style={styles.proceedButton} 
+              <TouchableOpacity
+                style={styles.proceedButton}
                 onPress={handleProceedToPayment}
               >
                 <Text style={styles.proceedButtonText}>Proceed to Payment</Text>
@@ -261,20 +281,20 @@ export const AssessmentScreen = (): React.JSX.Element => {
           <Icon name="home" size={24} color="#666" />
           <Text style={styles.navText}>Home</Text>
         </TouchableOpacity>
-        
+
         <EnrollmentDropdown isActive={false} />
-        
-        <TouchableOpacity 
+
+        <TouchableOpacity
           style={styles.navItem}
-        //   onPress={() => router.push('/grades')}
+          //   onPress={() => router.push('/grades')}
         >
           <Icon name="grade" size={24} color="#666" />
           <Text style={styles.navText}>Grades</Text>
         </TouchableOpacity>
         <PaymentDropdown isActive={isPaymentActive} />
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.navItem}
-        //   onPress={() => router.push('/documents')}
+          //   onPress={() => router.push('/documents')}
         >
           <Icon name="description" size={24} color="#666" />
           <Text style={styles.navText}>Documents</Text>

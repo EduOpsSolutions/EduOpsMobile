@@ -1,4 +1,4 @@
-import axiosInstance from "./axios";
+import axiosInstance from './axios';
 
 // Generic API error handler
 export const handleApiError = (error: any): string => {
@@ -7,14 +7,14 @@ export const handleApiError = (error: any): string => {
     return (
       error.response.data?.message ||
       error.response.statusText ||
-      "An error occurred"
+      'An error occurred'
     );
   } else if (error.request) {
     // Request made but no response
-    return "No response from server. Please check your connection.";
+    return 'No response from server. Please check your connection.';
   } else {
     // Error in request setup
-    return error.message || "An unexpected error occurred";
+    return error.message || 'An unexpected error occurred';
   }
 };
 
@@ -22,7 +22,7 @@ export const handleApiError = (error: any): string => {
 export const enrollmentApi = {
   trackEnrollment: async (enrollmentId?: string, email?: string) => {
     try {
-      const response = await axiosInstance.post("/enrollment/track", {
+      const response = await axiosInstance.post('/enrollment/track', {
         enrollmentId: enrollmentId || null,
         email: email || null,
       });
@@ -35,7 +35,7 @@ export const enrollmentApi = {
   createEnrollmentRequest: async (enrollmentData: any) => {
     try {
       const response = await axiosInstance.post(
-        "/enrollment/enroll",
+        '/enrollment/enroll',
         enrollmentData
       );
       return response.data;
@@ -49,7 +49,7 @@ export const enrollmentApi = {
     paymentProofPath: string
   ) => {
     try {
-      const response = await axiosInstance.patch("/enrollment/payment-proof", {
+      const response = await axiosInstance.patch('/enrollment/payment-proof', {
         enrollmentId,
         paymentProofPath,
       });
@@ -70,7 +70,7 @@ export const enrollmentApi = {
 
   getEnrollmentHistory: async () => {
     try {
-      const response = await axiosInstance.get("/enrollment/history");
+      const response = await axiosInstance.get('/enrollment/history');
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -82,7 +82,7 @@ export const enrollmentApi = {
 export const postsApi = {
   getPosts: async (params = {}) => {
     try {
-      const response = await axiosInstance.get("/posts", { params });
+      const response = await axiosInstance.get('/posts', { params });
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -100,7 +100,7 @@ export const postsApi = {
 
   getMyPosts: async (params = {}) => {
     try {
-      const response = await axiosInstance.get("/posts/my/posts", { params });
+      const response = await axiosInstance.get('/posts/my/posts', { params });
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -112,7 +112,7 @@ export const postsApi = {
 export const profileApi = {
   getProfile: async () => {
     try {
-      const response = await axiosInstance.get("/users/profile");
+      const response = await axiosInstance.get('/users/profile');
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -121,7 +121,7 @@ export const profileApi = {
 
   updateProfile: async (userData: any) => {
     try {
-      const response = await axiosInstance.put("/users/profile", userData);
+      const response = await axiosInstance.put('/users/profile', userData);
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -131,13 +131,13 @@ export const profileApi = {
   uploadProfilePicture: async (file: any) => {
     try {
       const formData = new FormData();
-      formData.append("profilePic", file);
+      formData.append('profilePic', file);
 
       const response = await axiosInstance.post(
-        "/users/update-profile-picture",
+        '/users/update-profile-picture',
         formData,
         {
-          headers: { "Content-Type": "multipart/form-data" },
+          headers: { 'Content-Type': 'multipart/form-data' },
         }
       );
       return response.data;
@@ -151,7 +151,7 @@ export const profileApi = {
 export const documentsApi = {
   getDocuments: async (params = {}) => {
     try {
-      const response = await axiosInstance.get("/documents", { params });
+      const response = await axiosInstance.get('/documents', { params });
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -160,7 +160,7 @@ export const documentsApi = {
 
   requestDocument: async (documentType: string, reason?: string) => {
     try {
-      const response = await axiosInstance.post("/documents/request", {
+      const response = await axiosInstance.post('/documents/request', {
         documentType,
         reason,
       });
@@ -175,7 +175,7 @@ export const documentsApi = {
       const response = await axiosInstance.get(
         `/documents/${documentId}/download`,
         {
-          responseType: "blob",
+          responseType: 'blob',
         }
       );
       return response.data;
@@ -189,7 +189,7 @@ export const documentsApi = {
 export const gradesApi = {
   getGrades: async (params = {}) => {
     try {
-      const response = await axiosInstance.get("/grades", { params });
+      const response = await axiosInstance.get('/grades', { params });
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -198,9 +198,18 @@ export const gradesApi = {
 
   getGradesBySemester: async (semester: string, schoolYear: string) => {
     try {
-      const response = await axiosInstance.get("/grades/semester", {
+      const response = await axiosInstance.get('/grades/semester', {
         params: { semester, schoolYear },
       });
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  },
+
+  getStudentGrades: async (studentId: string) => {
+    try {
+      const response = await axiosInstance.get(`/grades/student/${studentId}`);
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -212,7 +221,7 @@ export const gradesApi = {
 export const assessmentApi = {
   getAssessment: async () => {
     try {
-      const response = await axiosInstance.get("/assessment");
+      const response = await axiosInstance.get('/assessment');
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -221,7 +230,7 @@ export const assessmentApi = {
 
   getPaymentHistory: async (params = {}) => {
     try {
-      const response = await axiosInstance.get("/assessment/history", {
+      const response = await axiosInstance.get('/assessment/history', {
         params,
       });
       return response.data;
@@ -233,7 +242,7 @@ export const assessmentApi = {
   makePayment: async (paymentData: any) => {
     try {
       const response = await axiosInstance.post(
-        "/assessment/payment",
+        '/assessment/payment',
         paymentData
       );
       return response.data;
@@ -247,7 +256,7 @@ export const assessmentApi = {
 export const scheduleApi = {
   getSchedule: async (params = {}) => {
     try {
-      const response = await axiosInstance.get("/schedule", { params });
+      const response = await axiosInstance.get('/schedule', { params });
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -256,7 +265,7 @@ export const scheduleApi = {
 
   getScheduleBySemester: async (semester: string, schoolYear: string) => {
     try {
-      const response = await axiosInstance.get("/schedule/semester", {
+      const response = await axiosInstance.get('/schedule/semester', {
         params: { semester, schoolYear },
       });
       return response.data;
@@ -271,14 +280,14 @@ export const fileApi = {
   uploadFile: async (file: any, directory: string) => {
     try {
       const formData = new FormData();
-      formData.append("file", file);
-      formData.append("directory", directory);
+      formData.append('file', file);
+      formData.append('directory', directory);
 
       const response = await axiosInstance.post(
         `/upload?directory=${directory}`,
         formData,
         {
-          headers: { "Content-Type": "multipart/form-data" },
+          headers: { 'Content-Type': 'multipart/form-data' },
         }
       );
       return response.data;
@@ -290,14 +299,14 @@ export const fileApi = {
   guestUploadFile: async (file: any, directory: string) => {
     try {
       const formData = new FormData();
-      formData.append("file", file);
-      formData.append("directory", directory);
+      formData.append('file', file);
+      formData.append('directory', directory);
 
       const response = await axiosInstance.post(
         `/upload/guest?directory=${directory}`,
         formData,
         {
-          headers: { "Content-Type": "multipart/form-data" },
+          headers: { 'Content-Type': 'multipart/form-data' },
         }
       );
       return response.data;
@@ -311,7 +320,7 @@ export const fileApi = {
 export const coursesApi = {
   getCourses: async () => {
     try {
-      const response = await axiosInstance.get("/courses");
+      const response = await axiosInstance.get('/courses');
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));

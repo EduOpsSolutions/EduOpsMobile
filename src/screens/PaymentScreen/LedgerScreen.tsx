@@ -4,15 +4,16 @@ import {
   Text,
   TouchableOpacity,
   Image,
-  SafeAreaView,
   StatusBar,
   ScrollView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
 import { styles } from './LedgerScreen.styles';
 import { EnrollmentDropdown } from '../../../components/EnrollmentDropdown';
 import { PaymentDropdown } from '../../../components/PaymentDropdown';
+import { UserAvatar } from '../../components/UserAvatar';
 
 interface LedgerItemProps {
   date: string;
@@ -57,13 +58,13 @@ export const LedgerScreen = (): React.JSX.Element => {
     },
   ];
 
-    const isLedgerActive = true;
-    const isPaymentActive = true;
+  const isLedgerActive = true;
+  const isPaymentActive = true;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <StatusBar backgroundColor="#de0000" barStyle="light-content" />
-      
+
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
@@ -78,20 +79,21 @@ export const LedgerScreen = (): React.JSX.Element => {
             <TouchableOpacity style={styles.iconButton}>
               <Icon name="notifications" size={24} color="white" />
             </TouchableOpacity>
-            <TouchableOpacity 
+            <UserAvatar
+              size={40}
+              onPress={() => router.replace('/profile')}
               style={styles.profileButton}
-            //   onPress={() => router.push('/profile')}
-            >
-              <Text style={styles.profileText}>PD</Text>
-            </TouchableOpacity>
+            />
           </View>
         </View>
       </View>
 
       {/* Main Content */}
       <View style={styles.mainContent}>
-        
-        <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          style={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.ledgerContainer}>
             {/* Ledger Card */}
             <View style={styles.ledgerCard}>
@@ -141,20 +143,20 @@ export const LedgerScreen = (): React.JSX.Element => {
           <Icon name="home" size={24} color="#666" />
           <Text style={styles.navText}>Home</Text>
         </TouchableOpacity>
-        
+
         <EnrollmentDropdown isActive={false} />
-        
-        <TouchableOpacity 
+
+        <TouchableOpacity
           style={styles.navItem}
-        //   onPress={() => router.push('/grades')}
+          //   onPress={() => router.push('/grades')}
         >
           <Icon name="grade" size={24} color="#666" />
           <Text style={styles.navText}>Grades</Text>
         </TouchableOpacity>
         <PaymentDropdown isActive={isPaymentActive} />
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.navItem}
-        //   onPress={() => router.push('/documents')}
+          //   onPress={() => router.push('/documents')}
         >
           <Icon name="description" size={24} color="#666" />
           <Text style={styles.navText}>Documents</Text>
