@@ -1,7 +1,7 @@
-import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import axiosInstance from "../utils/axios";
+import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axiosInstance from '../utils/axios';
 import {
   decodeToken,
   setToken,
@@ -10,12 +10,14 @@ import {
   getUser,
   clearAuthData,
   isTokenExpired,
-} from "../utils/jwt";
-import { Alert } from "react-native";
-import { router } from "expo-router";
+} from '../utils/jwt';
+import { Alert } from 'react-native';
+import { router } from 'expo-router';
+import { clearProfilePictureCache } from '../components/UserAvatar';
 
 interface User {
   id: string;
+  userId?: string;
   email: string;
   firstName: string;
   lastName: string;
@@ -23,6 +25,11 @@ interface User {
   role: string;
   status: string;
   profilePicLink?: string;
+  course?: string;
+  phoneNumber?: string;
+  birthmonth?: number;
+  birthdate?: number;
+  birthyear?: number;
   [key: string]: any;
 }
 
@@ -51,11 +58,13 @@ interface AuthState {
   getUser: () => User | null;
   getToken: () => string | null;
   getUserFullName: () => string;
+  getBirthday: () => string;
   hasRole: (role: string) => boolean;
   hasAnyRole: (roles: string[]) => boolean;
   isAdmin: () => boolean;
   isTeacher: () => boolean;
   isStudent: () => boolean;
+  setUser: (user: User) => void;
   setError: (error: string | null) => void;
   clearError: () => void;
 }
@@ -75,8 +84,8 @@ export const useAuthStore = create<AuthState>()(
 
         try {
           // Make login request
-          console.log("Login request:", email, password);
-          const response = await axiosInstance.post("/auth/login", {
+          console.log('Login request:', email, password);
+          const response = await axiosInstance.post('/auth/login', {
             email,
             password,
           });
@@ -85,7 +94,7 @@ export const useAuthStore = create<AuthState>()(
           const token = response.data.token?.token || response.data.token;
 
           if (!token) {
-            throw new Error("No token received from server");
+            throw new Error('No token received from server');
           }
 
           // Store token in AsyncStorage
@@ -95,20 +104,20 @@ export const useAuthStore = create<AuthState>()(
           const decodedToken = decodeToken(token);
 
           if (!decodedToken || !decodedToken.data) {
-            throw new Error("Invalid token format");
+            throw new Error('Invalid token format');
           }
 
           const userData = decodedToken.data;
 
           // Check if user is active
-          if ((userData as User).status !== "active") {
+          if ((userData as User).status !== 'active') {
             throw new Error(
-              "Your account is not active. Please contact support."
+              'Your account is not active. Please contact support.'
             );
           }
 
-          if ((userData as User).role !== "student") {
-            throw new Error("Only students can access the app");
+          if ((userData as User).role !== 'student') {
+            throw new Error('Only students can access the app');
           }
 
           // Store user data in AsyncStorage
@@ -123,13 +132,13 @@ export const useAuthStore = create<AuthState>()(
             error: null,
           });
 
-          console.log("Login successful:", (userData as User).email);
+          console.log('Login successful:', (userData as User).email);
         } catch (error: any) {
-          console.log("Login error:", JSON.stringify(error));
+          console.log('Login error:', JSON.stringify(error));
           const errorMessage =
             error.response?.data?.message ||
             error.message ||
-            "Login failed. Please try again.";
+            'Login failed. Please try again.';
 
           set({
             isLoading: false,
@@ -149,8 +158,14 @@ export const useAuthStore = create<AuthState>()(
       // Logout action
       logout: async (redirectToLogin = true) => {
         try {
+          // Get user ID before clearing auth data
+          const userId = get().user?.id;
+
           // Clear all auth data from AsyncStorage
           await clearAuthData();
+
+          // Clear cached profile picture
+          await clearProfilePictureCache(userId);
 
           // Reset store state
           set({
@@ -160,13 +175,13 @@ export const useAuthStore = create<AuthState>()(
             error: null,
           });
 
-          console.log("Logout successful");
+          console.log('Logout successful');
 
           if (redirectToLogin) {
-            router.replace("/");
+            router.replace('/');
           }
         } catch (error) {
-          console.error("Error during logout:", error);
+          console.error('Error during logout:', error);
         }
       },
 
@@ -175,12 +190,12 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, error: null });
 
         try {
-          const response = await axiosInstance.post("/auth/register", userData);
+          const response = await axiosInstance.post('/auth/register', userData);
 
           Alert.alert(
-            "Registration Successful",
-            "Your account has been created. Please login.",
-            [{ text: "OK" }]
+            'Registration Successful',
+            'Your account has been created. Please login.',
+            [{ text: 'OK' }]
           );
 
           set({ isLoading: false, error: null });
@@ -188,7 +203,7 @@ export const useAuthStore = create<AuthState>()(
           const errorMessage =
             error.response?.data?.message ||
             error.message ||
-            "Registration failed. Please try again.";
+            'Registration failed. Please try again.';
 
           set({
             isLoading: false,
@@ -204,7 +219,7 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, error: null });
 
         try {
-          const response = await axiosInstance.put("/users/profile", userData);
+          const response = await axiosInstance.put('/users/profile', userData);
 
           const updatedUser = response.data.data || response.data;
 
@@ -217,14 +232,14 @@ export const useAuthStore = create<AuthState>()(
             error: null,
           });
 
-          Alert.alert("Success", "Profile updated successfully", [
-            { text: "OK" },
+          Alert.alert('Success', 'Profile updated successfully', [
+            { text: 'OK' },
           ]);
         } catch (error: any) {
           const errorMessage =
             error.response?.data?.message ||
             error.message ||
-            "Profile update failed. Please try again.";
+            'Profile update failed. Please try again.';
 
           set({
             isLoading: false,
@@ -240,21 +255,21 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, error: null });
 
         try {
-          await axiosInstance.post("/auth/change-password", {
+          await axiosInstance.post('/auth/change-password', {
             currentPassword,
             newPassword,
           });
 
           set({ isLoading: false, error: null });
 
-          Alert.alert("Success", "Password changed successfully", [
-            { text: "OK" },
+          Alert.alert('Success', 'Password changed successfully', [
+            { text: 'OK' },
           ]);
         } catch (error: any) {
           const errorMessage =
             error.response?.data?.message ||
             error.message ||
-            "Password change failed. Please try again.";
+            'Password change failed. Please try again.';
 
           set({
             isLoading: false,
@@ -270,20 +285,20 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, error: null });
 
         try {
-          await axiosInstance.post("/auth/forgot-password", { email });
+          await axiosInstance.post('/auth/forgot-password', { email });
 
           set({ isLoading: false, error: null });
 
           Alert.alert(
-            "Success",
-            "Password reset link has been sent to your email.",
-            [{ text: "OK" }]
+            'Success',
+            'Password reset link has been sent to your email.',
+            [{ text: 'OK' }]
           );
         } catch (error: any) {
           const errorMessage =
             error.response?.data?.message ||
             error.message ||
-            "Failed to send reset link. Please try again.";
+            'Failed to send reset link. Please try again.';
 
           set({
             isLoading: false,
@@ -299,21 +314,21 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, error: null });
 
         try {
-          await axiosInstance.post("/auth/reset-password", {
+          await axiosInstance.post('/auth/reset-password', {
             token,
             newPassword,
           });
 
           set({ isLoading: false, error: null });
 
-          Alert.alert("Success", "Password reset successfully. Please login.", [
-            { text: "OK" },
+          Alert.alert('Success', 'Password reset successfully. Please login.', [
+            { text: 'OK' },
           ]);
         } catch (error: any) {
           const errorMessage =
             error.response?.data?.message ||
             error.message ||
-            "Password reset failed. Please try again.";
+            'Password reset failed. Please try again.';
 
           set({
             isLoading: false,
@@ -341,14 +356,14 @@ export const useAuthStore = create<AuthState>()(
 
           // Optionally verify with server
           try {
-            await axiosInstance.get("/auth/verify");
+            await axiosInstance.get('/auth/verify');
             return true;
           } catch (error) {
             await get().logout(false);
             return false;
           }
         } catch (error) {
-          console.error("Token validation error:", error);
+          console.error('Token validation error:', error);
           return false;
         }
       },
@@ -356,7 +371,7 @@ export const useAuthStore = create<AuthState>()(
       // Refresh token
       refreshToken: async () => {
         try {
-          const response = await axiosInstance.post("/auth/refresh-token");
+          const response = await axiosInstance.post('/auth/refresh-token');
           const newToken = response.data.token?.token || response.data.token;
 
           if (newToken) {
@@ -364,7 +379,7 @@ export const useAuthStore = create<AuthState>()(
             set({ token: newToken });
           }
         } catch (error) {
-          console.error("Token refresh error:", error);
+          console.error('Token refresh error:', error);
           await get().logout(false);
         }
       },
@@ -376,12 +391,35 @@ export const useAuthStore = create<AuthState>()(
 
       getUserFullName: () => {
         const user = get().user;
-        if (!user) return "";
+        if (!user) return '';
 
         const { firstName, middleName, lastName } = user;
-        return `${firstName || ""} ${middleName || ""} ${
-          lastName || ""
+        return `${firstName || ''} ${middleName || ''} ${
+          lastName || ''
         }`.trim();
+      },
+
+      getBirthday: () => {
+        const user = get().user;
+        if (!user || !user.birthyear || !user.birthmonth || !user.birthdate) {
+          return '';
+        }
+
+        try {
+          const date = new Date(
+            user.birthyear,
+            user.birthmonth - 1,
+            user.birthdate
+          );
+          return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          });
+        } catch (error) {
+          console.error('Error formatting birthday:', error);
+          return '';
+        }
       },
 
       hasRole: (role: string) => {
@@ -396,18 +434,20 @@ export const useAuthStore = create<AuthState>()(
         );
       },
 
-      isAdmin: () => get().hasRole("admin"),
+      isAdmin: () => get().hasRole('admin'),
 
-      isTeacher: () => get().hasRole("teacher"),
+      isTeacher: () => get().hasRole('teacher'),
 
-      isStudent: () => get().hasRole("student"),
+      isStudent: () => get().hasRole('student'),
+
+      setUser: (user: User) => set({ user }),
 
       setError: (error: string | null) => set({ error }),
 
       clearError: () => set({ error: null }),
     }),
     {
-      name: "eduops-auth-storage",
+      name: 'eduops-auth-storage',
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({
         user: state.user,
@@ -419,7 +459,7 @@ export const useAuthStore = create<AuthState>()(
         if (state?.token && state?.isAuthenticated) {
           // Check if the persisted token is expired
           if (isTokenExpired(state.token)) {
-            console.log("Persisted token is expired, clearing auth data");
+            console.log('Persisted token is expired, clearing auth data');
             // Clear expired token and user data
             state.token = null;
             state.user = null;
@@ -427,12 +467,12 @@ export const useAuthStore = create<AuthState>()(
             // Also clear from AsyncStorage
             clearAuthData().catch(console.error);
           } else {
-            console.log("Persisted token is valid, user remains authenticated");
+            console.log('Persisted token is valid, user remains authenticated');
             // Token is valid, keep user authenticated
             // The AuthWrapper will handle server validation
           }
         } else {
-          console.log("No persisted auth data found");
+          console.log('No persisted auth data found');
         }
       },
     }

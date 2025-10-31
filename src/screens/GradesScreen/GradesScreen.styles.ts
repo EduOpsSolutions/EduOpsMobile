@@ -134,14 +134,14 @@ export const styles = StyleSheet.create({
     borderBottomColor: '#e0e0e0',
   },
   courseName: {
-    flex: 1,
+    flex: 2,
     fontSize: 13,
     color: '#333',
     fontWeight: '500',
   },
   status: {
     flex: 1,
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: 'bold',
     textAlign: 'center',
   },
@@ -154,10 +154,61 @@ export const styles = StyleSheet.create({
   noGradeStatus: {
     color: '#666',
   },
-  detailsButton: {
+  dateText: {
     flex: 1,
+    fontSize: 11,
+    color: '#666',
+    textAlign: 'center',
+  },
+  detailsButton: {
+    flex: 0.5,
     alignItems: 'center',
     padding: 4,
+  },
+  loadingContainer: {
+    paddingVertical: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: '#666',
+  },
+  errorContainer: {
+    paddingVertical: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  errorText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: '#F44336',
+    textAlign: 'center',
+    paddingHorizontal: 20,
+  },
+  retryButton: {
+    marginTop: 16,
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    backgroundColor: '#de0000',
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  emptyContainer: {
+    paddingVertical: 60,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#999',
+    textAlign: 'center',
   },
   bottomNavigation: {
     position: 'absolute',

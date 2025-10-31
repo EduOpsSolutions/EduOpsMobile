@@ -42,7 +42,7 @@ export const styles = StyleSheet.create({
   },
   profileText: {
     color: 'white',
-    fontSize: 12,
+    fontSize: 16,
     fontWeight: 'bold',
   },
   mainContent: {
@@ -83,7 +83,24 @@ export const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   stepsGrid: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 30,
+  },
+  timelineStep: {
+    alignItems: 'center',
+    flex: 1,
+    position: 'relative',
+  },
+  timelineLine: {
+    position: 'absolute',
+    top: 25,
+    left: '60%',
+    width: '80%',
+    height: 2,
+    backgroundColor: '#f0f0f0',
+    zIndex: 0,
   },
   stepsRow: {
     flexDirection: 'row',
@@ -93,6 +110,8 @@ export const styles = StyleSheet.create({
   stepContainer: {
     alignItems: 'center',
     flex: 1,
+    zIndex: 1,
+    backgroundColor: 'transparent',
   },
   stepCircle: {
     width: 50,
@@ -104,6 +123,8 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
+    position: 'relative',
+    zIndex: 2,
   },
   completedCircle: {
     backgroundColor: '#4CAF50',
@@ -111,12 +132,34 @@ export const styles = StyleSheet.create({
   },
   activeCircle: {
     borderColor: '#de0000',
+    backgroundColor: '#de0000',
+  },
+  pendingCircle: {
+    borderColor: '#ccc',
+    backgroundColor: 'white',
+  },
+  stepNumber: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#999',
+  },
+  stepNumberActive: {
+    color: 'white',
+  },
+  stepNumberPending: {
+    color: '#999',
   },
   stepTitle: {
-    fontSize: 12,
-    color: '#333',
+    fontSize: 9,
+    color: '#666',
     textAlign: 'center',
-    fontWeight: '500',
+    fontWeight: '400',
+    marginTop: 4,
+    maxWidth: 80,
+  },
+  stepTitleActive: {
+    color: '#de0000',
+    fontWeight: '600',
   },
   emptyStep: {
     flex: 1,
@@ -131,7 +174,7 @@ export const styles = StyleSheet.create({
   },
   actionButtonText: {
     color: 'white',
-    fontSize: 12,
+    fontSize: 16,
     fontWeight: '500',
     textAlign: 'center',
   },
@@ -140,18 +183,18 @@ export const styles = StyleSheet.create({
     marginBottom: 20,
   },
   contactTitle: {
-    fontSize: 12,
+    fontSize: 18,
     color: '#333',
     marginBottom: 4,
   },
   contactNumber: {
-    fontSize: 12,
+    fontSize: 16,
     color: '#333',
     fontWeight: '500',
     marginBottom: 2,
   },
   contactEmail: {
-    fontSize: 12,
+    fontSize: 16,
     color: '#333',
     fontWeight: '500',
   },
@@ -159,7 +202,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
   },
   uploadTitle: {
-    fontSize: 12,
+    fontSize: 18,
     color: '#333',
     marginBottom: 8,
     fontWeight: '500',
@@ -177,12 +220,146 @@ export const styles = StyleSheet.create({
   },
   uploadButtonText: {
     color: 'white',
-    fontSize: 11,
+    fontSize: 16,
     fontWeight: '500',
   },
   uploadText: {
-    fontSize: 11,
+    fontSize: 16,
     color: '#666',
+    marginTop: 8,
+  },
+  uploadButtonDisabled: {
+    backgroundColor: '#999',
+    opacity: 0.6,
+  },
+  uploadSuccessText: {
+    fontSize: 16,
+    color: '#4CAF50',
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  noDataContainer: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  noDataTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 18,
+    marginBottom: 8,
+  },
+  noDataText: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 24,
+    paddingHorizontal: 20,
+  },
+  infoSection: {
+    marginBottom: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  infoValueCopyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  infoLabel: {
+    fontSize: 13,
+    color: '#666',
+    fontWeight: '500',
+    minWidth: 90,
+  },
+  infoValue: {
+    fontSize: 13,
+    color: '#333',
+    fontWeight: '600',
+    flex: 1,
+  },
+  infoPriceValue: {
+    fontSize: 13,
+    color: '#4CAF50',
+    fontWeight: 'bold',
+    flex: 1,
+  },
+  statusBadge: {
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+  },
+  statusBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: 'white',
+  },
+  statusBadgeCompleted: {
+    backgroundColor: '#4CAF50',
+  },
+  statusBadgeApproved: {
+    backgroundColor: '#2196F3',
+  },
+  statusBadgeVerified: {
+    backgroundColor: '#FFC107',
+  },
+  statusBadgePaymentPending: {
+    backgroundColor: '#FF9800',
+  },
+  statusBadgeRejected: {
+    backgroundColor: '#F44336',
+  },
+  statusBadgePending: {
+    backgroundColor: '#9E9E9E',
+  },
+  progressSection: {
+    marginBottom: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#de0000',
+    marginBottom: 16,
+  },
+  remarksSection: {
+    marginBottom: 20,
+    paddingBottom: 18,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  remarksText: {
+    fontSize: 18,
+    color: '#666',
+    lineHeight: 20,
+  },
+  noteSection: {
+    backgroundColor: '#E3F2FD',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 20,
+    borderLeftWidth: 4,
+    borderLeftColor: '#2196F3',
+  },
+  noteTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1976D2',
+    marginBottom: 8,
+  },
+  noteText: {
+    fontSize: 16,
+    color: '#1565C0',
+    marginBottom: 4,
   },
   bottomNavigation: {
     position: 'absolute',
@@ -210,7 +387,7 @@ export const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   navText: {
-    fontSize: 10,
+    fontSize: 16,
     color: '#666',
     marginTop: 4,
     textAlign: 'center',

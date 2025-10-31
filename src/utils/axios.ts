@@ -1,12 +1,36 @@
-import axios from "axios";
-import { Alert } from "react-native";
-import { getToken, isTokenExpired, clearAuthData } from "./jwt";
+import axios from 'axios';
+import { Alert } from 'react-native';
+import { getToken, isTokenExpired, clearAuthData } from './jwt';
+import { router } from 'expo-router';
 
-// Create axios instance with base URL from environment
+/**
+ * Axios instance configured for EduOps Mobile App
+ *
+ * IMPORTANT: This configuration works with the webClientValidator middleware on the backend.
+ * The middleware validates requests from authorized clients (web and mobile).
+ *
+ * Mobile App Origin Validation:
+ * - React Native automatically sends Origin: null (allowed by middleware)
+ * - App scheme: "eduopsmobile://" (configured in app.json, allowed by middleware)
+ * - User-Agent: React Native default (validated by middleware)
+ *
+ * Guest Endpoints:
+ * - Guest endpoints (like /upload/guest, /enrollment/enroll) use validateWebClientOrigin
+ * - Mobile apps are allowed because:
+ *   1. Origin is "null" (React Native default) - explicitly allowed
+ *   2. User-Agent check is skipped for mobile apps (origin === "null")
+ *
+ * Allowed Origins in Backend:
+ * - "null" (React Native/Expo default)
+ * - "exp://localhost:8081" (Expo dev)
+ * - "exp://localhost:19000" (Expo dev alternative)
+ * - "eduopsmobile://" (production app scheme)
+ * - "myapp://" (legacy scheme, also supported)
+ */
 const axiosInstance = axios.create({
-  baseURL: process.env.EXPO_PUBLIC_API_URL || "http://172.20.10.7:5555/api/v1",
+  baseURL: process.env.EXPO_PUBLIC_API_URL || 'http://172.20.10.7:5555/api/v1',
   headers: {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
   },
 });
 
@@ -20,15 +44,17 @@ axiosInstance.interceptors.request.use(
       if (token) {
         // Check if token is expired before making request
         if (isTokenExpired(token)) {
-          console.log("Token expired during request, clearing auth data");
+          console.log('Token expired during request, clearing auth data');
           // Token expired - clear auth data
           await clearAuthData();
 
-          // Don't show alert here as it might interrupt user flow
-          // The response interceptor will handle showing appropriate messages
+          // Redirect to login
+          setTimeout(() => {
+            router.replace('/');
+          }, 100);
 
           // Reject the request
-          return Promise.reject(new Error("Token expired"));
+          return Promise.reject(new Error('Token expired'));
         }
 
         // Add valid token to Authorization header
@@ -37,7 +63,7 @@ axiosInstance.interceptors.request.use(
 
       return config;
     } catch (error) {
-      console.error("Request interceptor error:", error);
+      console.error('Request interceptor error:', error);
       return config;
     }
   },
@@ -61,29 +87,55 @@ axiosInstance.interceptors.response.use(
       const token = await getToken();
 
       if (token && isTokenExpired(token)) {
-        console.log("Token expired in response, clearing auth data");
+        console.log('Token expired in response, clearing auth data');
         // Token expired - clear auth data
         await clearAuthData();
 
-        // Only show alert for user-initiated actions, not background requests
-        if (originalRequest?.showExpirationAlert !== false) {
-          Alert.alert(
-            "Session Expired",
-            "Your session has expired. Please login again.",
-            [
-              {
-                text: "OK",
-                onPress: () => {
-                  // Navigation will be handled by the auth store
-                },
+        // Show alert and redirect to login
+        Alert.alert(
+          'Session Expired',
+          'Your session has expired. Please login again.',
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                router.replace('/');
               },
-            ]
-          );
-        }
+            },
+          ],
+          { cancelable: false }
+        );
+
+        // Also redirect after a short delay in case alert is dismissed
+        setTimeout(() => {
+          router.replace('/');
+        }, 100);
+      } else if (error.response?.status === 401) {
+        // 401 without expired token - possibly invalid token
+        console.log('Unauthorized request, clearing auth data');
+        await clearAuthData();
+
+        Alert.alert(
+          'Session Invalid',
+          'Your session is no longer valid. Please login again.',
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                router.replace('/');
+              },
+            },
+          ],
+          { cancelable: false }
+        );
+
+        setTimeout(() => {
+          router.replace('/');
+        }, 100);
       } else if (error.response?.status === 403) {
         // 403 without expired token might be a permission issue
         // Don't log out, just show error
-        console.log("Permission denied:", error.response?.data?.message);
+        console.log('Permission denied:', error.response?.data?.message);
       }
     }
 

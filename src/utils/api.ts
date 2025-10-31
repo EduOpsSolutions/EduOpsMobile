@@ -4,7 +4,11 @@ import axiosInstance from './axios';
 export const handleApiError = (error: any): string => {
   if (error.response) {
     // Server responded with error status
-    return error.response.data?.message || error.response.statusText || 'An error occurred';
+    return (
+      error.response.data?.message ||
+      error.response.statusText ||
+      'An error occurred'
+    );
   } else if (error.request) {
     // Request made but no response
     return 'No response from server. Please check your connection.';
@@ -30,7 +34,25 @@ export const enrollmentApi = {
 
   createEnrollmentRequest: async (enrollmentData: any) => {
     try {
-      const response = await axiosInstance.post('/enrollment/enroll', enrollmentData);
+      const response = await axiosInstance.post(
+        '/enrollment/enroll',
+        enrollmentData
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  },
+
+  updatePaymentProof: async (
+    enrollmentId: string,
+    paymentProofPath: string
+  ) => {
+    try {
+      const response = await axiosInstance.patch('/enrollment/payment-proof', {
+        enrollmentId,
+        paymentProofPath,
+      });
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -76,35 +98,6 @@ export const postsApi = {
     }
   },
 
-  createPost: async (formData: FormData) => {
-    try {
-      const response = await axiosInstance.post('/posts/create', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      return response.data;
-    } catch (error) {
-      throw new Error(handleApiError(error));
-    }
-  },
-
-  updatePost: async (postId: string, data: any) => {
-    try {
-      const response = await axiosInstance.put(`/posts/${postId}`, data);
-      return response.data;
-    } catch (error) {
-      throw new Error(handleApiError(error));
-    }
-  },
-
-  deletePost: async (postId: string) => {
-    try {
-      const response = await axiosInstance.delete(`/posts/${postId}`);
-      return response.data;
-    } catch (error) {
-      throw new Error(handleApiError(error));
-    }
-  },
-
   getMyPosts: async (params = {}) => {
     try {
       const response = await axiosInstance.get('/posts/my/posts', { params });
@@ -140,9 +133,13 @@ export const profileApi = {
       const formData = new FormData();
       formData.append('profilePic', file);
 
-      const response = await axiosInstance.post('/users/update-profile-picture', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const response = await axiosInstance.post(
+        '/users/update-profile-picture',
+        formData,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        }
+      );
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -175,9 +172,12 @@ export const documentsApi = {
 
   downloadDocument: async (documentId: string) => {
     try {
-      const response = await axiosInstance.get(`/documents/${documentId}/download`, {
-        responseType: 'blob',
-      });
+      const response = await axiosInstance.get(
+        `/documents/${documentId}/download`,
+        {
+          responseType: 'blob',
+        }
+      );
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -206,6 +206,15 @@ export const gradesApi = {
       throw new Error(handleApiError(error));
     }
   },
+
+  getStudentGrades: async (studentId: string) => {
+    try {
+      const response = await axiosInstance.get(`/grades/student/${studentId}`);
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  },
 };
 
 // Assessment/Payment API
@@ -221,7 +230,9 @@ export const assessmentApi = {
 
   getPaymentHistory: async (params = {}) => {
     try {
-      const response = await axiosInstance.get('/assessment/history', { params });
+      const response = await axiosInstance.get('/assessment/history', {
+        params,
+      });
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -230,7 +241,10 @@ export const assessmentApi = {
 
   makePayment: async (paymentData: any) => {
     try {
-      const response = await axiosInstance.post('/assessment/payment', paymentData);
+      const response = await axiosInstance.post(
+        '/assessment/payment',
+        paymentData
+      );
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -269,9 +283,13 @@ export const fileApi = {
       formData.append('file', file);
       formData.append('directory', directory);
 
-      const response = await axiosInstance.post(`/upload?directory=${directory}`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const response = await axiosInstance.post(
+        `/upload?directory=${directory}`,
+        formData,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        }
+      );
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -284,9 +302,25 @@ export const fileApi = {
       formData.append('file', file);
       formData.append('directory', directory);
 
-      const response = await axiosInstance.post(`/upload/guest?directory=${directory}`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const response = await axiosInstance.post(
+        `/upload/guest?directory=${directory}`,
+        formData,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  },
+};
+
+// Courses API
+export const coursesApi = {
+  getCourses: async () => {
+    try {
+      const response = await axiosInstance.get('/courses');
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -303,4 +337,5 @@ export default {
   assessment: assessmentApi,
   schedule: scheduleApi,
   file: fileApi,
+  courses: coursesApi,
 };
