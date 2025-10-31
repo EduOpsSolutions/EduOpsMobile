@@ -1,117 +1,255 @@
-import React from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Image,
-  SafeAreaView,
-  StatusBar,
-  ScrollView,
-} from "react-native";
-import Icon from "react-native-vector-icons/MaterialIcons";
-import { useRouter, useSegments } from "expo-router";
-import { styles } from "./ProfileScreen.styles";
-import { BottomNavigation } from "../../components/BottomNavigation";
-import { useAuthStore } from "@/src/stores/authStore";
+import React, { useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import * as Clipboard from 'expo-clipboard';
+import { useSegments } from 'expo-router';
+import { styles } from './ProfileScreen.styles';
+import { AppLayout } from '../../components/common';
+import { useAuthStore } from '@/src/stores/authStore';
+import { useProfileStore } from '@/src/stores/profileStore';
+import { ImageUploadField } from '@/src/components/form/ImageUploadField';
+import { ChangePasswordModal } from '@/src/components/modals';
 
 export const ProfileScreen = (): React.JSX.Element => {
-  const { logout } = useAuthStore();
-  const router = useRouter();
+  const { user, logout, getUserFullName, getBirthday, setUser } = useAuthStore();
   const segments = useSegments();
-  const currentRoute = "/" + (segments[segments.length - 1] || "");
+  const currentRoute = '/' + (segments[segments.length - 1] || '');
+  const [changePasswordModalVisible, setChangePasswordModalVisible] = useState(false);
+
+  const {
+    profileImagePreview,
+    uploadingImage,
+    hasChanges,
+    resetKey,
+    setProfileImage,
+    removeProfileImage,
+    cancelChanges,
+    saveProfilePicture,
+    resetState,
+  } = useProfileStore();
+
+  useEffect(() => {
+    return () => {
+      resetState();
+    };
+  }, [resetState]);
 
   const isEnrollmentActive =
-    currentRoute === "/enrollment" ||
-    currentRoute === "/enrollment-status" ||
-    currentRoute === "/schedule";
+    currentRoute === '/enrollment' ||
+    currentRoute === '/enrollment-status' ||
+    currentRoute === '/schedule';
+
+  const handleImageChange = (imageUri: string, previewUrl: string) => {
+    setProfileImage(imageUri, previewUrl);
+  };
+
+  const handleImageRemove = () => {
+    removeProfileImage();
+  };
+
+  const handleSaveProfilePicture = async () => {
+    try {
+      await saveProfilePicture(user, setUser);
+    } catch (error) {
+      console.error('Error saving profile picture:', error);
+    }
+  };
+
+  const handleCancelChanges = () => {
+    cancelChanges();
+  };
+
+  const handleCopyStudentId = async () => {
+    if (user?.userId) {
+      try {
+        await Clipboard.setStringAsync(user.userId);
+        Alert.alert('Copied!', 'Student ID copied to clipboard', [{ text: 'OK' }]);
+      } catch (error) {
+        console.error('Error copying to clipboard:', error);
+        Alert.alert('Error', 'Failed to copy Student ID');
+      }
+    }
+  };
+
+  if (!user) {
+    return (
+      <AppLayout
+        showNotifications={false}
+        enrollmentActive={false}
+        paymentActive={false}
+      >
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#de0000" />
+          <Text style={styles.loadingText}>Loading profile...</Text>
+        </View>
+      </AppLayout>
+    );
+  }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar backgroundColor="#de0000" barStyle="light-content" />
-
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <View style={styles.logoContainer}>
-            <Image
-              source={require("../../../assets/images/sprachins-logo-3.png")}
-              style={styles.headerLogo}
-              resizeMode="contain"
-            />
-          </View>
-          <View style={styles.headerIcons}>
-            <TouchableOpacity style={styles.iconButton}>
-              <Icon name="notifications" size={24} color="white" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.profileButton}>
-              <Text style={styles.profileText}>PD</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-
+    <AppLayout
+      showNotifications={false}
+      enrollmentActive={isEnrollmentActive}
+      paymentActive={false}
+    >
       {/* Main Content */}
-      <View style={styles.mainContent}>
+      <ScrollView style={styles.mainContent} showsVerticalScrollIndicator={false}>
         <View style={styles.profileContainer}>
           {/* Profile Card */}
           <View style={styles.profileCard}>
             {/* Profile Picture Section */}
             <View style={styles.profilePictureSection}>
-              <View style={styles.profilePictureContainer}>
-                <Icon name="person" size={60} color="#333" />
-              </View>
-              <TouchableOpacity style={styles.editProfileButton}>
-                <Icon name="edit" size={16} color="#666" />
-                <Text style={styles.editProfileText}>Edit Profile Picture</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.changePasswordButton}>
+              <ImageUploadField
+                key={resetKey}
+                currentImage={profileImagePreview || user.profilePicLink || getUserFullName()}
+                onImageChange={handleImageChange}
+                onImageRemove={handleImageRemove}
+                disabled={uploadingImage}
+              />
+
+              {hasChanges && !uploadingImage && (
+                <View style={styles.changesPendingContainer}>
+                  <View style={styles.changesPendingIndicator} />
+                  <Text style={styles.changesPendingText}>Changes Pending</Text>
+                </View>
+              )}
+
+              {uploadingImage && (
+                <View style={styles.uploadingContainer}>
+                  <ActivityIndicator size="small" color="#de0000" />
+                  <Text style={styles.uploadingText}>Uploading...</Text>
+                </View>
+              )}
+
+              {hasChanges && (
+                <View style={styles.actionButtonsContainer}>
+                  <TouchableOpacity
+                    style={[styles.saveButton, uploadingImage && styles.buttonDisabled]}
+                    onPress={handleSaveProfilePicture}
+                    disabled={uploadingImage}
+                  >
+                    {uploadingImage ? (
+                      <>
+                        <ActivityIndicator size="small" color="white" />
+                        <Text style={styles.saveButtonText}>Saving...</Text>
+                      </>
+                    ) : (
+                      <Text style={styles.saveButtonText}>Save Changes</Text>
+                    )}
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.cancelButton, uploadingImage && styles.buttonDisabled]}
+                    onPress={handleCancelChanges}
+                    disabled={uploadingImage}
+                  >
+                    <Text style={styles.cancelButtonText}>Cancel</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              <TouchableOpacity
+                style={styles.changePasswordButton}
+                onPress={() => setChangePasswordModalVisible(true)}
+              >
+                <Icon name="lock" size={16} color="white" />
                 <Text style={styles.changePasswordText}>Change Password</Text>
               </TouchableOpacity>
             </View>
 
             {/* Name Section */}
             <View style={styles.nameSection}>
-              <Text style={styles.studentName}>Polano Dolor</Text>
+              <Text style={styles.studentName}>{getUserFullName()}</Text>
               <View style={styles.nameLine} />
             </View>
 
             {/* Personal Details Section */}
             <View style={styles.detailsSection}>
-              <Text style={styles.sectionTitle}>Personal Details</Text>
+              <Text style={styles.sectionTitle}>Personal Information</Text>
+
+              <View style={styles.viewOnlyBadge}>
+                <Text style={styles.viewOnlyText}>View Only</Text>
+              </View>
 
               <View style={styles.detailsGrid}>
+                {user.userId && (
+                  <View style={styles.detailRow}>
+                    <View style={styles.detailItem}>
+                      <Text style={styles.detailLabel}>Student ID:</Text>
+                      <View style={styles.studentIdContainer}>
+                        <Text style={styles.detailValue}>{user.userId}</Text>
+                        <TouchableOpacity
+                          style={styles.copyButton}
+                          onPress={handleCopyStudentId}
+                        >
+                          <Icon name="content-copy" size={18} color="#de0000" />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </View>
+                )}
+
                 <View style={styles.detailRow}>
                   <View style={styles.detailItem}>
-                    <Text style={styles.detailLabel}>Student ID:</Text>
-                    <Text style={styles.detailValue}>3213562</Text>
+                    <Text style={styles.detailLabel}>First Name:</Text>
+                    <Text style={styles.detailValue}>{user.firstName}</Text>
                   </View>
                   <View style={styles.detailItem}>
-                    <Text style={styles.detailLabel}>Course:</Text>
-                    <Text style={styles.detailValue}>A1</Text>
+                    <Text style={styles.detailLabel}>Last Name:</Text>
+                    <Text style={styles.detailValue}>{user.lastName}</Text>
                   </View>
                 </View>
 
                 <View style={styles.detailRow}>
                   <View style={styles.detailItem}>
                     <Text style={styles.detailLabel}>Email:</Text>
-                    <Text style={styles.detailValue}>
-                      polanodolor@gmail.com
+                    <Text style={styles.detailValue} numberOfLines={1}>
+                      {user.email}
                     </Text>
-                  </View>
-                  <View style={styles.detailItem}>
-                    <Text style={styles.detailLabel}>Birthday:</Text>
-                    <Text style={styles.detailValue}>11/12/1997</Text>
                   </View>
                 </View>
 
-                <View style={styles.detailRow}>
-                  <View style={styles.detailItem}>
-                    <Text style={styles.detailLabel}>Phone Number:</Text>
-                    <Text style={styles.detailValue}>09123456789</Text>
+                {user.phoneNumber && (
+                  <View style={styles.detailRow}>
+                    <View style={styles.detailItem}>
+                      <Text style={styles.detailLabel}>Phone Number:</Text>
+                      <Text style={styles.detailValue}>{user.phoneNumber}</Text>
+                    </View>
                   </View>
-                  <View style={styles.detailItem} />
+                )}
+
+                {user.course && (
+                  <View style={styles.detailRow}>
+                    <View style={styles.detailItem}>
+                      <Text style={styles.detailLabel}>Course:</Text>
+                      <Text style={styles.detailValue}>{user.course}</Text>
+                    </View>
+                  </View>
+                )}
+
+                {getBirthday() && (
+                  <View style={styles.detailRow}>
+                    <View style={styles.detailItem}>
+                      <Text style={styles.detailLabel}>Birthday:</Text>
+                      <Text style={styles.detailValue}>{getBirthday()}</Text>
+                    </View>
+                  </View>
+                )}
+              </View>
+
+              {/* Information Panel */}
+              <View style={styles.infoPanel}>
+                <Icon name="info" size={20} color="#0066cc" />
+                <View style={styles.infoPanelContent}>
+                  <Text style={styles.infoPanelTitle}>Profile Information:</Text>
+                  <Text style={styles.infoPanelText}>
+                    • Personal information can only be updated by system administrators
+                  </Text>
+                  <Text style={styles.infoPanelText}>
+                    • Contact your administrator if any information needs to be changed
+                  </Text>
                 </View>
               </View>
+
               <TouchableOpacity
                 style={styles.logoutButton}
                 onPress={() => logout(true)}
@@ -122,13 +260,13 @@ export const ProfileScreen = (): React.JSX.Element => {
             </View>
           </View>
         </View>
-      </View>
+      </ScrollView>
 
-      {/* Bottom Navigation */}
-      <BottomNavigation
-        enrollmentActive={isEnrollmentActive}
-        paymentActive={false}
+      {/* Change Password Modal */}
+      <ChangePasswordModal
+        visible={changePasswordModalVisible}
+        onClose={() => setChangePasswordModalVisible(false)}
       />
-    </SafeAreaView>
+    </AppLayout>
   );
 };

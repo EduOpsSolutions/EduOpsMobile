@@ -1,24 +1,20 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
-  Image,
-  SafeAreaView,
-  StatusBar,
   ScrollView,
   TextInput,
-} from "react-native";
-import Icon from "react-native-vector-icons/MaterialIcons";
-import { useRouter } from "expo-router";
-import { styles } from "./DocumentScreen.styles";
-import { BottomNavigation } from "../../components/BottomNavigation";
+} from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import { styles } from './DocumentScreen.styles';
+import { AppLayout } from '../../components/common';
 
 interface DocumentProps {
   id: string;
   fee: string;
   name: string;
-  actionType: "Request" | "Download";
+  actionType: 'Request' | 'Download';
   description: string;
 }
 
@@ -29,7 +25,7 @@ const DocumentItem: React.FC<DocumentProps> = ({
   description,
 }) => {
   const getActionButton = () => {
-    if (actionType === "Request") {
+    if (actionType === 'Request') {
       return (
         <TouchableOpacity style={styles.requestButton}>
           <Text style={styles.requestButtonText}>Request</Text>
@@ -66,91 +62,68 @@ const DocumentItem: React.FC<DocumentProps> = ({
 };
 
 export const DocumentScreen = (): React.JSX.Element => {
-  const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
 
   const documents: DocumentProps[] = [
     {
-      id: "1",
-      fee: "PHP 150",
-      name: "Transcript of Records",
-      actionType: "Request",
-      description: "Free for 1st request",
+      id: '1',
+      fee: 'PHP 150',
+      name: 'Transcript of Records',
+      actionType: 'Request',
+      description: 'Free for 1st request',
     },
     {
-      id: "2",
-      fee: "FREE",
-      name: "Excuse Letter",
-      actionType: "Download",
-      description: "",
+      id: '2',
+      fee: 'FREE',
+      name: 'Excuse Letter',
+      actionType: 'Download',
+      description: '',
     },
     {
-      id: "3",
-      fee: "FREE",
-      name: "Examination Results",
-      actionType: "Request",
-      description: "",
+      id: '3',
+      fee: 'FREE',
+      name: 'Examination Results',
+      actionType: 'Request',
+      description: '',
     },
     {
-      id: "4",
-      fee: "PHP 3000",
-      name: "Certification of Fluency",
-      actionType: "Request",
-      description: "",
+      id: '4',
+      fee: 'PHP 3000',
+      name: 'Certification of Fluency',
+      actionType: 'Request',
+      description: '',
     },
     {
-      id: "5",
-      fee: "FREE",
-      name: "Student Manual 2024",
-      actionType: "Download",
-      description: "",
+      id: '5',
+      fee: 'FREE',
+      name: 'Student Manual 2024',
+      actionType: 'Download',
+      description: '',
     },
     {
-      id: "6",
-      fee: "FREE",
-      name: "Courses Catalog",
-      actionType: "Download",
-      description: "",
+      id: '6',
+      fee: 'FREE',
+      name: 'Courses Catalog',
+      actionType: 'Download',
+      description: '',
     },
     {
-      id: "7",
-      fee: "FREE",
-      name: "A1 - B2 Prospectus",
-      actionType: "Download",
-      description: "",
+      id: '7',
+      fee: 'FREE',
+      name: 'A1 - B2 Prospectus',
+      actionType: 'Download',
+      description: '',
     },
   ];
 
   const isDocumentsActive = true;
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar backgroundColor="#de0000" barStyle="light-content" />
-
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <View style={styles.logoContainer}>
-            <Image
-              source={require("../../../assets/images/sprachins-logo-3.png")}
-              style={styles.headerLogo}
-              resizeMode="contain"
-            />
-          </View>
-          <View style={styles.headerIcons}>
-            <TouchableOpacity style={styles.iconButton}>
-              <Icon name="notifications" size={24} color="white" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.profileButton}
-              //   onPress={() => router.push('/profile')}
-            >
-              <Text style={styles.profileText}>PD</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-
+    <AppLayout
+      showNotifications={false}
+      enrollmentActive={isDocumentsActive}
+      paymentActive={false}
+    >
       {/* Main Content */}
       <View style={styles.mainContent}>
         <View style={styles.documentsContainer}>
@@ -215,9 +188,6 @@ export const DocumentScreen = (): React.JSX.Element => {
           </View>
         </View>
       </View>
-
-      {/* Bottom Navigation */}
-      <BottomNavigation enrollmentActive={false} paymentActive={false} />
-    </SafeAreaView>
+    </AppLayout>
   );
 };

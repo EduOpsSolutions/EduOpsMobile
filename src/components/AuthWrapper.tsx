@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
-import { View, ActivityIndicator } from "react-native";
-import { useRouter } from "expo-router";
-import { useAuthStore } from "../stores/authStore";
-import { LoginScreen } from "../screens/LoginScreen";
-import { getToken, isTokenExpired } from "../utils/jwt";
+import React, { useEffect, useState } from 'react';
+import { View, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import { useAuthStore } from '../stores/authStore';
+import { LoginScreen } from '../screens/LoginScreen';
+import { getToken, isTokenExpired } from '../utils/jwt';
 
 export const AuthWrapper: React.FC = () => {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
@@ -21,27 +22,27 @@ export const AuthWrapper: React.FC = () => {
 
         if (token && !isTokenExpired(token)) {
           // Token exists and is valid locally
-          console.log("Valid token found, validating with server...");
+          console.log('Valid token found, validating with server...');
 
           // Validate token with server
           const isValid = await validateToken();
 
           if (isValid && user) {
-            console.log("Token validated successfully, redirecting to home");
-            router.replace("/home");
+            console.log('Token validated successfully, redirecting to home');
+            router.replace('/home');
             return;
           } else {
             console.log(
-              "Token validation failed or no user data, staying on login"
+              'Token validation failed or no user data, staying on login'
             );
           }
         } else {
-          console.log("No valid token found, staying on login");
+          console.log('No valid token found, staying on login');
         }
 
         setIsCheckingAuth(false);
       } catch (error) {
-        console.error("Auth check error:", error);
+        console.error('Auth check error:', error);
         setIsCheckingAuth(false);
       }
     };
@@ -52,16 +53,17 @@ export const AuthWrapper: React.FC = () => {
   // Show loading spinner while checking authentication
   if (isCheckingAuth) {
     return (
-      <View
+      <SafeAreaView
         style={{
           flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-          backgroundColor: "#f5f5f5",
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: '#f5f5f5',
         }}
+        edges={['top', 'left', 'right', 'bottom']}
       >
         <ActivityIndicator size="large" color="#8B0000" />
-      </View>
+      </SafeAreaView>
     );
   }
 

@@ -5,15 +5,16 @@ import {
   TextInput,
   TouchableOpacity,
   Image,
-  SafeAreaView,
   StatusBar,
   ScrollView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { useRouter } from 'expo-router';
+import { useRouter, useSegments } from 'expo-router';
 import { styles } from './PaymentScreen.styles';
 import { EnrollmentDropdown } from '../../../components/EnrollmentDropdown';
 import { PaymentDropdown } from '../../../components/PaymentDropdown';
+import { UserAvatar } from '../../components/UserAvatar';
 
 interface DropdownProps {
   placeholder: string;
@@ -22,14 +23,20 @@ interface DropdownProps {
   options: string[];
 }
 
-const Dropdown: React.FC<DropdownProps> = ({placeholder, value, onValueChange, options}) => {
+const Dropdown: React.FC<DropdownProps> = ({
+  placeholder,
+  value,
+  onValueChange,
+  options,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <View style={styles.dropdownContainer}>
       <TouchableOpacity
         style={styles.dropdownButton}
-        onPress={() => setIsOpen(!isOpen)}>
+        onPress={() => setIsOpen(!isOpen)}
+      >
         <Text style={[styles.dropdownText, !value && styles.placeholderText]}>
           {value || placeholder}
         </Text>
@@ -44,7 +51,8 @@ const Dropdown: React.FC<DropdownProps> = ({placeholder, value, onValueChange, o
               onPress={() => {
                 onValueChange(option);
                 setIsOpen(false);
-              }}>
+              }}
+            >
               <Text style={styles.dropdownOptionText}>{option}</Text>
             </TouchableOpacity>
           ))}
@@ -56,7 +64,7 @@ const Dropdown: React.FC<DropdownProps> = ({placeholder, value, onValueChange, o
 
 export const PaymentScreen = (): React.JSX.Element => {
   const router = useRouter();
-  
+
   const [formData, setFormData] = useState({
     firstName: '',
     middleName: '',
@@ -68,10 +76,16 @@ export const PaymentScreen = (): React.JSX.Element => {
   });
 
   const updateFormData = (field: string, value: string) => {
-    setFormData(prev => ({...prev, [field]: value}));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const feeTypeOptions = ['School Fee', 'Enrollment Fee', 'Examination Fee', 'Certificate Fee', 'Other'];
+  const feeTypeOptions = [
+    'School Fee',
+    'Enrollment Fee',
+    'Examination Fee',
+    'Certificate Fee',
+    'Other',
+  ];
 
   const handleSubmit = () => {
     // Add payment submission logic here
@@ -79,13 +93,13 @@ export const PaymentScreen = (): React.JSX.Element => {
   };
 
   // Dynamically determine if payment is active based on current route
-  const currentRoute = router?.pathname || router?.route || '';
+  const currentRoute = '/' + (useSegments()[useSegments().length - 1] || '');
   const isPaymentActive = currentRoute === '/payment';
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <StatusBar backgroundColor="#de0000" barStyle="light-content" />
-      
+
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
@@ -100,26 +114,29 @@ export const PaymentScreen = (): React.JSX.Element => {
             <TouchableOpacity style={styles.iconButton}>
               <Icon name="notifications" size={24} color="white" />
             </TouchableOpacity>
-            <TouchableOpacity 
+            <UserAvatar
+              size={40}
+              onPress={() => router.replace('/profile')}
               style={styles.profileButton}
-            //   onPress={() => router.push('/profile')}
-            >
-              <Text style={styles.profileText}>PD</Text>
-            </TouchableOpacity>
+            />
           </View>
         </View>
       </View>
 
       {/* Main Content */}
       <View style={styles.mainContent}>
-        
-        <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          style={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.paymentContainer}>
             {/* Payment Form Card */}
             <View style={styles.paymentCard}>
               {/* Form Title */}
               <Text style={styles.formTitle}>Maya Payment Form</Text>
-              <Text style={styles.formSubtitle}>Please enter valid information.</Text>
+              <Text style={styles.formSubtitle}>
+                Please enter valid information.
+              </Text>
 
               {/* First Row - First Name and Middle Name */}
               <View style={styles.row}>
@@ -138,7 +155,9 @@ export const PaymentScreen = (): React.JSX.Element => {
                   <TextInput
                     style={styles.input}
                     value={formData.middleName}
-                    onChangeText={(value) => updateFormData('middleName', value)}
+                    onChangeText={(value) =>
+                      updateFormData('middleName', value)
+                    }
                     placeholder=""
                     placeholderTextColor="#999"
                   />
@@ -162,7 +181,9 @@ export const PaymentScreen = (): React.JSX.Element => {
                   <TextInput
                     style={styles.input}
                     value={formData.emailAddress}
-                    onChangeText={(value) => updateFormData('emailAddress', value)}
+                    onChangeText={(value) =>
+                      updateFormData('emailAddress', value)
+                    }
                     placeholder=""
                     placeholderTextColor="#999"
                     keyboardType="email-address"
@@ -215,7 +236,10 @@ export const PaymentScreen = (): React.JSX.Element => {
               </View>
 
               {/* Submit Button */}
-              <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+              <TouchableOpacity
+                style={styles.submitButton}
+                onPress={handleSubmit}
+              >
                 <Text style={styles.submitButtonText}>Submit</Text>
               </TouchableOpacity>
             </View>
@@ -232,20 +256,20 @@ export const PaymentScreen = (): React.JSX.Element => {
           <Icon name="home" size={24} color="#666" />
           <Text style={styles.navText}>Home</Text>
         </TouchableOpacity>
-        
+
         <EnrollmentDropdown isActive={false} />
-        
-        <TouchableOpacity 
+
+        <TouchableOpacity
           style={styles.navItem}
-        //   onPress={() => router.push('/grades')}
+          //   onPress={() => router.push('/grades')}
         >
           <Icon name="grade" size={24} color="#666" />
           <Text style={styles.navText}>Grades</Text>
         </TouchableOpacity>
         <PaymentDropdown isActive={isPaymentActive} />
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.navItem}
-        //   onPress={() => router.push('/documents')}
+          //   onPress={() => router.push('/documents')}
         >
           <Icon name="description" size={24} color="#666" />
           <Text style={styles.navText}>Documents</Text>

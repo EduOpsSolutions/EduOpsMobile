@@ -1,29 +1,24 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
   Image,
-  SafeAreaView,
-  StatusBar,
   RefreshControl,
   ActivityIndicator,
-  Alert,
-  Modal,
-} from "react-native";
-import Icon from "react-native-vector-icons/MaterialIcons";
-import ImageViewing from "react-native-image-viewing";
-import { useRouter, useSegments } from "expo-router";
-import { styles } from "./Homescreen.styles";
-import { BottomNavigation } from "../../components/BottomNavigation";
-import { NotificationDropdown } from "../../../components/NotificationDropdown";
-import usePostsStore from "../../stores/postsStore";
-import { Post, PostFile } from "../../types/post";
+} from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import ImageViewing from 'react-native-image-viewing';
+import { useSegments } from 'expo-router';
+import { styles } from './Homescreen.styles';
+import { AppLayout } from '../../components/common';
+import usePostsStore from '../../stores/postsStore';
+import { Post, PostFile } from '../../types/post';
 import {
   showDownloadConfirmation,
   downloadAndShare,
-} from "../../utils/fileDownload";
+} from '../../utils/fileDownload';
 
 interface PostCardProps {
   post: Post;
@@ -34,14 +29,14 @@ interface PostCardProps {
 const PostTag: React.FC<{ tag: string }> = ({ tag }) => {
   const getTagStyle = () => {
     switch (tag) {
-      case "global":
-        return { backgroundColor: "#3b82f6", text: "Global" };
-      case "student":
-        return { backgroundColor: "#10b981", text: "Student" };
-      case "teacher":
-        return { backgroundColor: "#f59e0b", text: "Teacher" };
+      case 'global':
+        return { backgroundColor: '#3b82f6', text: 'Global' };
+      case 'student':
+        return { backgroundColor: '#10b981', text: 'Student' };
+      case 'teacher':
+        return { backgroundColor: '#f59e0b', text: 'Teacher' };
       default:
-        return { backgroundColor: "#6b7280", text: tag };
+        return { backgroundColor: '#6b7280', text: tag };
     }
   };
 
@@ -60,7 +55,7 @@ const FileAttachment: React.FC<{ file: PostFile; onPress: () => void }> = ({
   file,
   onPress,
 }) => {
-  const isImage = file.fileType?.startsWith("image/");
+  const isImage = file.fileType?.startsWith('image/');
 
   if (isImage) {
     return (
@@ -87,7 +82,7 @@ const FileAttachment: React.FC<{ file: PostFile; onPress: () => void }> = ({
         <Text style={styles.fileSize}>
           {file.fileSize
             ? `${(file.fileSize / 1024 / 1024).toFixed(2)} MB`
-            : "File"}
+            : 'File'}
         </Text>
       </View>
       <Icon name="download" size={20} color="#666" />
@@ -101,9 +96,9 @@ const PostCard: React.FC<PostCardProps> = ({
   onFilePress,
 }) => {
   const images =
-    post.files?.filter((f) => f.fileType?.startsWith("image/")) || [];
+    post.files?.filter((f) => f.fileType?.startsWith('image/')) || [];
   const documents =
-    post.files?.filter((f) => !f.fileType?.startsWith("image/")) || [];
+    post.files?.filter((f) => !f.fileType?.startsWith('image/')) || [];
 
   const handleImagePress = (file: PostFile) => {
     const imageIndex = images.findIndex((img) => img.id === file.id);
@@ -117,7 +112,7 @@ const PostCard: React.FC<PostCardProps> = ({
         <Image
           source={{ uri: post.profilePic }}
           style={styles.avatar}
-          defaultSource={require("../../../assets/images/sprachins-logo-3.png")}
+          defaultSource={require('../../../assets/images/sprachins-logo-3.png')}
         />
         <View style={styles.authorInfo}>
           <Text style={styles.authorName}>{post.postedBy}</Text>
@@ -179,9 +174,8 @@ const PostCard: React.FC<PostCardProps> = ({
 };
 
 export const HomeScreen = (): React.JSX.Element => {
-  const router = useRouter();
   const segments = useSegments();
-  const currentRoute = "/" + (segments[segments.length - 1] || "");
+  const currentRoute = '/' + (segments[segments.length - 1] || '');
 
   const [imageViewerVisible, setImageViewerVisible] = useState(false);
   const [currentImages, setCurrentImages] = useState<{ uri: string }[]>([]);
@@ -197,7 +191,7 @@ export const HomeScreen = (): React.JSX.Element => {
     clearError,
   } = usePostsStore();
 
-  const visiblePosts = getVisiblePosts("student");
+  const visiblePosts = getVisiblePosts('student');
 
   useEffect(() => {
     fetchPosts();
@@ -219,45 +213,25 @@ export const HomeScreen = (): React.JSX.Element => {
       try {
         await downloadAndShare(file.url, file.fileName);
       } catch (error) {
-        console.error("Download error:", error);
+        console.error('Download error:', error);
       }
     });
   };
 
   const isEnrollmentActive =
-    currentRoute === "/enrollment" ||
-    currentRoute === "/enrollment-status" ||
-    currentRoute === "/schedule";
-  const isPaymentActive = ["/paymentform", "/assessment", "/ledger"].includes(
+    currentRoute === '/enrollment' ||
+    currentRoute === '/enrollment-status' ||
+    currentRoute === '/schedule';
+  const isPaymentActive = ['/paymentform', '/assessment', '/ledger'].includes(
     currentRoute
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar backgroundColor="#de0000" barStyle="light-content" />
-
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <View style={styles.logoContainer}>
-            <Image
-              source={require("../../../assets/images/sprachins-logo-3.png")}
-              style={styles.headerLogo}
-              resizeMode="contain"
-            />
-          </View>
-          <View style={styles.headerIcons}>
-            <NotificationDropdown />
-            <TouchableOpacity
-              style={styles.profileButton}
-              onPress={() => router.replace("/profile")}
-            >
-              <Text style={styles.profileText}>PD</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-
+    <AppLayout
+      showNotifications={true}
+      enrollmentActive={isEnrollmentActive}
+      paymentActive={isPaymentActive}
+    >
       {/* Main Content */}
       {isLoading ? (
         <View style={styles.centerContainer}>
@@ -280,7 +254,7 @@ export const HomeScreen = (): React.JSX.Element => {
             <RefreshControl
               refreshing={isRefreshing}
               onRefresh={refreshPosts}
-              colors={["#de0000"]}
+              colors={['#de0000']}
               tintColor="#de0000"
             />
           }
@@ -312,12 +286,6 @@ export const HomeScreen = (): React.JSX.Element => {
         visible={imageViewerVisible}
         onRequestClose={() => setImageViewerVisible(false)}
       />
-
-      {/* Bottom Navigation */}
-      <BottomNavigation
-        enrollmentActive={isEnrollmentActive}
-        paymentActive={isPaymentActive}
-      />
-    </SafeAreaView>
+    </AppLayout>
   );
 };
