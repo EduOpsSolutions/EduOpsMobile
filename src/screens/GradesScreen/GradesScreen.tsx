@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator, Alert, TouchableOpacity, RefreshControl } from 'react-native';
 import { useSegments } from 'expo-router';
 import { styles } from './GradesScreen.styles';
 import { AppLayout } from '../../components/common';
@@ -66,13 +66,14 @@ const GradeItem: React.FC<GradeItemProps> = ({ grade, onViewDetails }) => {
 export const GradesScreen = (): React.JSX.Element => {
   const segments = useSegments();
   const currentRoute = '/' + (segments[segments.length - 1] || '');
-  
+
   const { user } = useAuthStore();
   const [gradesData, setGradesData] = useState<GradeData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [previewFile, setPreviewFile] = useState({ url: '', title: '' });
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     fetchGrades();
@@ -131,6 +132,17 @@ export const GradesScreen = (): React.JSX.Element => {
     }
   };
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await fetchGrades();
+    } catch (error) {
+      console.error('Error refreshing grades:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   const handleViewDetails = (grade: GradeData) => {
     if (grade.status === 'NO GRADE') {
       Alert.alert(
@@ -182,6 +194,14 @@ export const GradesScreen = (): React.JSX.Element => {
         <ScrollView
           style={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={['#de0000']}
+              tintColor="#de0000"
+            />
+          }
         >
           <View style={styles.gradesContainer}>
             {/* Grades Card */}

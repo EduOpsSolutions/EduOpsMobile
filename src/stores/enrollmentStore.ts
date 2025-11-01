@@ -87,12 +87,47 @@ export const useEnrollmentStore = create<EnrollmentStoreState>()(
 
       // Fetch enrollment data (already available from tracking)
       fetchEnrollmentData: async () => {
-        const { enrollmentId } = get();
+        const { enrollmentId, email } = get();
         if (!enrollmentId) {
           console.log("No enrollment ID available for fetching data");
           return;
         }
-        console.log("Enrollment data already available in store");
+
+        try {
+          console.log("Refetching enrollment data...");
+          const response = await enrollmentApi.trackEnrollment(
+            enrollmentId,
+            email
+          );
+
+          if (response.error) {
+            throw new Error(response.message || "Failed to fetch enrollment data");
+          }
+
+          // Update the enrollment data
+          get().setEnrollmentData({
+            enrollmentId: response.data.enrollmentId,
+            studentId: response.data.studentId,
+            status: response.data.status,
+            currentStep: response.data.currentStep,
+            completedSteps: response.data.completedSteps,
+            remarkMsg: response.data.remarkMsg,
+            fullName: response.data.fullName,
+            email: response.data.email,
+            createdAt: response.data.createdAt,
+            coursesToEnroll: response.data.coursesToEnroll,
+            coursePrice: response.data.coursePrice,
+            courseName: response.data.courseName,
+            paymentProofPath: response.data.paymentProofPath,
+          });
+
+          console.log("Enrollment data refreshed successfully");
+          return response.data;
+        } catch (error: any) {
+          console.error("Error fetching enrollment data:", error);
+          // Don't show alert on refresh, just log the error
+          throw error;
+        }
       },
 
       // Track enrollment by ID or email

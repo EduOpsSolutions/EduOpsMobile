@@ -52,6 +52,7 @@ export const styles = StyleSheet.create({
   },
   scrollContent: {
     zIndex: 2,
+    paddingBottom: 80, // Space for bottom navigation
   },
   assessmentContainer: {
     padding: 20,
