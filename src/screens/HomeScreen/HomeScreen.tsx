@@ -9,10 +9,9 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import ImageViewing from 'react-native-image-viewing';
 import { useSegments } from 'expo-router';
 import { styles } from './Homescreen.styles';
-import { AppLayout } from '../../components/common';
+import { AppLayout, ImageViewer } from '../../components/common';
 import usePostsStore from '../../stores/postsStore';
 import { Post, PostFile } from '../../types/post';
 import {
@@ -280,7 +279,7 @@ export const HomeScreen = (): React.JSX.Element => {
       )}
 
       {/* Image Viewer */}
-      <ImageViewing
+      <ImageViewer
         images={currentImages}
         imageIndex={currentImageIndex}
         visible={imageViewerVisible}

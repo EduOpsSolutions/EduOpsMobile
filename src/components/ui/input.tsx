@@ -1,22 +1,43 @@
 import * as React from "react";
+import { TextInput, StyleSheet, TextInputProps, ViewStyle } from "react-native";
 
-import { cn } from "../../lib/utils";
+export interface InputProps extends TextInputProps {
+  style?: ViewStyle;
+}
 
-const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
-  ({ className, type, ...props }, ref) => {
+const Input = React.forwardRef<TextInput, InputProps>(
+  ({ style, ...props }, ref) => {
     return (
-      <input
-        type={type}
-        className={cn(
-          "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-          className,
-        )}
+      <TextInput
         ref={ref}
+        style={[styles.input, style]}
+        placeholderTextColor="#9ca3af"
         {...props}
       />
     );
-  },
+  }
 );
+
 Input.displayName = "Input";
+
+const styles = StyleSheet.create({
+  input: {
+    height: 36,
+    width: "100%",
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    backgroundColor: "transparent",
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    fontSize: 16,
+    color: "#000000",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+});
 
 export { Input };
