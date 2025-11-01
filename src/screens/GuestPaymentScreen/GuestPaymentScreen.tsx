@@ -88,6 +88,11 @@ export const GuestPaymentScreen = (): React.JSX.Element => {
 
   const [isFetchingStudent, setIsFetchingStudent] = useState(false);
 
+  // Clear form when component mounts
+  useEffect(() => {
+    resetForm();
+  }, []);
+
   // Prefill student ID if provided via URL params
   useEffect(() => {
     if (studentId && studentId !== formData.student_id) {
@@ -351,16 +356,12 @@ export const GuestPaymentScreen = (): React.JSX.Element => {
               <TextInput
                 style={[styles.input, phoneError && styles.inputError]}
                 value={formData.phone_number}
-                onChangeText={(value) =>
-                  updateFormField('phone_number', value)
-                }
+                onChangeText={(value) => updateFormField('phone_number', value)}
                 placeholder="+63 XXX XXX XXXX"
                 placeholderTextColor="#999"
                 keyboardType="phone-pad"
               />
-              {phoneError && (
-                <Text style={styles.errorText}>{phoneError}</Text>
-              )}
+              {phoneError && <Text style={styles.errorText}>{phoneError}</Text>}
             </View>
 
             {/* Fee Type */}
@@ -389,7 +390,10 @@ export const GuestPaymentScreen = (): React.JSX.Element => {
 
             {/* Submit Button */}
             <TouchableOpacity
-              style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+              style={[
+                styles.submitButton,
+                loading && styles.submitButtonDisabled,
+              ]}
               onPress={handleSubmit}
               disabled={loading}
             >

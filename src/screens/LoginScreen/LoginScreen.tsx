@@ -189,6 +189,27 @@ export const LoginScreen = (): React.JSX.Element => {
                 </TouchableOpacity>
               </View>
 
+              {/* Pay as Guest Section */}
+              <View style={styles.guestPaymentWrapper}>
+                <Text style={styles.guestPaymentLabel}>
+                  Need to make a payment?
+                </Text>
+                <TouchableOpacity
+                  style={[
+                    styles.guestPaymentButton,
+                    isLoading && { opacity: 0.6 },
+                  ]}
+                  onPress={() =>
+                    router.push('/guest-payment' as any as RelativePathString)
+                  }
+                  disabled={isLoading}
+                >
+                  <Text style={styles.guestPaymentButtonText}>
+                    Pay as Guest
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
               {/* Terms and Privacy */}
               <Text style={styles.termsText}>
                 By using this service, you understood and agree to our{' '}
