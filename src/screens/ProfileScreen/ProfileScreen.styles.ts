@@ -132,6 +132,68 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
   },
+  roleStatusSection: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 20,
+    flexWrap: "wrap",
+  },
+  roleBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fee",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#de0000",
+    gap: 6,
+  },
+  roleText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#de0000",
+  },
+  statusBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    gap: 6,
+  },
+  statusActive: {
+    backgroundColor: "#e8f5e9",
+    borderColor: "#4caf50",
+  },
+  statusInactive: {
+    backgroundColor: "#ffebee",
+    borderColor: "#f44336",
+  },
+  statusIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  statusIndicatorActive: {
+    backgroundColor: "#4caf50",
+  },
+  statusIndicatorInactive: {
+    backgroundColor: "#f44336",
+  },
+  statusText: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  statusTextActive: {
+    color: "#2e7d32",
+  },
+  statusTextInactive: {
+    color: "#c62828",
+  },
   nameSection: {
     marginBottom: 30,
   },

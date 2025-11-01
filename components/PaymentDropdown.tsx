@@ -43,7 +43,7 @@ export const PaymentDropdown: React.FC<PaymentDropdownProps> = ({ isActive }) =>
 
   const dropdownHeight = animation.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, 150], 
+    outputRange: [0, 180],
   });
 
   const rotateIcon = animation.interpolate({
@@ -123,6 +123,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     position: 'relative',
+    zIndex: 10001,
   },
   navItem: {
     flex: 1,
@@ -147,38 +148,39 @@ const styles = StyleSheet.create({
   dropdown: {
     position: 'absolute',
     bottom: '113%',
-    left: 0,
-    right: 0,
+    left: -50,
+    right: -50,
     backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
+    borderWidth: 1,
     borderColor: '#e0e0e0',
     overflow: 'hidden',
-    borderTopLeftRadius: 8,
-    borderTopRightRadius: 8,
-    
+    borderRadius: 12,
+    zIndex: 10002,
+    elevation: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
   },
   dropdownItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-start',
-    paddingVertical: 11,
-    paddingHorizontal: 12,
+    justifyContent: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
-    gap: 8,
+    borderBottomColor: '#f0f0f0',
   },
   activeDropdownItem: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: '#fff3e0',
   },
   dropdownText: {
-    fontSize: 12,
-    color: 'black',
+    fontSize: 14,
+    color: '#333',
     fontWeight: '500',
   },
   activeDropdownText: {
-    color: '#ffcf00',
-    fontWeight: '600',
+    color: '#de0000',
+    fontWeight: '700',
   },
 });

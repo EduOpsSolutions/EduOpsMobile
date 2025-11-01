@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,13 +8,14 @@ import {
   Alert,
   ActivityIndicator,
   Linking,
+  StatusBar,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { useSegments } from 'expo-router';
-import { styles } from './PaymentScreen.styles';
-import { AppLayout } from '../../components/common';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { styles } from './GuestPaymentScreen.styles';
+import { GuestNavbar } from '../../components/common/GuestNavbar';
 import { usePaymentStore } from '@/src/stores/paymentStore';
-import { useAuthStore } from '@/src/stores/authStore';
 
 interface DropdownProps {
   placeholder: string;
@@ -38,46 +39,37 @@ const Dropdown: React.FC<DropdownProps> = ({
       <TouchableOpacity
         style={styles.dropdownButton}
         onPress={() => setIsOpen(!isOpen)}
-        activeOpacity={0.7}
       >
         <Text style={[styles.dropdownText, !value && styles.placeholderText]}>
           {selectedLabel || placeholder}
         </Text>
-        <Icon
-          name={isOpen ? 'keyboard-arrow-up' : 'keyboard-arrow-down'}
-          size={20}
-          color="#666"
-        />
+        <Icon name="keyboard-arrow-down" size={16} color="#666" />
       </TouchableOpacity>
       {isOpen && (
-        <View style={styles.dropdownOptions}>
-          <ScrollView
-            nestedScrollEnabled={true}
-            showsVerticalScrollIndicator={true}
-            bounces={false}
-            keyboardShouldPersistTaps="handled"
-          >
-            {options.map((option) => (
-              <TouchableOpacity
-                key={option.value}
-                style={styles.dropdownOption}
-                onPress={() => {
-                  onValueChange(option.value);
-                  setIsOpen(false);
-                }}
-                activeOpacity={0.6}
-              >
-                <Text style={styles.dropdownOptionText}>{option.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
+        <ScrollView style={styles.dropdownOptions} nestedScrollEnabled>
+          {options.map((option) => (
+            <TouchableOpacity
+              key={option.value}
+              style={styles.dropdownOption}
+              onPress={() => {
+                onValueChange(option.value);
+                setIsOpen(false);
+              }}
+            >
+              <Text style={styles.dropdownOptionText}>{option.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       )}
     </View>
   );
 };
 
-export const PaymentScreen = (): React.JSX.Element => {
+export const GuestPaymentScreen = (): React.JSX.Element => {
+  const router = useRouter();
+  const params = useLocalSearchParams();
+  const studentId = params.studentId as string | undefined;
+
   const {
     formData,
     loading,
@@ -94,8 +86,21 @@ export const PaymentScreen = (): React.JSX.Element => {
     setLoading,
   } = usePaymentStore();
 
-  const { user } = useAuthStore();
   const [isFetchingStudent, setIsFetchingStudent] = useState(false);
+
+  // Prefill student ID if provided via URL params
+  useEffect(() => {
+    if (studentId && studentId !== formData.student_id) {
+      updateFormField('student_id', studentId);
+      // Automatically fetch student data
+      const fetchStudent = async () => {
+        setIsFetchingStudent(true);
+        await validateAndFetchStudentByID(studentId);
+        setIsFetchingStudent(false);
+      };
+      fetchStudent();
+    }
+  }, [studentId]);
 
   // Helper function to get proper fee type label
   const getFeeTypeLabel = (feeType: string) => {
@@ -120,18 +125,6 @@ export const PaymentScreen = (): React.JSX.Element => {
       await validateAndFetchStudentByID(studentId);
       setIsFetchingStudent(false);
     }
-  };
-
-  const handleUseMyStudentId = async () => {
-    if (!user?.userId) {
-      Alert.alert('Error', 'No student ID found for your account.');
-      return;
-    }
-
-    updateFormField('student_id', user.userId);
-    setIsFetchingStudent(true);
-    await validateAndFetchStudentByID(user.userId);
-    setIsFetchingStudent(false);
   };
 
   const handleSubmit = async () => {
@@ -184,12 +177,8 @@ export const PaymentScreen = (): React.JSX.Element => {
 
                 Alert.alert(
                   'Email Sent Successfully!',
-                  `A payment link has been sent to ${paymentData.email}\n\nYou can complete your payment using the link in your email.`,
+                  `A payment link has been sent to ${paymentData.email}\n\nYou can complete your payment using the link in your email.\n\nYou will be redirected to the login page.`,
                   [
-                    {
-                      text: 'Close',
-                      style: 'cancel',
-                    },
                     {
                       text: 'Open Payment Link',
                       onPress: () => {
@@ -197,7 +186,6 @@ export const PaymentScreen = (): React.JSX.Element => {
                           const clientBaseUrl =
                             `${process.env.EXPO_PUBLIC_CLIENT_URL}` ||
                             'https://eduops.vercel.app';
-                          // For mobile, open a new tab with the payment URL - browser is used instead
                           const paymentUrl = `${clientBaseUrl}/payment?paymentId=${paymentId}`;
                           Linking.openURL(paymentUrl).catch((err) => {
                             console.error('Failed to open payment link:', err);
@@ -207,12 +195,19 @@ export const PaymentScreen = (): React.JSX.Element => {
                             );
                           });
                         }
+                        resetForm();
+                        router.replace('/');
+                      },
+                    },
+                    {
+                      text: 'Go to Login',
+                      onPress: () => {
+                        resetForm();
+                        router.replace('/');
                       },
                     },
                   ]
                 );
-
-                resetForm();
               } else {
                 Alert.alert(
                   'Error',
@@ -236,16 +231,12 @@ export const PaymentScreen = (): React.JSX.Element => {
     );
   };
 
-  // Dynamically determine if payment is active based on current route
-  const currentRoute = '/' + (useSegments()[useSegments().length - 1] || '');
-  const isPaymentActive = currentRoute === '/paymentform';
-
   return (
-    <AppLayout
-      showNotifications={true}
-      enrollmentActive={false}
-      paymentActive={isPaymentActive}
-    >
+    <SafeAreaView style={styles.container} edges={['left', 'right']}>
+      <StatusBar backgroundColor="#de0000" barStyle="light-content" />
+
+      <GuestNavbar />
+
       <ScrollView
         style={styles.mainContent}
         contentContainerStyle={styles.scrollContent}
@@ -261,46 +252,9 @@ export const PaymentScreen = (): React.JSX.Element => {
               student information.
             </Text>
 
-            {/* Info Note */}
-            <View style={styles.infoNote}>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'flex-start',
-                  gap: 8,
-                }}
-              >
-                <Icon
-                  name="info"
-                  size={16}
-                  color="#2196f3"
-                  style={{ marginTop: 1 }}
-                />
-                <Text style={styles.infoNoteText}>
-                  <Text style={{ fontWeight: '600' }}>Tip:</Text> Your Student
-                  ID can be found and copied from the Profile page in the
-                  navbar. For convenience, you can click the{' '}
-                  <Text style={{ fontWeight: '600' }}>"Use My ID"</Text> button
-                  to fill in your Student ID.
-                </Text>
-              </View>
-            </View>
-
-            {/* Student ID */}
+            {/* Student ID - No "Use My ID" button for guest */}
             <View style={styles.fullWidth}>
-              <View style={styles.labelRow}>
-                <Text style={styles.label}>Student ID*</Text>
-                {user?.userId && (
-                  <TouchableOpacity
-                    style={styles.useMyIdButton}
-                    onPress={handleUseMyStudentId}
-                    disabled={isFetchingStudent}
-                  >
-                    <Icon name="person" size={14} color="#de0000" />
-                    <Text style={styles.useMyIdButtonText}>Use My ID</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
+              <Text style={styles.label}>Student ID*</Text>
               <View style={styles.inputWithIcon}>
                 <TextInput
                   style={[
@@ -393,28 +347,25 @@ export const PaymentScreen = (): React.JSX.Element => {
 
             {/* Phone Number */}
             <View style={styles.fullWidth}>
-              <Text style={styles.label}>Phone Number</Text>
+              <Text style={styles.label}>Phone Number*</Text>
               <TextInput
                 style={[styles.input, phoneError && styles.inputError]}
                 value={formData.phone_number}
-                onChangeText={(value) => updateFormField('phone_number', value)}
-                placeholder="09xxxxxxxxx"
+                onChangeText={(value) =>
+                  updateFormField('phone_number', value)
+                }
+                placeholder="+63 XXX XXX XXXX"
                 placeholderTextColor="#999"
                 keyboardType="phone-pad"
-                maxLength={15}
               />
-              {phoneError && <Text style={styles.errorText}>{phoneError}</Text>}
+              {phoneError && (
+                <Text style={styles.errorText}>{phoneError}</Text>
+              )}
             </View>
 
-            {/* Separator Line */}
-            <View style={styles.separator} />
-
-            {/* Payment Details Section */}
-            <Text style={styles.sectionTitle}>Payment Details</Text>
-
-            {/* Type of Fee */}
+            {/* Fee Type */}
             <View style={styles.fullWidth}>
-              <Text style={styles.label}>Type of Fee*</Text>
+              <Text style={styles.label}>Fee Type*</Text>
               <Dropdown
                 placeholder="Select Fee Type"
                 value={formData.fee}
@@ -425,7 +376,7 @@ export const PaymentScreen = (): React.JSX.Element => {
 
             {/* Amount */}
             <View style={styles.fullWidth}>
-              <Text style={styles.label}>Amount (PHP)*</Text>
+              <Text style={styles.label}>Amount*</Text>
               <TextInput
                 style={styles.input}
                 value={formData.amount}
@@ -438,25 +389,40 @@ export const PaymentScreen = (): React.JSX.Element => {
 
             {/* Submit Button */}
             <TouchableOpacity
-              style={[
-                styles.submitButton,
-                (loading || !!nameError) && styles.submitButtonDisabled,
-              ]}
+              style={[styles.submitButton, loading && styles.submitButtonDisabled]}
               onPress={handleSubmit}
-              disabled={loading || !!nameError}
+              disabled={loading}
             >
               {loading ? (
-                <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="small" color="#fff" />
-                  <Text style={styles.submitButtonText}>Processing...</Text>
-                </View>
+                <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.submitButtonText}>Checkout</Text>
+                <Text style={styles.submitButtonText}>Send Payment Link</Text>
               )}
             </TouchableOpacity>
+
+            {/* Information Panel */}
+            <View style={styles.infoPanel}>
+              <Icon name="info" size={20} color="#0066cc" />
+              <View style={styles.infoPanelContent}>
+                <Text style={styles.infoPanelTitle}>How it works:</Text>
+                <Text style={styles.infoPanelText}>
+                  • Enter your Student ID to auto-fill your information
+                </Text>
+                <Text style={styles.infoPanelText}>
+                  • Provide your email and phone number for the payment link
+                </Text>
+                <Text style={styles.infoPanelText}>
+                  • Select the fee type and enter the amount
+                </Text>
+                <Text style={styles.infoPanelText}>
+                  • Click "Send Payment Link" to receive the payment link via
+                  email
+                </Text>
+              </View>
+            </View>
           </View>
         </View>
       </ScrollView>
-    </AppLayout>
+    </SafeAreaView>
   );
 };

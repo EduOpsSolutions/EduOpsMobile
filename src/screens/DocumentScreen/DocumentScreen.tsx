@@ -116,12 +116,10 @@ export const DocumentScreen = (): React.JSX.Element => {
     },
   ];
 
-  const isDocumentsActive = true;
-
   return (
     <AppLayout
       showNotifications={false}
-      enrollmentActive={isDocumentsActive}
+      enrollmentActive={false}
       paymentActive={false}
     >
       {/* Main Content */}

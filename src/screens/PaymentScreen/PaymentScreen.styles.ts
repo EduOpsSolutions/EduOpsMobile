@@ -52,6 +52,7 @@ export const styles = StyleSheet.create({
   },
   scrollContent: {
     zIndex: 2,
+    paddingBottom: 80, // Space for bottom navigation
   },
   paymentContainer: {
     padding: 20,
@@ -79,7 +80,24 @@ export const styles = StyleSheet.create({
   formSubtitle: {
     fontSize: 12,
     color: '#666',
+    marginBottom: 12,
+  },
+  infoNote: {
+    width: '100%',
+    backgroundColor: '#e3f2fd',
+    borderLeftWidth: 3,
+    borderLeftColor: '#2196f3',
+    padding: 12,
+    borderRadius: 4,
     marginBottom: 20,
+  },
+  infoNoteText: {
+    fontSize: 11,
+    color: '#1565c0',
+    lineHeight: 16,
+    textAlign: 'justify',
+    width: '85%',
+    flexWrap: 'wrap',
   },
   row: {
     flexDirection: 'row',
@@ -92,11 +110,32 @@ export const styles = StyleSheet.create({
   fullWidth: {
     marginBottom: 16,
   },
+  labelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
   label: {
     fontSize: 12,
     color: '#333',
-    marginBottom: 4,
     fontWeight: '500',
+  },
+  useMyIdButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    backgroundColor: '#fff3e0',
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#de0000',
+  },
+  useMyIdButtonText: {
+    fontSize: 11,
+    color: '#de0000',
+    fontWeight: '600',
   },
   input: {
     borderWidth: 1,
@@ -108,6 +147,39 @@ export const styles = StyleSheet.create({
     color: '#333',
     backgroundColor: 'white',
     minHeight: 36,
+  },
+  inputWithIcon: {
+    position: 'relative',
+  },
+  inputIcon: {
+    position: 'absolute',
+    right: 8,
+    top: 8,
+  },
+  inputDisabled: {
+    backgroundColor: '#f5f5f5',
+    opacity: 0.6,
+  },
+  inputReadOnly: {
+    backgroundColor: '#f5f5f5',
+  },
+  inputError: {
+    borderColor: '#de0000',
+    borderWidth: 1,
+  },
+  errorContainer: {
+    marginBottom: 16,
+    marginTop: -8,
+  },
+  errorText: {
+    fontSize: 11,
+    color: '#de0000',
+    marginTop: 4,
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   separator: {
     height: 1,
@@ -131,13 +203,13 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     backgroundColor: 'white',
-    minHeight: 36,
+    minHeight: 44,
   },
   dropdownText: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#333',
   },
   placeholderText: {
@@ -155,18 +227,33 @@ export const styles = StyleSheet.create({
     borderRadius: 4,
     borderTopLeftRadius: 0,
     borderTopRightRadius: 0,
-    maxHeight: 120,
+    maxHeight: 200,
+    height: 200,
     zIndex: 1001,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 8,
+    overflow: 'hidden',
   },
   dropdownOption: {
-    paddingHorizontal: 8,
-    paddingVertical: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 14,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
+    backgroundColor: 'white',
+  },
+  dropdownOptionPressed: {
+    backgroundColor: '#f5f5f5',
   },
   dropdownOptionText: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#333',
+    fontWeight: '500',
   },
   submitButton: {
     backgroundColor: '#de0000',
@@ -183,6 +270,10 @@ export const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  submitButtonDisabled: {
+    backgroundColor: '#ccc',
+    opacity: 0.6,
   },
   submitButtonText: {
     color: 'white',

@@ -7,6 +7,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -94,10 +95,22 @@ export const EnrollmentStatusScreen = (): React.JSX.Element => {
   } = useEnrollmentStore();
 
   const [selectedFile, setSelectedFile] = useState<any>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     fetchEnrollmentData();
   }, []);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await fetchEnrollmentData();
+    } catch (error) {
+      console.error('Error refreshing enrollment data:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const steps = [
     { title: 'Enrollment Form', stepNumber: 1 },
@@ -176,7 +189,7 @@ export const EnrollmentStatusScreen = (): React.JSX.Element => {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={styles.container} edges={['left', 'right']}>
       <StatusBar backgroundColor="#de0000" barStyle="light-content" />
 
       <GuestNavbar />
@@ -185,6 +198,14 @@ export const EnrollmentStatusScreen = (): React.JSX.Element => {
       <ScrollView
         style={styles.mainContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#de0000']}
+            tintColor="#de0000"
+          />
+        }
       >
         {!enrollmentId ? (
           <View style={styles.statusContainer}>
@@ -218,19 +239,22 @@ export const EnrollmentStatusScreen = (): React.JSX.Element => {
               <View style={styles.infoSection}>
                 <View style={styles.infoRow}>
                   <Text style={styles.infoLabel}>Enrollee ID:</Text>
-                  <TouchableOpacity
-                    style={styles.infoValueCopyButton}
-                    onPress={async () => {
-                      await copyToClipboard(enrollmentId);
-                      Alert.alert(
-                        'Enrollee ID copied to clipboard',
-                        'You can now paste it in the payment form'
-                      );
-                    }}
-                  >
+                  <View style={styles.enrolleeIdContainer}>
                     <Text style={styles.infoValue}>{enrollmentId}</Text>
-                    <Icon name="content-copy" size={20} color="#000" />
-                  </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.copyButton}
+                      onPress={async () => {
+                        await copyToClipboard(enrollmentId);
+                        Alert.alert(
+                          'Copied!',
+                          'Enrollee ID copied to clipboard',
+                          [{ text: 'OK' }]
+                        );
+                      }}
+                    >
+                      <Icon name="content-copy" size={18} color="#de0000" />
+                    </TouchableOpacity>
+                  </View>
                 </View>
 
                 {fullName && (
@@ -303,6 +327,28 @@ export const EnrollmentStatusScreen = (): React.JSX.Element => {
                 <Text style={styles.remarksText}>{remarkMsg}</Text>
               </View>
 
+              {/* Payment Button - Show only on step 3 */}
+              {currentStep === 3 && studentId && (
+                <View style={styles.paymentButtonSection}>
+                  <TouchableOpacity
+                    style={styles.goToPaymentButton}
+                    onPress={() => {
+                      router.push(
+                        `/guest-payment?studentId=${studentId}` as any
+                      );
+                    }}
+                  >
+                    <Icon name="payment" size={20} color="white" />
+                    <Text style={styles.goToPaymentButtonText}>
+                      Go to Payment Form
+                    </Text>
+                  </TouchableOpacity>
+                  <Text style={styles.paymentButtonHint}>
+                    Use this to make your payment directly
+                  </Text>
+                </View>
+              )}
+
               {/* Upload Section - Show only on step 3 */}
               {currentStep === 3 && (
                 <View style={styles.uploadSection}>
@@ -345,9 +391,27 @@ export const EnrollmentStatusScreen = (): React.JSX.Element => {
               {currentStep === 3 && !hasPaymentProof && (
                 <View style={styles.noteSection}>
                   <Text style={styles.noteTitle}>Note:</Text>
-                  <Text style={styles.noteText}>
-                    • Student ID: {studentId || 'Pending...'}
-                  </Text>
+                  <View style={styles.studentIdRow}>
+                    <Text style={styles.noteText}>• Student ID: </Text>
+                    <Text style={styles.studentIdValue}>
+                      {studentId || 'Pending...'}
+                    </Text>
+                    {studentId && (
+                      <TouchableOpacity
+                        style={styles.noteCopyButton}
+                        onPress={async () => {
+                          await copyToClipboard(studentId);
+                          Alert.alert(
+                            'Copied!',
+                            'Student ID copied to clipboard',
+                            [{ text: 'OK' }]
+                          );
+                        }}
+                      >
+                        <Icon name="content-copy" size={16} color="#de0000" />
+                      </TouchableOpacity>
+                    )}
+                  </View>
                   <Text style={styles.noteText}>
                     • Use this Student ID in the payment form
                   </Text>
