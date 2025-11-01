@@ -173,4 +173,33 @@ export const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 18,
   },
+  guestPaymentWrapper: {
+    marginTop: 12,
+    width: '100%',
+    alignItems: 'center',
+    paddingTop: 10,
+  },
+  guestPaymentLabel: {
+    color: '#fffdf2',
+    fontSize: 15,
+  },
+  guestPaymentButton: {
+    width: '80%',
+    marginTop: 8,
+    backgroundColor: '#2563eb',
+    borderRadius: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 4,
+    padding: 10,
+  },
+  guestPaymentButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 18,
+  },
 });
