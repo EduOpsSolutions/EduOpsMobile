@@ -156,6 +156,39 @@ export const ProfileScreen = (): React.JSX.Element => {
               </TouchableOpacity>
             </View>
 
+            {/* Role and Status Section */}
+            <View style={styles.roleStatusSection}>
+              {user.role && (
+                <View style={styles.roleBadge}>
+                  <Icon name="person" size={16} color="#de0000" />
+                  <Text style={styles.roleText}>{user.role.toUpperCase()}</Text>
+                </View>
+              )}
+              {user.status && (
+                <View style={[
+                  styles.statusBadge,
+                  user.status.toLowerCase() === 'active'
+                    ? styles.statusActive
+                    : styles.statusInactive
+                ]}>
+                  <View style={[
+                    styles.statusIndicator,
+                    user.status.toLowerCase() === 'active'
+                      ? styles.statusIndicatorActive
+                      : styles.statusIndicatorInactive
+                  ]} />
+                  <Text style={[
+                    styles.statusText,
+                    user.status.toLowerCase() === 'active'
+                      ? styles.statusTextActive
+                      : styles.statusTextInactive
+                  ]}>
+                    {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
+                  </Text>
+                </View>
+              )}
+            </View>
+
             {/* Name Section */}
             <View style={styles.nameSection}>
               <Text style={styles.studentName}>{getUserFullName()}</Text>

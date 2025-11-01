@@ -9,7 +9,7 @@ export const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: '#de0000',
-    paddingVertical: 12,
+    paddingVertical: 2,
     paddingHorizontal: 16,
   },
   headerContent: {
@@ -198,6 +198,42 @@ export const styles = StyleSheet.create({
     color: '#333',
     fontWeight: '500',
   },
+  paymentButtonSection: {
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  goToPaymentButton: {
+    backgroundColor: '#4CAF50',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    gap: 8,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  goToPaymentButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  paymentButtonHint: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 8,
+    textAlign: 'center',
+  },
   uploadSection: {
     alignItems: 'center',
   },
@@ -262,11 +298,18 @@ export const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
-  infoValueCopyButton: {
+  enrolleeIdContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
+    flex: 1,
+  },
+  copyButton: {
+    padding: 4,
+    backgroundColor: '#fee',
+    borderRadius: 4,
     justifyContent: 'center',
-    gap: 4,
+    alignItems: 'center',
   },
   infoRow: {
     flexDirection: 'row',
@@ -287,9 +330,10 @@ export const styles = StyleSheet.create({
   },
   infoPriceValue: {
     fontSize: 13,
-    color: '#4CAF50',
-    fontWeight: 'bold',
+    color: '#de0000',
+    fontWeight: '700',
     flex: 1,
+    textDecorationLine: 'underline',
   },
   statusBadge: {
     paddingVertical: 4,
@@ -347,6 +391,7 @@ export const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     marginBottom: 20,
+    marginTop: 20,
     borderLeftWidth: 4,
     borderLeftColor: '#2196F3',
   },
@@ -360,6 +405,27 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     color: '#1565C0',
     marginBottom: 4,
+  },
+  studentIdRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+    flexWrap: 'wrap',
+  },
+  studentIdValue: {
+    fontSize: 16,
+    color: '#1565C0',
+    fontWeight: '700',
+  },
+  noteCopyButton: {
+    padding: 6,
+    backgroundColor: '#fee',
+    borderRadius: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#de0000',
   },
   bottomNavigation: {
     position: 'absolute',

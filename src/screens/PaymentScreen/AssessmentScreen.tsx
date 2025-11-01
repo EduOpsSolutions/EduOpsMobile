@@ -4,17 +4,12 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  Image,
-  StatusBar,
   ScrollView,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
 import { styles } from './AssessmentScreen.styles';
-import { EnrollmentDropdown } from '../../../components/EnrollmentDropdown';
-import { PaymentDropdown } from '../../../components/PaymentDropdown';
-import { UserAvatar } from '../../components/UserAvatar';
+import { AppLayout } from '../../components/common';
 
 interface DropdownProps {
   placeholder: string;
@@ -111,195 +106,139 @@ export const AssessmentScreen = (): React.JSX.Element => {
   const isPaymentActive = true;
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-      <StatusBar backgroundColor="#de0000" barStyle="light-content" />
+    <AppLayout
+      showNotifications={true}
+      enrollmentActive={false}
+      paymentActive={isPaymentActive}
+    >
+      <ScrollView
+        style={styles.mainContent}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.assessmentContainer}>
+          {/* Search Section */}
+          <View style={styles.searchCard}>
+            {/* Search Header */}
+            <View style={styles.searchHeader}>
+              <Icon name="search" size={20} color="#333" />
+              <Text style={styles.searchTitle}>
+                SEARCH TUITION FEE ASSESSMENT
+              </Text>
+            </View>
 
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <View style={styles.logoContainer}>
-            <Image
-              source={require('../../../assets/images/sprachins-logo-3.png')}
-              style={styles.headerLogo}
-              resizeMode="contain"
-            />
+            {/* Search Form */}
+            <View style={styles.searchForm}>
+              <View style={styles.searchRow}>
+                <View style={styles.searchField}>
+                  <Text style={styles.searchLabel}>Course</Text>
+                  <TextInput
+                    style={styles.searchInput}
+                    value={searchData.course}
+                    onChangeText={(value) => updateSearchData('course', value)}
+                    placeholder=""
+                    placeholderTextColor="#999"
+                  />
+                </View>
+                <View style={styles.searchField}>
+                  <Text style={styles.searchLabel}>Batch</Text>
+                  <Dropdown
+                    placeholder="Select Batch"
+                    value={searchData.batch}
+                    onValueChange={(value) => updateSearchData('batch', value)}
+                    options={batchOptions}
+                  />
+                </View>
+              </View>
+              <View style={styles.searchRow}>
+                <View style={styles.searchField}>
+                  <Text style={styles.searchLabel}>Year</Text>
+                  <Dropdown
+                    placeholder="Select Year"
+                    value={searchData.year}
+                    onValueChange={(value) => updateSearchData('year', value)}
+                    options={yearOptions}
+                  />
+                </View>
+                <View style={styles.searchButtonContainer}>
+                  <TouchableOpacity
+                    style={styles.searchButton}
+                    onPress={handleSearch}
+                  >
+                    <Text style={styles.searchButtonText}>Search</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
           </View>
-          <View style={styles.headerIcons}>
-            <TouchableOpacity style={styles.iconButton}>
-              <Icon name="notifications" size={24} color="white" />
+
+          {/* Assessment Results */}
+          <View style={styles.resultsCard}>
+            {/* Course Info */}
+            <View style={styles.courseInfo}>
+              <Text style={styles.courseTitle}>A1: Batch 1 | 2024</Text>
+              <View style={styles.courseActions}>
+                <TouchableOpacity style={styles.historyButton}>
+                  <Text style={styles.historyButtonText}>
+                    Transaction History
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.ledgerButton}
+                  onPress={() => router.push('/ledger')}
+                >
+                  <Text style={styles.ledgerButtonText}>Ledger</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Student Name */}
+            <Text style={styles.studentName}>DOLOR, POLANO I.</Text>
+
+            {/* Fees Section */}
+            <View style={styles.feesSection}>
+              <View style={styles.feesHeader}>
+                <Text style={styles.feesHeaderText}>Description</Text>
+                <Text style={styles.feesHeaderText}>Amount</Text>
+              </View>
+
+              <View style={styles.feesList}>
+                {fees.map((fee, index) => (
+                  <FeeItem
+                    key={index}
+                    description={fee.description}
+                    amount={fee.amount}
+                  />
+                ))}
+              </View>
+            </View>
+
+            {/* Summary Section */}
+            <View style={styles.summarySection}>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Net Assessment</Text>
+                <Text style={styles.summaryAmount}>50.00</Text>
+              </View>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Total Payments</Text>
+                <Text style={styles.summaryAmount}>50.00</Text>
+              </View>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Remaining Balance</Text>
+                <Text style={styles.summaryAmount}>0</Text>
+              </View>
+            </View>
+
+            {/* Proceed Button */}
+            <TouchableOpacity
+              style={styles.proceedButton}
+              onPress={handleProceedToPayment}
+            >
+              <Text style={styles.proceedButtonText}>Proceed to Payment</Text>
             </TouchableOpacity>
-            <UserAvatar
-              size={40}
-              onPress={() => router.replace('/profile')}
-              style={styles.profileButton}
-            />
           </View>
         </View>
-      </View>
-
-      {/* Main Content */}
-      <View style={styles.mainContent}>
-        <ScrollView
-          style={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.assessmentContainer}>
-            {/* Search Section */}
-            <View style={styles.searchCard}>
-              {/* Search Header */}
-              <View style={styles.searchHeader}>
-                <Icon name="search" size={20} color="#333" />
-                <Text style={styles.searchTitle}>
-                  SEARCH TUITION FEE ASSESSMENT
-                </Text>
-              </View>
-
-              {/* Search Form */}
-              <View style={styles.searchForm}>
-                <View style={styles.searchRow}>
-                  <View style={styles.searchField}>
-                    <Text style={styles.searchLabel}>Course</Text>
-                    <TextInput
-                      style={styles.searchInput}
-                      value={searchData.course}
-                      onChangeText={(value) =>
-                        updateSearchData('course', value)
-                      }
-                      placeholder=""
-                      placeholderTextColor="#999"
-                    />
-                  </View>
-                  <View style={styles.searchField}>
-                    <Text style={styles.searchLabel}>Batch</Text>
-                    <Dropdown
-                      placeholder="Select Batch"
-                      value={searchData.batch}
-                      onValueChange={(value) =>
-                        updateSearchData('batch', value)
-                      }
-                      options={batchOptions}
-                    />
-                  </View>
-                </View>
-                <View style={styles.searchRow}>
-                  <View style={styles.searchField}>
-                    <Text style={styles.searchLabel}>Year</Text>
-                    <Dropdown
-                      placeholder="Select Year"
-                      value={searchData.year}
-                      onValueChange={(value) => updateSearchData('year', value)}
-                      options={yearOptions}
-                    />
-                  </View>
-                  <View style={styles.searchButtonContainer}>
-                    <TouchableOpacity
-                      style={styles.searchButton}
-                      onPress={handleSearch}
-                    >
-                      <Text style={styles.searchButtonText}>Search</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
-            </View>
-
-            {/* Assessment Results */}
-            <View style={styles.resultsCard}>
-              {/* Course Info */}
-              <View style={styles.courseInfo}>
-                <Text style={styles.courseTitle}>A1: Batch 1 | 2024</Text>
-                <View style={styles.courseActions}>
-                  <TouchableOpacity style={styles.historyButton}>
-                    <Text style={styles.historyButtonText}>
-                      Transaction History
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.ledgerButton}
-                    onPress={() => router.push('/ledger')}
-                  >
-                    <Text style={styles.ledgerButtonText}>Ledger</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-
-              {/* Student Name */}
-              <Text style={styles.studentName}>DOLOR, POLANO I.</Text>
-
-              {/* Fees Section */}
-              <View style={styles.feesSection}>
-                <View style={styles.feesHeader}>
-                  <Text style={styles.feesHeaderText}>Description</Text>
-                  <Text style={styles.feesHeaderText}>Amount</Text>
-                </View>
-
-                <View style={styles.feesList}>
-                  {fees.map((fee, index) => (
-                    <FeeItem
-                      key={index}
-                      description={fee.description}
-                      amount={fee.amount}
-                    />
-                  ))}
-                </View>
-              </View>
-
-              {/* Summary Section */}
-              <View style={styles.summarySection}>
-                <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>Net Assessment</Text>
-                  <Text style={styles.summaryAmount}>50.00</Text>
-                </View>
-                <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>Total Payments</Text>
-                  <Text style={styles.summaryAmount}>50.00</Text>
-                </View>
-                <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>Remaining Balance</Text>
-                  <Text style={styles.summaryAmount}>0</Text>
-                </View>
-              </View>
-
-              {/* Proceed Button */}
-              <TouchableOpacity
-                style={styles.proceedButton}
-                onPress={handleProceedToPayment}
-              >
-                <Text style={styles.proceedButtonText}>Proceed to Payment</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </ScrollView>
-      </View>
-
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNavigation}>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => router.push('/home')}
-        >
-          <Icon name="home" size={24} color="#666" />
-          <Text style={styles.navText}>Home</Text>
-        </TouchableOpacity>
-
-        <EnrollmentDropdown isActive={false} />
-
-        <TouchableOpacity
-          style={styles.navItem}
-          //   onPress={() => router.push('/grades')}
-        >
-          <Icon name="grade" size={24} color="#666" />
-          <Text style={styles.navText}>Grades</Text>
-        </TouchableOpacity>
-        <PaymentDropdown isActive={isPaymentActive} />
-        <TouchableOpacity
-          style={styles.navItem}
-          //   onPress={() => router.push('/documents')}
-        >
-          <Icon name="description" size={24} color="#666" />
-          <Text style={styles.navText}>Documents</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+      </ScrollView>
+    </AppLayout>
   );
 };

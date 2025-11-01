@@ -144,7 +144,8 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 5,
+    elevation: 15,
+    zIndex: 10000,
   },
   navItem: {
     flex: 1,
