@@ -18,32 +18,51 @@ export const downloadFile = async (
   fileName: string
 ): Promise<{ success: boolean; uri?: string; error?: string }> => {
   try {
+    // Parse URL to get pathname and remove query parameters
+    let cleanFileName = fileName;
+
+    // First, remove query parameters (anything after ? or &)
+    cleanFileName = cleanFileName.split('?')[0];
+    cleanFileName = cleanFileName.split('&')[0];
+
     // Extract just the filename without any path components
     // Handle both forward slashes and backslashes
-    let cleanFileName = fileName.split('/').pop() || fileName;
+    cleanFileName = cleanFileName.split('/').pop() || cleanFileName;
     cleanFileName = cleanFileName.split('\\').pop() || cleanFileName;
-    // Remove any non-filename characters for safety
-    cleanFileName = cleanFileName.replace(/[<>:"|?*]/g, '_');
+
+    // Remove any invalid filename characters for safety
+    cleanFileName = cleanFileName.replace(/[<>:"|?*&=]/g, '_');
+
+    // Ensure we have a valid filename
+    if (!cleanFileName || cleanFileName.length === 0) {
+      cleanFileName = `download_${Date.now()}.pdf`;
+    }
 
     // Create a unique file path in the document directory
     const fileUri = `${FileSystem.documentDirectory}${cleanFileName}`;
 
     // Check if the file already exists and generate a unique name if needed
     let finalFileUri = fileUri;
-    let counter = 1;
     const fileInfo = await FileSystem.getInfoAsync(fileUri);
 
     if (fileInfo.exists) {
       // Add timestamp to make it unique
-      const extension = cleanFileName.substring(cleanFileName.lastIndexOf('.'));
-      const nameWithoutExt = cleanFileName.substring(
-        0,
-        cleanFileName.lastIndexOf('.')
-      );
-      finalFileUri = `${
-        FileSystem.documentDirectory
-      }${nameWithoutExt}_${Date.now()}${extension}`;
+      const dotIndex = cleanFileName.lastIndexOf('.');
+      if (dotIndex > 0) {
+        const extension = cleanFileName.substring(dotIndex);
+        const nameWithoutExt = cleanFileName.substring(0, dotIndex);
+        finalFileUri = `${
+          FileSystem.documentDirectory
+        }${nameWithoutExt}_${Date.now()}${extension}`;
+      } else {
+        finalFileUri = `${
+          FileSystem.documentDirectory
+        }${cleanFileName}_${Date.now()}`;
+      }
     }
+
+    console.log('Downloading from URL:', url);
+    console.log('Saving to path:', finalFileUri);
 
     // Download the file
     const downloadResult = await FileSystem.downloadAsync(url, finalFileUri);

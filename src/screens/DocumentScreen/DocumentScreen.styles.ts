@@ -150,14 +150,14 @@ export const styles = StyleSheet.create({
   tableHeader: {
     flexDirection: 'row',
     backgroundColor: '#f8f8f8',
-    paddingVertical: 8, 
-    paddingHorizontal: 4, 
+    paddingVertical: 8,
+    paddingHorizontal: 4,
     borderRadius: 8,
     marginBottom: 8,
-    gap: 2, 
+    gap: 2,
   },
   tableHeaderText: {
-    fontSize: 10, 
+    fontSize: 10,
     fontWeight: 'bold',
     color: '#333',
     textAlign: 'center',
@@ -167,7 +167,7 @@ export const styles = StyleSheet.create({
     flex: 1,
   },
   tableHeaderName: {
-    flex: 2.2, 
+    flex: 2.2,
     textAlign: 'left',
   },
   tableHeaderActions: {
@@ -299,5 +299,28 @@ export const styles = StyleSheet.create({
   activeNavText: {
     color: '#de0000',
     fontWeight: '500',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: '#666',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  emptyText: {
+    marginTop: 16,
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
   },
 });

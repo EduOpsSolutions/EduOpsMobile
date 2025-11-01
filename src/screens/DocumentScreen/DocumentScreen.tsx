@@ -1,120 +1,178 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   ScrollView,
   TextInput,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { styles } from './DocumentScreen.styles';
 import { AppLayout } from '../../components/common';
+import { useDocumentStore } from '../../stores/documentStore';
+import { DocumentTemplate } from '../../types/document';
+import {
+  DocumentDetailsModal,
+  RequestDocumentModal,
+  ViewRequestsModal,
+  RequestDetailsModal,
+} from '../../components/modals';
+import {
+  downloadAndShare,
+  showDownloadConfirmation,
+} from '../../utils/fileDownload';
 
-interface DocumentProps {
-  id: string;
-  fee: string;
-  name: string;
-  actionType: 'Request' | 'Download';
-  description: string;
+interface DocumentItemProps {
+  document: DocumentTemplate;
+  onPress: () => void;
+  onAction: () => void;
 }
 
-const DocumentItem: React.FC<DocumentProps> = ({
-  fee,
-  name,
-  actionType,
-  description,
+const DocumentItem: React.FC<DocumentItemProps> = ({
+  document,
+  onPress,
+  onAction,
 }) => {
   const getActionButton = () => {
-    if (actionType === 'Request') {
+    if (document.requiresRequest) {
       return (
-        <TouchableOpacity style={styles.requestButton}>
+        <TouchableOpacity
+          style={styles.requestButton}
+          onPress={(e) => {
+            e.stopPropagation();
+            onAction();
+          }}
+        >
           <Text style={styles.requestButtonText}>Request</Text>
         </TouchableOpacity>
       );
-    } else {
+    } else if (document.canDownload) {
       return (
-        <TouchableOpacity style={styles.downloadButton}>
+        <TouchableOpacity
+          style={styles.downloadButton}
+          onPress={(e) => {
+            e.stopPropagation();
+            onAction();
+          }}
+        >
           <Icon name="download" size={16} color="white" />
           <Text style={styles.downloadButtonText}>Download</Text>
         </TouchableOpacity>
       );
     }
+    return null;
   };
 
   return (
-    <View style={styles.documentRow}>
+    <TouchableOpacity
+      style={styles.documentRow}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
       <Text style={styles.feeText} numberOfLines={1} ellipsizeMode="tail">
-        {fee}
+        {document.displayPrice}
       </Text>
       <Text style={styles.nameText} numberOfLines={1} ellipsizeMode="tail">
-        {name}
+        {document.documentName}
       </Text>
       <View style={styles.actionContainer}>{getActionButton()}</View>
-      <Text
+      {/* <Text
         style={styles.descriptionText}
         numberOfLines={1}
         ellipsizeMode="tail"
       >
-        {description}
-      </Text>
-    </View>
+        {document.description || ''}
+      </Text> */}
+    </TouchableOpacity>
   );
 };
 
 export const DocumentScreen = (): React.JSX.Element => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const {
+    documents,
+    requests,
+    loading,
+    requestsLoading,
+    searchQuery,
+    selectedDocument,
+    selectedRequest,
+    requestModalVisible,
+    requestsModalVisible,
+    requestDetailsModalVisible,
+    documentDetailsModalVisible,
+    fetchDocuments,
+    fetchRequests,
+    searchDocuments,
+    createRequest,
+    uploadProofOfPayment,
+    removeProofOfPayment,
+    openRequestModal,
+    closeRequestModal,
+    openRequestsModal,
+    closeRequestsModal,
+    openRequestDetailsModal,
+    closeRequestDetailsModal,
+    openDocumentDetailsModal,
+    closeDocumentDetailsModal,
+  } = useDocumentStore();
 
-  const documents: DocumentProps[] = [
-    {
-      id: '1',
-      fee: 'PHP 150',
-      name: 'Transcript of Records',
-      actionType: 'Request',
-      description: 'Free for 1st request',
-    },
-    {
-      id: '2',
-      fee: 'FREE',
-      name: 'Excuse Letter',
-      actionType: 'Download',
-      description: '',
-    },
-    {
-      id: '3',
-      fee: 'FREE',
-      name: 'Examination Results',
-      actionType: 'Request',
-      description: '',
-    },
-    {
-      id: '4',
-      fee: 'PHP 3000',
-      name: 'Certification of Fluency',
-      actionType: 'Request',
-      description: '',
-    },
-    {
-      id: '5',
-      fee: 'FREE',
-      name: 'Student Manual 2024',
-      actionType: 'Download',
-      description: '',
-    },
-    {
-      id: '6',
-      fee: 'FREE',
-      name: 'Courses Catalog',
-      actionType: 'Download',
-      description: '',
-    },
-    {
-      id: '7',
-      fee: 'FREE',
-      name: 'A1 - B2 Prospectus',
-      actionType: 'Download',
-      description: '',
-    },
-  ];
+  useEffect(() => {
+    fetchDocuments();
+    fetchRequests();
+  }, []);
+
+  const handleSearch = (query: string) => {
+    searchDocuments(query);
+  };
+
+  const filteredDocuments = documents.filter(
+    (doc) =>
+      doc.documentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      doc.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleDownloadDocument = async (document: DocumentTemplate) => {
+    if (!document.uploadFile) {
+      Alert.alert('Error', 'This document is not available for download.');
+      return;
+    }
+
+    // Extract filename from URL (handle Firebase Storage URLs with query params)
+    let fileName = document.uploadFile.split('/').pop() || '';
+
+    // Remove query parameters if present
+    fileName = fileName.split('?')[0];
+
+    // Fallback to document name if extraction failed
+    if (!fileName || fileName.length === 0) {
+      fileName = `${document.documentName.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
+    }
+
+    // Show confirmation dialog before downloading (same as posts/homepage)
+    showDownloadConfirmation(fileName, undefined, async () => {
+      try {
+        await downloadAndShare(document.uploadFile!, fileName);
+      } catch (error: any) {
+        console.error('Download error:', error);
+        Alert.alert('Error', 'Failed to download document. Please try again.');
+      }
+    });
+  };
+
+  const handleDocumentAction = (document: DocumentTemplate) => {
+    if (document.requiresRequest) {
+      openRequestModal(document);
+    } else if (document.canDownload) {
+      handleDownloadDocument(document);
+    }
+  };
+
+  const handleViewRequests = () => {
+    fetchRequests();
+    openRequestsModal();
+  };
 
   return (
     <AppLayout
@@ -141,13 +199,16 @@ export const DocumentScreen = (): React.JSX.Element => {
                   placeholder="Search documents"
                   placeholderTextColor="#999"
                   value={searchQuery}
-                  onChangeText={setSearchQuery}
+                  onChangeText={handleSearch}
                 />
                 <TouchableOpacity style={styles.searchButton}>
                   <Icon name="search" size={20} color="#666" />
                 </TouchableOpacity>
               </View>
-              <TouchableOpacity style={styles.seeRequestsButton}>
+              <TouchableOpacity
+                style={styles.seeRequestsButton}
+                onPress={handleViewRequests}
+              >
                 <Icon name="assignment" size={16} color="white" />
                 <Text style={styles.seeRequestsText}>See Requests</Text>
               </TouchableOpacity>
@@ -164,28 +225,96 @@ export const DocumentScreen = (): React.JSX.Element => {
               <Text style={[styles.tableHeaderText, styles.tableHeaderActions]}>
                 ACTIONS
               </Text>
-              <Text style={styles.tableHeaderDescription}>DESCRIPTION</Text>
+              {/* <Text style={styles.tableHeaderDescription}>DESCRIPTION</Text> */}
             </View>
 
             {/* Documents List */}
-            <ScrollView
-              style={styles.documentsList}
-              contentContainerStyle={{ paddingBottom: 8 }}
-              showsVerticalScrollIndicator={false}
-            >
-              {documents.map((document) => (
-                <DocumentItem key={document.id} {...document} />
-              ))}
-            </ScrollView>
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#2563eb" />
+                <Text style={styles.loadingText}>Loading documents...</Text>
+              </View>
+            ) : filteredDocuments.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <Icon name="description" size={64} color="#d1d5db" />
+                <Text style={styles.emptyText}>
+                  {searchQuery
+                    ? 'No documents found'
+                    : 'No documents available'}
+                </Text>
+              </View>
+            ) : (
+              <ScrollView
+                style={styles.documentsList}
+                contentContainerStyle={{ paddingBottom: 8 }}
+                showsVerticalScrollIndicator={false}
+              >
+                {filteredDocuments.map((document) => (
+                  <DocumentItem
+                    key={document.id}
+                    document={document}
+                    onPress={() => openDocumentDetailsModal(document)}
+                    onAction={() => handleDocumentAction(document)}
+                  />
+                ))}
+              </ScrollView>
+            )}
 
             {/* Version Info */}
-            <View style={styles.versionInfo}>
+            {/* <View style={styles.versionInfo}>
               <Text style={styles.versionText}>Latest Version</Text>
-              <Text style={styles.versionDate}>4/16/2024</Text>
-            </View>
+              <Text style={styles.versionDate}>
+                {new Date().toLocaleDateString('en-US', {
+                  month: 'numeric',
+                  day: 'numeric',
+                  year: 'numeric',
+                })}
+              </Text>
+            </View> */}
           </View>
         </View>
       </View>
+
+      {/* Modals */}
+      <DocumentDetailsModal
+        visible={documentDetailsModalVisible}
+        document={selectedDocument}
+        onClose={closeDocumentDetailsModal}
+        onRequest={(doc) => {
+          closeDocumentDetailsModal();
+          openRequestModal(doc);
+        }}
+        onDownload={handleDownloadDocument}
+      />
+
+      <RequestDocumentModal
+        visible={requestModalVisible}
+        document={selectedDocument}
+        onClose={closeRequestModal}
+        onSubmit={createRequest}
+        loading={loading}
+      />
+
+      <ViewRequestsModal
+        visible={requestsModalVisible}
+        requests={requests}
+        loading={requestsLoading}
+        onClose={closeRequestsModal}
+        onRequestPress={(request) => {
+          closeRequestsModal();
+          openRequestDetailsModal(request);
+        }}
+        onRefresh={fetchRequests}
+      />
+
+      <RequestDetailsModal
+        visible={requestDetailsModalVisible}
+        request={selectedRequest}
+        onClose={closeRequestDetailsModal}
+        onUploadProof={uploadProofOfPayment}
+        onRemoveProof={removeProofOfPayment}
+        loading={loading}
+      />
     </AppLayout>
   );
 };

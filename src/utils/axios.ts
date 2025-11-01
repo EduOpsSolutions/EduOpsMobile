@@ -27,8 +27,10 @@ import { router } from 'expo-router';
  * - "eduopsmobile://" (production app scheme)
  * - "myapp://" (legacy scheme, also supported)
  */
+const apiUrl =
+  process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5555/api/v1';
 const axiosInstance = axios.create({
-  baseURL: process.env.EXPO_PUBLIC_API_URL || 'http://172.20.10.7:5555/api/v1',
+  baseURL: apiUrl,
   headers: {
     'Content-Type': 'application/json',
   },
