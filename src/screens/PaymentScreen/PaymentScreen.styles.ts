@@ -99,6 +99,53 @@ export const styles = StyleSheet.create({
     width: '85%',
     flexWrap: 'wrap',
   },
+  infoBanner: {
+    width: '100%',
+    backgroundColor: '#e3f2fd',
+    borderWidth: 1,
+    borderColor: '#90caf9',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 20,
+  },
+  infoBannerContent: {
+    gap: 8,
+  },
+  infoBannerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+  },
+  infoBannerLabel: {
+    fontSize: 12,
+    color: '#1565c0',
+    fontWeight: '600',
+  },
+  infoBannerValue: {
+    fontSize: 12,
+    color: '#0d47a1',
+    fontFamily: 'monospace',
+    fontWeight: 'bold',
+  },
+  copyButton: {
+    marginLeft: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    backgroundColor: '#fff',
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#2196f3',
+  },
+  copyButtonText: {
+    fontSize: 10,
+    color: '#2196f3',
+    fontWeight: '600',
+  },
+  infoBannerNote: {
+    fontSize: 10,
+    color: '#1565c0',
+    lineHeight: 14,
+  },
   row: {
     flexDirection: 'row',
     marginBottom: 16,

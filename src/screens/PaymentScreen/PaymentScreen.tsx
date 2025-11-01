@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Linking,
 } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useSegments } from 'expo-router';
 import { styles } from './PaymentScreen.styles';
@@ -94,8 +95,28 @@ export const PaymentScreen = (): React.JSX.Element => {
     setLoading,
   } = usePaymentStore();
 
-  const { user } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
   const [isFetchingStudent, setIsFetchingStudent] = useState(false);
+  const [showIdCopied, setShowIdCopied] = useState(false);
+
+  // Auto-fill user details on component mount
+  React.useEffect(() => {
+    const autoFillUserDetails = async () => {
+      if (isAuthenticated && user?.userId && user?.role === 'student') {
+        updateFormField('student_id', user.userId);
+
+        setIsFetchingStudent(true);
+        await validateAndFetchStudentByID(user.userId);
+        setIsFetchingStudent(false);
+
+        if (user?.email) {
+          updateFormField('email_address', user.email);
+        }
+      }
+    };
+
+    autoFillUserDetails();
+  }, [isAuthenticated, user]);
 
   // Helper function to get proper fee type label
   const getFeeTypeLabel = (feeType: string) => {
@@ -115,23 +136,21 @@ export const PaymentScreen = (): React.JSX.Element => {
 
   const handleStudentIdBlur = async () => {
     const studentId = formData.student_id;
-    if (studentId) {
+    // Only validate for guests (non-authenticated users)
+    // Authenticated users already have auto-filled data
+    if (studentId && !isAuthenticated) {
       setIsFetchingStudent(true);
       await validateAndFetchStudentByID(studentId);
       setIsFetchingStudent(false);
     }
   };
 
-  const handleUseMyStudentId = async () => {
-    if (!user?.userId) {
-      Alert.alert('Error', 'No student ID found for your account.');
-      return;
+  const handleCopyId = async () => {
+    if (user?.userId) {
+      await Clipboard.setStringAsync(user.userId);
+      setShowIdCopied(true);
+      setTimeout(() => setShowIdCopied(false), 2000);
     }
-
-    updateFormField('student_id', user.userId);
-    setIsFetchingStudent(true);
-    await validateAndFetchStudentByID(user.userId);
-    setIsFetchingStudent(false);
   };
 
   const handleSubmit = async () => {
@@ -261,58 +280,71 @@ export const PaymentScreen = (): React.JSX.Element => {
               student information.
             </Text>
 
-            {/* Info Note */}
-            <View style={styles.infoNote}>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'flex-start',
-                  gap: 8,
-                }}
-              >
-                <Icon
-                  name="info"
-                  size={16}
-                  color="#2196f3"
-                  style={{ marginTop: 1 }}
-                />
-                <Text style={styles.infoNoteText}>
-                  <Text style={{ fontWeight: '600' }}>Tip:</Text> Your Student
-                  ID can be found and copied from the Profile page in the
-                  navbar. For convenience, you can click the{' '}
-                  <Text style={{ fontWeight: '600' }}>"Use My ID"</Text> button
-                  to fill in your Student ID.
-                </Text>
+            {/* Info Banner for Logged-in Users */}
+            {isAuthenticated && user?.userId && user?.role === 'student' && (
+              <View style={styles.infoBanner}>
+                <View style={styles.infoBannerContent}>
+                  <View style={styles.infoBannerRow}>
+                    <Text style={styles.infoBannerLabel}>Your ID: </Text>
+                    <Text style={styles.infoBannerValue}>{user.userId}</Text>
+                    <TouchableOpacity onPress={handleCopyId} style={styles.copyButton}>
+                      <Text style={styles.copyButtonText}>
+                        {showIdCopied ? 'Copied!' : 'Copy'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                  <Text style={styles.infoBannerNote}>
+                    <Text style={{ fontWeight: '600' }}>Note:</Text> Your details
+                    have been automatically filled. You can only process payments
+                    for yourself. For guest payments, you can share your ID to
+                    allow others to pay without logging in.
+                  </Text>
+                </View>
               </View>
-            </View>
+            )}
+
+            {/* Info Note for Guests */}
+            {!isAuthenticated && (
+              <View style={styles.infoNote}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'flex-start',
+                    gap: 8,
+                  }}
+                >
+                  <Icon
+                    name="info"
+                    size={16}
+                    color="#2196f3"
+                    style={{ marginTop: 1 }}
+                  />
+                  <Text style={styles.infoNoteText}>
+                    <Text style={{ fontWeight: '600' }}>Tip:</Text> Enter the
+                    Student ID to fetch student details and proceed with payment.
+                    If you don't have a Student ID, please contact the
+                    administration.
+                  </Text>
+                </View>
+              </View>
+            )}
 
             {/* Student ID */}
             <View style={styles.fullWidth}>
-              <View style={styles.labelRow}>
-                <Text style={styles.label}>Student ID*</Text>
-                {user?.userId && (
-                  <TouchableOpacity
-                    style={styles.useMyIdButton}
-                    onPress={handleUseMyStudentId}
-                    disabled={isFetchingStudent}
-                  >
-                    <Icon name="person" size={14} color="#de0000" />
-                    <Text style={styles.useMyIdButtonText}>Use My ID</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
+              <Text style={styles.label}>Student ID*</Text>
               <View style={styles.inputWithIcon}>
                 <TextInput
                   style={[
                     styles.input,
                     isFetchingStudent && styles.inputDisabled,
+                    isAuthenticated && styles.inputReadOnly,
                   ]}
                   value={formData.student_id}
                   onChangeText={(value) => updateFormField('student_id', value)}
                   onBlur={handleStudentIdBlur}
                   placeholder="Enter Student ID"
                   placeholderTextColor="#999"
-                  editable={!isFetchingStudent}
+                  editable={!isFetchingStudent && !isAuthenticated}
                 />
                 {isFetchingStudent && (
                   <ActivityIndicator

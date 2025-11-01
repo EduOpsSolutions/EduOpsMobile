@@ -41,7 +41,9 @@ interface PaymentState {
   validateRequiredFields: () => boolean;
   validatePhoneNumber: () => boolean;
   preparePaymentData: () => any;
-  sendPaymentLinkEmail: (paymentData: any) => Promise<{ success: boolean; data?: any; error?: string }>;
+  sendPaymentLinkEmail: (
+    paymentData: any
+  ) => Promise<{ success: boolean; data?: any; error?: string }>;
   setLoading: (loading: boolean) => void;
 }
 
@@ -76,7 +78,11 @@ export const usePaymentStore = create<PaymentState>((set, get) => ({
       formData: { ...state.formData, [name]: value },
     }));
 
-    if (name === 'first_name' || name === 'last_name' || name === 'student_id') {
+    if (
+      name === 'first_name' ||
+      name === 'last_name' ||
+      name === 'student_id'
+    ) {
       set({ nameError: '' });
     }
   },
@@ -85,19 +91,33 @@ export const usePaymentStore = create<PaymentState>((set, get) => ({
     if (!studentId) {
       set({
         nameError: 'Student ID is required',
-        formData: { ...get().formData, first_name: '', middle_name: '', last_name: '' }
+        formData: {
+          ...get().formData,
+          first_name: '',
+          middle_name: '',
+          last_name: '',
+        },
       });
       return false;
     }
 
     try {
-      const response = await axiosInstance.get(`/users/get-student-by-id/${studentId}`);
+      const response = await axiosInstance.get(
+        `/users/get-student-by-id/${studentId}`
+      );
       const data = response.data;
 
       if (data.error || !data.success) {
         set({
-          nameError: data.message || 'Student ID not found. Please verify the Student ID.',
-          formData: { ...get().formData, first_name: '', middle_name: '', last_name: '' }
+          nameError:
+            data.message ||
+            'Student ID not found. Please verify the Student ID.',
+          formData: {
+            ...get().formData,
+            first_name: '',
+            middle_name: '',
+            last_name: '',
+          },
         });
         return false;
       }
@@ -117,10 +137,17 @@ export const usePaymentStore = create<PaymentState>((set, get) => ({
 
       return true;
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || 'Unable to find student. Please verify the Student ID.';
+      const errorMessage =
+        error.response?.data?.message ||
+        'Unable to find student. Please verify the Student ID.';
       set({
         nameError: errorMessage,
-        formData: { ...get().formData, first_name: '', middle_name: '', last_name: '' }
+        formData: {
+          ...get().formData,
+          first_name: '',
+          middle_name: '',
+          last_name: '',
+        },
       });
       return false;
     }
@@ -137,8 +164,14 @@ export const usePaymentStore = create<PaymentState>((set, get) => ({
 
   validateRequiredFields: () => {
     const { formData } = get();
-    return !!(formData.student_id && formData.first_name && formData.last_name &&
-           formData.email_address && formData.fee && formData.amount);
+    return !!(
+      formData.student_id &&
+      formData.first_name &&
+      formData.last_name &&
+      formData.email_address &&
+      formData.fee &&
+      formData.amount
+    );
   },
 
   validatePhoneNumber: () => {
@@ -153,6 +186,7 @@ export const usePaymentStore = create<PaymentState>((set, get) => ({
 
   preparePaymentData: () => {
     const { formData, studentData } = get();
+    console.log('studentData ko', studentData);
     return {
       userId: studentData?.id || null,
       studentId: studentData?.userId || null,
@@ -168,15 +202,20 @@ export const usePaymentStore = create<PaymentState>((set, get) => ({
 
   sendPaymentLinkEmail: async (paymentData: any) => {
     try {
-      const response = await axiosInstance.post('/payments/send-email', paymentData);
+      console.log('paymentData ko', paymentData);
+      const response = await axiosInstance.post(
+        '/payments/send-email',
+        paymentData
+      );
       return {
         success: true,
-        data: response.data
+        data: response.data,
       };
     } catch (error: any) {
       return {
         success: false,
-        error: error.response?.data?.message || 'Failed to send payment link email'
+        error:
+          error.response?.data?.message || 'Failed to send payment link email',
       };
     }
   },
