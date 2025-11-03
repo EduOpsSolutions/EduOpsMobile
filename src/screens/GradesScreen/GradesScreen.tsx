@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, ActivityIndicator, Alert, TouchableOpacity, RefreshControl } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  ActivityIndicator,
+  Alert,
+  TouchableOpacity,
+  RefreshControl,
+} from 'react-native';
 import { useSegments } from 'expo-router';
 import { styles } from './GradesScreen.styles';
 import { AppLayout } from '../../components/common';
@@ -53,10 +61,10 @@ const GradeItem: React.FC<GradeItemProps> = ({ grade, onViewDetails }) => {
       <Text style={[styles.status, getStatusStyle()]}>{grade.status}</Text>
       <Text style={styles.dateText}>{formatDate(grade.completedDate)}</Text>
       <View style={styles.detailsButton}>
-        <Icon 
-          name="description" 
-          size={20} 
-          color={grade.status === 'NO GRADE' ? '#999' : '#de0000'} 
+        <Icon
+          name="description"
+          size={20}
+          color={grade.status === 'NO GRADE' ? '#999' : '#de0000'}
         />
       </View>
     </TouchableOpacity>
@@ -88,7 +96,7 @@ export const GradesScreen = (): React.JSX.Element => {
 
     setLoading(true);
     setError(null);
-    
+
     try {
       // Fetch all courses and student grades in parallel
       const [coursesData, gradesData] = await Promise.all([
@@ -97,7 +105,7 @@ export const GradesScreen = (): React.JSX.Element => {
       ]);
 
       // Sort courses alphabetically (A1, A2, B1, B2, etc.)
-      const sortedCourses = coursesData.sort((a: any, b: any) => 
+      const sortedCourses = coursesData.sort((a: any, b: any) =>
         a.name.localeCompare(b.name)
       );
 
@@ -113,8 +121,12 @@ export const GradesScreen = (): React.JSX.Element => {
         return {
           id: grade?.id || course.id,
           courseName: course.name,
-          status: grade 
-            ? (grade.grade === 'Pass' ? 'PASS' : grade.grade === 'Fail' ? 'FAIL' : 'NO GRADE')
+          status: grade
+            ? grade.grade === 'Pass'
+              ? 'PASS'
+              : grade.grade === 'Fail'
+              ? 'FAIL'
+              : 'NO GRADE'
             : 'NO GRADE',
           completedDate: grade?.updatedAt || null,
           courseId: course.id,
@@ -155,18 +167,17 @@ export const GradesScreen = (): React.JSX.Element => {
       if (grade.files && grade.files.length > 0) {
         // Sort files by uploadedAt descending (latest first)
         const sortedFiles = [...grade.files].sort(
-          (a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
+          (a, b) =>
+            new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
         );
         const latestFile = sortedFiles[0];
         if (latestFile.url) {
           setPreviewFile({ url: latestFile.url, title: 'Certificate Preview' });
           setShowPreview(true);
         } else {
-          Alert.alert(
-            'File Error',
-            'No file URL found.',
-            [{ text: 'OK', style: 'default' }]
-          );
+          Alert.alert('File Error', 'No file URL found.', [
+            { text: 'OK', style: 'default' },
+          ]);
         }
       } else {
         Alert.alert(
@@ -185,7 +196,7 @@ export const GradesScreen = (): React.JSX.Element => {
 
   return (
     <AppLayout
-      showNotifications={false}
+      showNotifications={true}
       enrollmentActive={isEnrollmentActive}
       paymentActive={false}
     >
@@ -215,7 +226,9 @@ export const GradesScreen = (): React.JSX.Element => {
               {/* Student Info */}
               {user && (
                 <Text style={styles.studentInfo}>
-                  {`${user.lastName?.toUpperCase() || ''}, ${user.firstName?.toUpperCase() || ''} ${user.middleName?.charAt(0)?.toUpperCase() || ''}.`}
+                  {`${user.lastName?.toUpperCase() || ''}, ${
+                    user.firstName?.toUpperCase() || ''
+                  } ${user.middleName?.charAt(0)?.toUpperCase() || ''}.`}
                 </Text>
               )}
 
@@ -228,7 +241,10 @@ export const GradesScreen = (): React.JSX.Element => {
                 <View style={styles.errorContainer}>
                   <Icon name="error-outline" size={48} color="#F44336" />
                   <Text style={styles.errorText}>{error}</Text>
-                  <TouchableOpacity style={styles.retryButton} onPress={fetchGrades}>
+                  <TouchableOpacity
+                    style={styles.retryButton}
+                    onPress={fetchGrades}
+                  >
                     <Text style={styles.retryButtonText}>Retry</Text>
                   </TouchableOpacity>
                 </View>
@@ -236,10 +252,18 @@ export const GradesScreen = (): React.JSX.Element => {
                 <>
                   {/* Table Header */}
                   <View style={styles.tableHeader}>
-                    <Text style={[styles.tableHeaderText, { flex: 2 }]}>Course</Text>
-                    <Text style={[styles.tableHeaderText, { flex: 1 }]}>Status</Text>
-                    <Text style={[styles.tableHeaderText, { flex: 1 }]}>Date</Text>
-                    <Text style={[styles.tableHeaderText, { flex: 0.5 }]}></Text>
+                    <Text style={[styles.tableHeaderText, { flex: 2 }]}>
+                      Course
+                    </Text>
+                    <Text style={[styles.tableHeaderText, { flex: 1 }]}>
+                      Status
+                    </Text>
+                    <Text style={[styles.tableHeaderText, { flex: 1 }]}>
+                      Date
+                    </Text>
+                    <Text
+                      style={[styles.tableHeaderText, { flex: 0.5 }]}
+                    ></Text>
                   </View>
 
                   {/* Grades List */}

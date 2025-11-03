@@ -90,6 +90,13 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  printButtonDisabled: {
+    backgroundColor: 'rgba(139, 14, 7, 0.8)',
+    opacity: 0.6,
   },
   printButtonText: {
     color: 'white',
@@ -136,10 +143,23 @@ export const styles = StyleSheet.create({
     color: '#333',
     textAlign: 'center',
   },
-  paymentMethodText: {
+  orNumberText: {
     flex: 1,
     fontSize: 11,
     color: '#333',
+    textAlign: 'center',
+  },
+  debitText: {
+    flex: 1,
+    fontSize: 11,
+    color: '#d32f2f',
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  creditText: {
+    flex: 1,
+    fontSize: 11,
+    color: '#388e3c',
     fontWeight: '500',
     textAlign: 'center',
   },
@@ -147,6 +167,7 @@ export const styles = StyleSheet.create({
     flex: 1,
     fontSize: 11,
     color: '#333',
+    fontWeight: '600',
     textAlign: 'center',
   },
   typeText: {
@@ -160,6 +181,50 @@ export const styles = StyleSheet.create({
     fontSize: 11,
     color: '#333',
     textAlign: 'center',
+  },
+  loadingContainer: {
+    paddingVertical: 60,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: '#666',
+  },
+  errorContainer: {
+    paddingVertical: 60,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  errorText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    paddingHorizontal: 20,
+  },
+  retryButton: {
+    marginTop: 16,
+    backgroundColor: '#8B0E07',
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderRadius: 6,
+  },
+  retryButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  emptyContainer: {
+    paddingVertical: 60,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: '#9CA3AF',
   },
   bottomNavigation: {
     position: 'absolute',

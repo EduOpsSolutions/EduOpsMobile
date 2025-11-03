@@ -176,7 +176,7 @@ export const DocumentScreen = (): React.JSX.Element => {
 
   return (
     <AppLayout
-      showNotifications={false}
+      showNotifications={true}
       enrollmentActive={false}
       paymentActive={false}
     >

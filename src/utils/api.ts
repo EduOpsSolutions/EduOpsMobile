@@ -219,9 +219,26 @@ export const gradesApi = {
 
 // Assessment/Payment API
 export const assessmentApi = {
-  getAssessment: async () => {
+  // Get all assessments for a specific student (all courses/batches)
+  getStudentAssessments: async (studentId: string) => {
     try {
-      const response = await axiosInstance.get('/assessment');
+      const response = await axiosInstance.get(`/assessment/student/${studentId}`);
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  },
+
+  // Get specific assessment for a student with course and batch
+  getAssessmentDetails: async (
+    studentId: string,
+    courseId: string,
+    academicPeriodId: string
+  ) => {
+    try {
+      const response = await axiosInstance.get(`/assessment/${studentId}`, {
+        params: { courseId, academicPeriodId },
+      });
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -328,6 +345,27 @@ export const coursesApi = {
   },
 };
 
+// Ledger API
+export const ledgerApi = {
+  getStudentLedger: async (studentId: string) => {
+    try {
+      const response = await axiosInstance.get(`/ledger/student/${studentId}`);
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  },
+
+  getOngoingStudents: async () => {
+    try {
+      const response = await axiosInstance.get('/ledger/students/ongoing');
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  },
+};
+
 export default {
   enrollment: enrollmentApi,
   posts: postsApi,
@@ -338,4 +376,5 @@ export default {
   schedule: scheduleApi,
   file: fileApi,
   courses: coursesApi,
+  ledger: ledgerApi,
 };

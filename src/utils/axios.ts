@@ -46,11 +46,25 @@ axiosInstance.interceptors.request.use(
       if (token) {
         // Check if token is expired before making request
         if (isTokenExpired(token)) {
-          console.log('Token expired during request, clearing auth data');
           // Token expired - clear auth data
           await clearAuthData();
 
-          // Redirect to login
+          // Show alert and redirect to login
+          Alert.alert(
+            'Session Expired',
+            'Your session has expired. Please login again.',
+            [
+              {
+                text: 'OK',
+                onPress: () => {
+                  router.replace('/');
+                },
+              },
+            ],
+            { cancelable: false }
+          );
+
+          // Also redirect after a short delay in case alert is dismissed
           setTimeout(() => {
             router.replace('/');
           }, 100);
@@ -65,7 +79,6 @@ axiosInstance.interceptors.request.use(
 
       return config;
     } catch (error) {
-      console.error('Request interceptor error:', error);
       return config;
     }
   },
@@ -89,7 +102,6 @@ axiosInstance.interceptors.response.use(
       const token = await getToken();
 
       if (token && isTokenExpired(token)) {
-        console.log('Token expired in response, clearing auth data');
         // Token expired - clear auth data
         await clearAuthData();
 
@@ -114,7 +126,6 @@ axiosInstance.interceptors.response.use(
         }, 100);
       } else if (error.response?.status === 401) {
         // 401 without expired token - possibly invalid token
-        console.log('Unauthorized request, clearing auth data');
         await clearAuthData();
 
         Alert.alert(
@@ -134,10 +145,6 @@ axiosInstance.interceptors.response.use(
         setTimeout(() => {
           router.replace('/');
         }, 100);
-      } else if (error.response?.status === 403) {
-        // 403 without expired token might be a permission issue
-        // Don't log out, just show error
-        console.log('Permission denied:', error.response?.data?.message);
       }
     }
 
