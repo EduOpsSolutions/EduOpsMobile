@@ -31,6 +31,8 @@ export type RequestMode = 'pickup' | 'delivery';
 
 export type PaymentMethod = 'online' | 'cashPickup';
 
+export type PaymentStatus = 'pending' | 'verified';
+
 export interface DocumentRequest {
   id: string;
   userId: string;
@@ -49,6 +51,12 @@ export interface DocumentRequest {
   status: RequestStatus;
   remarks?: string;
   proofOfPayment?: string;
+  // Payment-related fields
+  paymentStatus?: PaymentStatus;
+  paymentAmount?: number;
+  paymentUrl?: string;
+  paymentId?: string;
+  fulfilledDocumentUrl?: string;
   createdAt: string;
   updatedAt: string;
   // Relations
@@ -65,6 +73,7 @@ export interface DocumentRequest {
   documentName?: string;
   displayDate?: string;
   displayStatus?: string;
+  displayPaymentStatus?: string;
 }
 
 // Form Data Types
