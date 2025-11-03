@@ -113,7 +113,6 @@ export const styles = StyleSheet.create({
   },
   dropdownContainer: {
     position: 'relative',
-    zIndex: 1000,
   },
   dropdownButton: {
     flexDirection: 'row',
@@ -147,7 +146,6 @@ export const styles = StyleSheet.create({
     borderTopLeftRadius: 0,
     borderTopRightRadius: 0,
     maxHeight: 120,
-    zIndex: 1001,
   },
   dropdownOption: {
     paddingHorizontal: 8,

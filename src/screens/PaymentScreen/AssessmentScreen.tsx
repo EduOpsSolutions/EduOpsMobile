@@ -21,6 +21,7 @@ interface DropdownProps {
   value: string;
   onValueChange: (value: string) => void;
   options: string[];
+  zIndex?: number;
 }
 
 const Dropdown: React.FC<DropdownProps> = ({
@@ -28,11 +29,12 @@ const Dropdown: React.FC<DropdownProps> = ({
   value,
   onValueChange,
   options,
+  zIndex = 1000,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <View style={styles.dropdownContainer}>
+    <View style={[styles.dropdownContainer, { zIndex: isOpen ? zIndex : 1 }]}>
       <TouchableOpacity
         style={styles.dropdownButton}
         onPress={() => setIsOpen(!isOpen)}
@@ -43,7 +45,11 @@ const Dropdown: React.FC<DropdownProps> = ({
         <Icon name="keyboard-arrow-down" size={16} color="#666" />
       </TouchableOpacity>
       {isOpen && (
-        <View style={styles.dropdownOptions}>
+        <ScrollView
+          style={styles.dropdownOptions}
+          nestedScrollEnabled={true}
+          showsVerticalScrollIndicator={true}
+        >
           {options.map((option, index) => (
             <TouchableOpacity
               key={index}
@@ -56,7 +62,7 @@ const Dropdown: React.FC<DropdownProps> = ({
               <Text style={styles.dropdownOptionText}>{option}</Text>
             </TouchableOpacity>
           ))}
-        </View>
+        </ScrollView>
       )}
     </View>
   );
@@ -265,15 +271,15 @@ export const AssessmentScreen = (): React.JSX.Element => {
 
             {/* Search Form */}
             <View style={styles.searchForm}>
-              <View style={styles.searchRow}>
+              <View style={[styles.searchRow, { zIndex: 2 }]}>
                 <View style={styles.searchField}>
                   <Text style={styles.searchLabel}>Course</Text>
-                  <TextInput
-                    style={styles.searchInput}
+                  <Dropdown
+                    placeholder="Select Course"
                     value={searchData.course}
-                    onChangeText={(value) => updateSearchData('course', value)}
-                    placeholder=""
-                    placeholderTextColor="#999"
+                    onValueChange={(value) => updateSearchData('course', value)}
+                    options={courseOptions}
+                    zIndex={3000}
                   />
                 </View>
                 <View style={styles.searchField}>
@@ -283,10 +289,11 @@ export const AssessmentScreen = (): React.JSX.Element => {
                     value={searchData.batch}
                     onValueChange={(value) => updateSearchData('batch', value)}
                     options={batchOptions}
+                    zIndex={2000}
                   />
                 </View>
               </View>
-              <View style={styles.searchRow}>
+              <View style={[styles.searchRow, { zIndex: 1 }]}>
                 <View style={styles.searchField}>
                   <Text style={styles.searchLabel}>Year</Text>
                   <Dropdown
@@ -294,6 +301,7 @@ export const AssessmentScreen = (): React.JSX.Element => {
                     value={searchData.year}
                     onValueChange={(value) => updateSearchData('year', value)}
                     options={yearOptions}
+                    zIndex={1000}
                   />
                 </View>
                 <View style={styles.searchButtonContainer}>
