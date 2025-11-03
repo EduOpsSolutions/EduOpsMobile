@@ -18,6 +18,14 @@ export const downloadFile = async (
   fileName: string
 ): Promise<{ success: boolean; uri?: string; error?: string }> => {
   try {
+    // Validate URL
+    if (!url || url.trim().length === 0) {
+      return {
+        success: false,
+        error: 'Invalid file URL. The file may not be available.',
+      };
+    }
+
     // Parse URL to get pathname and remove query parameters
     let cleanFileName = fileName;
 
@@ -61,9 +69,6 @@ export const downloadFile = async (
       }
     }
 
-    console.log('Downloading from URL:', url);
-    console.log('Saving to path:', finalFileUri);
-
     // Download the file
     const downloadResult = await FileSystem.downloadAsync(url, finalFileUri);
 
@@ -72,17 +77,46 @@ export const downloadFile = async (
         success: true,
         uri: downloadResult.uri,
       };
+    } else if (downloadResult.status === 404) {
+      return {
+        success: false,
+        error: 'File not found. The document may have been removed or is unavailable.',
+      };
+    } else if (downloadResult.status === 403) {
+      return {
+        success: false,
+        error: 'Access denied. You may not have permission to download this file.',
+      };
     } else {
       return {
         success: false,
-        error: `Download failed with status ${downloadResult.status}`,
+        error: `Download failed. The file may not be available. (Status: ${downloadResult.status})`,
       };
     }
   } catch (error: any) {
-    console.error('Download error:', error);
+    // Handle specific error messages
+    const errorMessage = error.message || '';
+
+    if (errorMessage.includes('404') || errorMessage.includes('not found')) {
+      return {
+        success: false,
+        error: 'File not found. The document may have been removed or is unavailable.',
+      };
+    } else if (errorMessage.includes('network') || errorMessage.includes('connection')) {
+      return {
+        success: false,
+        error: 'Network error. Please check your internet connection and try again.',
+      };
+    } else if (errorMessage.includes('permission') || errorMessage.includes('403')) {
+      return {
+        success: false,
+        error: 'Access denied. You may not have permission to download this file.',
+      };
+    }
+
     return {
       success: false,
-      error: error.message || 'Failed to download file',
+      error: 'Failed to download file. The document may not be available.',
     };
   }
 };
@@ -122,7 +156,6 @@ export const downloadAndShare = async (
       dialogTitle: `Save ${fileName}`,
     });
   } catch (error: any) {
-    console.error('Download and share error:', error);
     Alert.alert(
       'Download Failed',
       error.message || 'Failed to download file. Please try again.',

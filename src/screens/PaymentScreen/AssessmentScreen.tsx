@@ -12,7 +12,10 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
 import { styles } from './AssessmentScreen.styles';
 import { AppLayout } from '../../components/common';
-import { useAssessmentStore, AssessmentSummary } from '../../stores/assessmentStore';
+import {
+  useAssessmentStore,
+  AssessmentSummary,
+} from '../../stores/assessmentStore';
 import { useAuthStore } from '../../stores/authStore';
 import axiosInstance from '../../utils/axios';
 
@@ -114,7 +117,9 @@ export const AssessmentScreen = (): React.JSX.Element => {
     batch: '',
     year: '',
   });
-  const [filteredAssessments, setFilteredAssessments] = useState<AssessmentSummary[]>([]);
+  const [filteredAssessments, setFilteredAssessments] = useState<
+    AssessmentSummary[]
+  >([]);
   const [showResults, setShowResults] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
   const [academicPeriods, setAcademicPeriods] = useState<AcademicPeriod[]>([]);
@@ -191,12 +196,12 @@ export const AssessmentScreen = (): React.JSX.Element => {
   // Filter assessments whenever search criteria or assessments change
   useEffect(() => {
     const filtered = assessments.filter((assessment) => {
-      const courseMatch = !searchData.course ||
-        assessment.course === searchData.course;
-      const batchMatch = !searchData.batch ||
-        assessment.batch === searchData.batch;
-      const yearMatch = !searchData.year ||
-        assessment.year.toString() === searchData.year;
+      const courseMatch =
+        !searchData.course || assessment.course === searchData.course;
+      const batchMatch =
+        !searchData.batch || assessment.batch === searchData.batch;
+      const yearMatch =
+        !searchData.year || assessment.year.toString() === searchData.year;
 
       return courseMatch && batchMatch && yearMatch;
     });
@@ -212,7 +217,10 @@ export const AssessmentScreen = (): React.JSX.Element => {
     if (filteredAssessments.length === 1) {
       selectAssessment(filteredAssessments[0]);
     } else if (filteredAssessments.length === 0) {
-      Alert.alert('No Results', 'No assessments found matching your search criteria.');
+      Alert.alert(
+        'No Results',
+        'No assessments found matching your search criteria.'
+      );
     }
   };
 
@@ -236,13 +244,15 @@ export const AssessmentScreen = (): React.JSX.Element => {
   };
 
   const handleTransactionHistory = () => {
-    Alert.alert('Transaction History', 'This feature will open transaction history modal.', [
-      { text: 'OK' },
-    ]);
+    Alert.alert(
+      'Transaction History',
+      'This feature will open transaction history modal.',
+      [{ text: 'OK' }]
+    );
   };
 
   const formatAmount = (amount: number) => {
-    return amount.toFixed(2);
+    return new Number(amount).toFixed(2);
   };
 
   const isPaymentActive = true;
@@ -347,7 +357,9 @@ export const AssessmentScreen = (): React.JSX.Element => {
                     </Text>
                   </View>
                   <View style={styles.assessmentItemFooter}>
-                    <Text style={styles.assessmentItemLabel}>Remaining Balance:</Text>
+                    <Text style={styles.assessmentItemLabel}>
+                      Remaining Balance:
+                    </Text>
                     <Text style={styles.assessmentItemBalance}>
                       ₱{formatAmount(assessment.remainingBalance)}
                     </Text>
@@ -446,7 +458,9 @@ export const AssessmentScreen = (): React.JSX.Element => {
                     .filter((sf) => sf.type === 'discount')
                     .map((discount, index) => (
                       <View key={`discount-${index}`} style={styles.feeRow}>
-                        <Text style={[styles.feeDescription, styles.discountText]}>
+                        <Text
+                          style={[styles.feeDescription, styles.discountText]}
+                        >
                           {discount.name.toUpperCase()} (DISCOUNT)
                         </Text>
                         <Text style={[styles.feeAmount, styles.discountAmount]}>

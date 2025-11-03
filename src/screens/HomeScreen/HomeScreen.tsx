@@ -212,7 +212,7 @@ export const HomeScreen = (): React.JSX.Element => {
       try {
         await downloadAndShare(file.url, file.fileName);
       } catch (error) {
-        console.error('Download error:', error);
+        // Error already handled by downloadAndShare
       }
     });
   };
