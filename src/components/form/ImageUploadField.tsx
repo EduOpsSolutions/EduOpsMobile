@@ -33,7 +33,10 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
 
   useEffect(() => {
     // Reset preview when resetKey changes
-    if (currentImage && (currentImage.startsWith('http') || currentImage.startsWith('file://'))) {
+    if (
+      currentImage &&
+      (currentImage.startsWith('http') || currentImage.startsWith('file://'))
+    ) {
       setPreviewUrl(currentImage);
     } else {
       setPreviewUrl(null);
@@ -44,12 +47,16 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
     if (!name) return 'U';
     const parts = name.split(' ');
     if (parts.length >= 2) {
-      return `${parts[0].charAt(0)}${parts[1].charAt(0)}`.toUpperCase();
+      return `${parts[0].charAt(0)}${parts[parts.length - 1].charAt(
+        0
+      )}`.toUpperCase();
     }
     return name.charAt(0).toUpperCase();
   };
 
-  const requestPermissions = async (type: 'camera' | 'library'): Promise<boolean> => {
+  const requestPermissions = async (
+    type: 'camera' | 'library'
+  ): Promise<boolean> => {
     try {
       if (type === 'camera') {
         const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -62,7 +69,8 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
           return false;
         }
       } else {
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        const { status } =
+          await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
           Alert.alert(
             'Permission Required',
@@ -178,11 +186,14 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
       if (previewUrl) {
         buttons.push({
           text: 'Remove Photo',
-          onPress: handleRemoveImage,
-        });
+          onPress: () => Promise.resolve(handleRemoveImage()),
+        } as const);
       }
 
-      buttons.push({ text: 'Cancel', onPress: () => {} });
+      buttons.push({
+        text: 'Cancel',
+        onPress: () => Promise.resolve(),
+      } as const);
 
       Alert.alert('Profile Picture', 'Choose an option', buttons);
     }
@@ -211,7 +222,9 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
             <Image source={{ uri: previewUrl }} style={styles.image} />
           ) : (
             <View style={styles.initialsContainer}>
-              <Text style={styles.initialsText}>{getUserInitials(currentImage)}</Text>
+              <Text style={styles.initialsText}>
+                {getUserInitials(currentImage)}
+              </Text>
             </View>
           )}
         </View>

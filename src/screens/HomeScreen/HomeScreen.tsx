@@ -29,13 +29,13 @@ const PostTag: React.FC<{ tag: string }> = ({ tag }) => {
   const getTagStyle = () => {
     switch (tag) {
       case 'global':
-        return { backgroundColor: '#3b82f6', text: 'Global' };
+        return { backgroundColor: '#f59e0b', text: 'Global' };
       case 'student':
-        return { backgroundColor: '#10b981', text: 'Student' };
+        return { backgroundColor: '#ff0A04', text: 'Student' };
       case 'teacher':
-        return { backgroundColor: '#f59e0b', text: 'Teacher' };
+        return { backgroundColor: '#10b981', text: 'Teacher' };
       default:
-        return { backgroundColor: '#6b7280', text: tag };
+        return { backgroundColor: '#3b82f6', text: tag };
     }
   };
 
@@ -212,7 +212,7 @@ export const HomeScreen = (): React.JSX.Element => {
       try {
         await downloadAndShare(file.url, file.fileName);
       } catch (error) {
-        console.error('Download error:', error);
+        // Error already handled by downloadAndShare
       }
     });
   };

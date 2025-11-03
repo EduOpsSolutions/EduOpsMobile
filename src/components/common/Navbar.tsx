@@ -3,7 +3,7 @@ import { View, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
 import { UserAvatar } from '../UserAvatar';
-import { NotificationDropdown } from '../../../components/NotificationDropdown';
+import { NotificationDropdown } from '../NotificationDropdown';
 
 interface NavbarProps {
   showNotifications?: boolean;

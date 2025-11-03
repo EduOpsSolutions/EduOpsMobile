@@ -6,7 +6,6 @@ export const decodeToken = (token: string) => {
   try {
     return decodeJwt(token);
   } catch (error) {
-    console.error("Error decoding token:", error);
     return null;
   }
 };

@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  ActivityIndicator,
+  Alert,
+} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import * as Clipboard from 'expo-clipboard';
 import { useSegments } from 'expo-router';
@@ -11,10 +18,12 @@ import { ImageUploadField } from '@/src/components/form/ImageUploadField';
 import { ChangePasswordModal } from '@/src/components/modals';
 
 export const ProfileScreen = (): React.JSX.Element => {
-  const { user, logout, getUserFullName, getBirthday, setUser } = useAuthStore();
+  const { user, logout, getUserFullName, getBirthday, setUser } =
+    useAuthStore();
   const segments = useSegments();
   const currentRoute = '/' + (segments[segments.length - 1] || '');
-  const [changePasswordModalVisible, setChangePasswordModalVisible] = useState(false);
+  const [changePasswordModalVisible, setChangePasswordModalVisible] =
+    useState(false);
 
   const {
     profileImagePreview,
@@ -63,7 +72,9 @@ export const ProfileScreen = (): React.JSX.Element => {
     if (user?.userId) {
       try {
         await Clipboard.setStringAsync(user.userId);
-        Alert.alert('Copied!', 'Student ID copied to clipboard', [{ text: 'OK' }]);
+        Alert.alert('Copied!', 'Student ID copied to clipboard', [
+          { text: 'OK' },
+        ]);
       } catch (error) {
         console.error('Error copying to clipboard:', error);
         Alert.alert('Error', 'Failed to copy Student ID');
@@ -74,7 +85,7 @@ export const ProfileScreen = (): React.JSX.Element => {
   if (!user) {
     return (
       <AppLayout
-        showNotifications={false}
+        showNotifications={true}
         enrollmentActive={false}
         paymentActive={false}
       >
@@ -93,7 +104,10 @@ export const ProfileScreen = (): React.JSX.Element => {
       paymentActive={false}
     >
       {/* Main Content */}
-      <ScrollView style={styles.mainContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.mainContent}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.profileContainer}>
           {/* Profile Card */}
           <View style={styles.profileCard}>
@@ -101,7 +115,11 @@ export const ProfileScreen = (): React.JSX.Element => {
             <View style={styles.profilePictureSection}>
               <ImageUploadField
                 key={resetKey}
-                currentImage={profileImagePreview || user.profilePicLink || getUserFullName()}
+                currentImage={
+                  profileImagePreview ||
+                  user.profilePicLink ||
+                  getUserFullName()
+                }
                 onImageChange={handleImageChange}
                 onImageRemove={handleImageRemove}
                 disabled={uploadingImage}
@@ -124,7 +142,10 @@ export const ProfileScreen = (): React.JSX.Element => {
               {hasChanges && (
                 <View style={styles.actionButtonsContainer}>
                   <TouchableOpacity
-                    style={[styles.saveButton, uploadingImage && styles.buttonDisabled]}
+                    style={[
+                      styles.saveButton,
+                      uploadingImage && styles.buttonDisabled,
+                    ]}
                     onPress={handleSaveProfilePicture}
                     disabled={uploadingImage}
                   >
@@ -138,7 +159,10 @@ export const ProfileScreen = (): React.JSX.Element => {
                     )}
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.cancelButton, uploadingImage && styles.buttonDisabled]}
+                    style={[
+                      styles.cancelButton,
+                      uploadingImage && styles.buttonDisabled,
+                    ]}
                     onPress={handleCancelChanges}
                     disabled={uploadingImage}
                   >
@@ -165,24 +189,30 @@ export const ProfileScreen = (): React.JSX.Element => {
                 </View>
               )}
               {user.status && (
-                <View style={[
-                  styles.statusBadge,
-                  user.status.toLowerCase() === 'active'
-                    ? styles.statusActive
-                    : styles.statusInactive
-                ]}>
-                  <View style={[
-                    styles.statusIndicator,
+                <View
+                  style={[
+                    styles.statusBadge,
                     user.status.toLowerCase() === 'active'
-                      ? styles.statusIndicatorActive
-                      : styles.statusIndicatorInactive
-                  ]} />
-                  <Text style={[
-                    styles.statusText,
-                    user.status.toLowerCase() === 'active'
-                      ? styles.statusTextActive
-                      : styles.statusTextInactive
-                  ]}>
+                      ? styles.statusActive
+                      : styles.statusInactive,
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.statusIndicator,
+                      user.status.toLowerCase() === 'active'
+                        ? styles.statusIndicatorActive
+                        : styles.statusIndicatorInactive,
+                    ]}
+                  />
+                  <Text
+                    style={[
+                      styles.statusText,
+                      user.status.toLowerCase() === 'active'
+                        ? styles.statusTextActive
+                        : styles.statusTextInactive,
+                    ]}
+                  >
                     {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
                   </Text>
                 </View>
@@ -273,12 +303,16 @@ export const ProfileScreen = (): React.JSX.Element => {
               <View style={styles.infoPanel}>
                 <Icon name="info" size={20} color="#0066cc" />
                 <View style={styles.infoPanelContent}>
-                  <Text style={styles.infoPanelTitle}>Profile Information:</Text>
-                  <Text style={styles.infoPanelText}>
-                    • Personal information can only be updated by system administrators
+                  <Text style={styles.infoPanelTitle}>
+                    Profile Information:
                   </Text>
                   <Text style={styles.infoPanelText}>
-                    • Contact your administrator if any information needs to be changed
+                    • Personal information can only be updated by system
+                    administrators
+                  </Text>
+                  <Text style={styles.infoPanelText}>
+                    • Contact your administrator if any information needs to be
+                    changed
                   </Text>
                 </View>
               </View>
