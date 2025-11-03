@@ -397,13 +397,13 @@ export const AssessmentScreen = (): React.JSX.Element => {
               {/* Action Buttons */}
               <View style={styles.courseInfo}>
                 <View style={styles.courseActions}>
-                  <TouchableOpacity
+                  {/* <TouchableOpacity
                     style={styles.historyButton}
                     onPress={handleTransactionHistory}
                   >
                     <Icon name="history" size={16} color="white" />
                     <Text style={styles.historyButtonText}>History</Text>
-                  </TouchableOpacity>
+                  </TouchableOpacity> */}
                   <TouchableOpacity
                     style={styles.ledgerButton}
                     onPress={() => router.push('/ledger')}
