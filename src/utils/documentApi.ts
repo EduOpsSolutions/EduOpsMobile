@@ -195,6 +195,12 @@ export const documentHelpers = {
       fulfilled: 'Fulfilled',
     };
 
+    // Format payment status for display
+    const paymentStatusMap: { [key: string]: string } = {
+      pending: 'Pending',
+      verified: 'Verified',
+    };
+
     return {
       ...request,
       name,
@@ -205,6 +211,9 @@ export const documentHelpers = {
         day: 'numeric',
       }),
       displayStatus: statusMap[request.status] || request.status,
+      displayPaymentStatus: request.paymentStatus
+        ? paymentStatusMap[request.paymentStatus] || request.paymentStatus
+        : 'N/A',
       remarks: request.remarks || '-',
     };
   },

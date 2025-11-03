@@ -263,6 +263,44 @@ export const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({
                   )}
                 </Text>
               </View>
+              {isPaidDocument && request.paymentStatus && (
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>Payment Status:</Text>
+                  <View
+                    style={[
+                      styles.paymentStatusBadge,
+                      {
+                        backgroundColor:
+                          request.paymentStatus === 'verified'
+                            ? '#dcfce7'
+                            : '#fef3c7',
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.paymentStatusText,
+                        {
+                          color:
+                            request.paymentStatus === 'verified'
+                              ? '#16a34a'
+                              : '#ca8a04',
+                        },
+                      ]}
+                    >
+                      {request.displayPaymentStatus}
+                    </Text>
+                  </View>
+                </View>
+              )}
+              {request.paymentAmount && (
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>Payment Amount:</Text>
+                  <Text style={styles.infoValue}>
+                    ₱{parseFloat(String(request.paymentAmount)).toFixed(2)}
+                  </Text>
+                </View>
+              )}
             </View>
 
             {/* Contact Info */}
@@ -313,6 +351,44 @@ export const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Remarks</Text>
                 <Text style={styles.remarksText}>{request.remarks}</Text>
+              </View>
+            )}
+
+            {/* Fulfilled Document */}
+            {request.fulfilledDocumentUrl && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Fulfilled Document</Text>
+                <TouchableOpacity
+                  style={styles.downloadButton}
+                  onPress={() => {
+                    if (request.fulfilledDocumentUrl) {
+                      // Open fulfilled document URL in browser
+                      Alert.alert(
+                        'Download Document',
+                        'Your document is ready for download.',
+                        [
+                          {
+                            text: 'Cancel',
+                            style: 'cancel',
+                          },
+                          {
+                            text: 'Download',
+                            onPress: () => {
+                              // In React Native, we'd use Linking to open the URL
+                              const { Linking } = require('react-native');
+                              Linking.openURL(request.fulfilledDocumentUrl!);
+                            },
+                          },
+                        ]
+                      );
+                    }
+                  }}
+                >
+                  <Icon name="file-download" size={20} color="#059669" />
+                  <Text style={styles.downloadButtonText}>
+                    Download Completed Document
+                  </Text>
+                </TouchableOpacity>
               </View>
             )}
 
@@ -533,5 +609,31 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#374151',
+  },
+  paymentStatusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  paymentStatusText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  downloadButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#059669',
+    backgroundColor: '#ecfdf5',
+  },
+  downloadButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#059669',
   },
 });
