@@ -69,6 +69,9 @@ export const downloadFile = async (
       }
     }
 
+    console.log('Downloading from URL:', url);
+    console.log('Saving to path:', finalFileUri);
+
     // Download the file
     const downloadResult = await FileSystem.downloadAsync(url, finalFileUri);
 
