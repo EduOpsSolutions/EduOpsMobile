@@ -1,12 +1,12 @@
-import axiosInstance from './axios';
-import { handleApiError } from './api';
+import axiosInstance from "./axios";
+import { handleApiError } from "./api";
 
 // Document Templates API
 export const documentTemplatesApi = {
   // Get all document templates (role-based filtering)
   getAll: async (includeHidden = false) => {
     try {
-      const response = await axiosInstance.get('/documents/templates', {
+      const response = await axiosInstance.get("/documents/templates", {
         params: { includeHidden },
       });
       return response.data;
@@ -18,7 +18,7 @@ export const documentTemplatesApi = {
   // Search document templates
   search: async (filters = {}) => {
     try {
-      const response = await axiosInstance.get('/documents/templates/search', {
+      const response = await axiosInstance.get("/documents/templates/search", {
         params: filters,
       });
       return response.data;
@@ -43,7 +43,7 @@ export const documentRequestsApi = {
   // Get all document requests (role-based access)
   getAll: async () => {
     try {
-      const response = await axiosInstance.get('/documents/requests');
+      const response = await axiosInstance.get("/documents/requests");
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -53,7 +53,7 @@ export const documentRequestsApi = {
   // Search document requests
   search: async (filters = {}) => {
     try {
-      const response = await axiosInstance.get('/documents/requests/search', {
+      const response = await axiosInstance.get("/documents/requests/search", {
         params: filters,
       });
       return response.data;
@@ -76,7 +76,7 @@ export const documentRequestsApi = {
   create: async (requestData: any) => {
     try {
       const response = await axiosInstance.post(
-        '/documents/requests',
+        "/documents/requests",
         requestData
       );
       return response.data;
@@ -101,14 +101,14 @@ export const documentRequestsApi = {
       };
 
       const formData = new FormData();
-      formData.append('proofOfPayment', fileData);
+      formData.append("proofOfPayment", fileData);
 
       const response = await axiosInstance.patch(
         `/documents/requests/${id}/proof-of-payment`,
         formData,
         {
           headers: {
-            'Content-Type': 'multipart/form-data',
+            "Content-Type": "multipart/form-data",
           },
         }
       );
@@ -155,16 +155,16 @@ export const documentHelpers = {
   formatDocument: (document: any) => ({
     ...document,
     formattedAmount:
-      document.price === 'paid' && document.amount
-        ? parseFloat(document.amount).toLocaleString('en-US', {
+      document.price === "paid" && document.amount
+        ? parseFloat(document.amount).toLocaleString("en-US", {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
           })
         : null,
     displayPrice:
-      document.price === 'free'
-        ? 'FREE'
-        : document.price === 'paid'
+      document.price === "free"
+        ? "FREE"
+        : document.price === "paid"
         ? `₱${document.amount}`
         : document.price,
     canDownload: document.downloadable && document.uploadFile,
@@ -174,47 +174,56 @@ export const documentHelpers = {
   // Format document request for display
   formatDocumentRequest: (request: any) => {
     // Format name from user or firstName/lastName
-    let name = 'Unknown Student';
+    let name = "Unknown Student";
     if (request.user) {
       name = `${request.user.firstName} ${
-        request.user.middleName ? request.user.middleName + ' ' : ''
+        request.user.middleName ? request.user.middleName + " " : ""
       }${request.user.lastName}`;
     } else if (request.firstName && request.lastName) {
       name = `${request.firstName} ${request.lastName}`;
     }
 
     // Format document name
-    const documentName = request.document?.documentName || 'Unknown Document';
+    const documentName = request.document?.documentName || "Unknown Document";
 
     // Format status for display
     const statusMap: { [key: string]: string } = {
-      in_process: 'In Process',
-      in_transit: 'In Transit',
-      delivered: 'Delivered',
-      failed: 'Failed',
-      fulfilled: 'Fulfilled',
+      in_process: "In Process",
+      approved: "Approved",
+      ready_for_pickup: "Ready for Pickup",
+      delivered: "Delivered",
+      rejected: "Rejected",
+    };
+
+    // Format payment status for display
+    const paymentStatusMap: { [key: string]: string } = {
+      pending: "Pending",
+      verified: "Verified",
     };
 
     return {
       ...request,
       name,
       documentName: documentName,
-      displayDate: new Date(request.createdAt).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
+      displayDate: new Date(request.createdAt).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
       }),
       displayStatus: statusMap[request.status] || request.status,
-      remarks: request.remarks || '-',
+      displayPaymentStatus: request.paymentStatus
+        ? paymentStatusMap[request.paymentStatus] || request.paymentStatus
+        : "N/A",
+      remarks: request.remarks || "-",
     };
   },
 
   // Check if user can access document based on role and privacy
   canAccessDocument: (document: any, userRole: string) => {
     const accessRules: { [key: string]: string[] } = {
-      admin: ['public', 'student_only', 'teacher_only'],
-      teacher: ['public', 'teacher_only'],
-      student: ['public', 'student_only'],
+      admin: ["public", "student_only", "teacher_only"],
+      teacher: ["public", "teacher_only"],
+      student: ["public", "student_only"],
     };
 
     const allowedPrivacyLevels = accessRules[userRole] || accessRules.student;
@@ -226,33 +235,33 @@ export const documentHelpers = {
     const errors: { [key: string]: string } = {};
 
     if (!requestData.documentId) {
-      errors.documentId = 'Document is required';
+      errors.documentId = "Document is required";
     }
 
     if (
       !requestData.email ||
       !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(requestData.email)
     ) {
-      errors.email = 'Valid email is required';
+      errors.email = "Valid email is required";
     }
 
     if (!requestData.phone || !/^[\d\s\-\+\(\)]+$/.test(requestData.phone)) {
-      errors.phone = 'Valid phone number is required';
+      errors.phone = "Valid phone number is required";
     }
 
-    if (requestData.mode === 'delivery') {
+    if (requestData.mode === "delivery") {
       if (!requestData.address)
-        errors.address = 'Address is required for delivery';
-      if (!requestData.city) errors.city = 'City is required for delivery';
-      if (!requestData.state) errors.state = 'State is required for delivery';
+        errors.address = "Address is required for delivery";
+      if (!requestData.city) errors.city = "City is required for delivery";
+      if (!requestData.state) errors.state = "State is required for delivery";
       if (!requestData.zipCode)
-        errors.zipCode = 'ZIP code is required for delivery';
+        errors.zipCode = "ZIP code is required for delivery";
       if (!requestData.country)
-        errors.country = 'Country is required for delivery';
+        errors.country = "Country is required for delivery";
     }
 
     if (!requestData.purpose) {
-      errors.purpose = 'Purpose is required';
+      errors.purpose = "Purpose is required";
     }
 
     return {
@@ -264,21 +273,20 @@ export const documentHelpers = {
   // Get status color for UI
   getStatusColor: (status: string) => {
     const statusColors: { [key: string]: string } = {
-      in_process: '#FFA500', // Orange
-      in_transit: '#1E90FF', // DodgerBlue
-      delivered: '#32CD32', // LimeGreen
-      fulfilled: '#32CD32', // LimeGreen
-      failed: '#DC143C', // Crimson
+      in_process: "#FFA500", // Orange/Yellow
+      approved: "#1E90FF", // Blue
+      ready_for_pickup: "#32CD32", // Green
+      delivered: "#9333EA", // Purple
+      rejected: "#DC143C", // Red
     };
-    return statusColors[status] || '#666666';
+    return statusColors[status] || "#666666";
   },
 
   // Get payment method display text
   getPaymentMethodText: (method: string) => {
     const methodMap: { [key: string]: string } = {
-      online: 'Online (Maya)',
-      cod: 'Cash on Delivery',
-      cashPickup: 'Cash (Pay upon Pickup)',
+      online: "Pay Online",
+      cash: "Cash (Pickup Only)",
     };
     return methodMap[method] || method;
   },

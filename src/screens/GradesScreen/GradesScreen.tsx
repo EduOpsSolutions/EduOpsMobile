@@ -1,12 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, ActivityIndicator, Alert, TouchableOpacity, RefreshControl } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  ActivityIndicator,
+  Alert,
+  TouchableOpacity,
+  RefreshControl,
+  Linking,
+} from 'react-native';
 import { useSegments } from 'expo-router';
 import { styles } from './GradesScreen.styles';
 import { AppLayout } from '../../components/common';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { gradesApi, coursesApi } from '../../utils/api';
+import { gradesApi, coursesApi, assessmentApi } from '../../utils/api';
 import { useAuthStore } from '../../stores/authStore';
-import { FilePreviewModal } from '../../components/modals/FilePreviewModal';
 
 interface GradeData {
   id: string;
@@ -15,6 +23,7 @@ interface GradeData {
   completedDate: string | null;
   courseId: string;
   studentId: string;
+  batchId: string | null;
   files: Array<{
     url: string;
     uploadedAt: string;
@@ -53,10 +62,10 @@ const GradeItem: React.FC<GradeItemProps> = ({ grade, onViewDetails }) => {
       <Text style={[styles.status, getStatusStyle()]}>{grade.status}</Text>
       <Text style={styles.dateText}>{formatDate(grade.completedDate)}</Text>
       <View style={styles.detailsButton}>
-        <Icon 
-          name="description" 
-          size={20} 
-          color={grade.status === 'NO GRADE' ? '#999' : '#de0000'} 
+        <Icon
+          name="description"
+          size={20}
+          color={grade.status === 'NO GRADE' ? '#999' : '#de0000'}
         />
       </View>
     </TouchableOpacity>
@@ -71,8 +80,6 @@ export const GradesScreen = (): React.JSX.Element => {
   const [gradesData, setGradesData] = useState<GradeData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showPreview, setShowPreview] = useState(false);
-  const [previewFile, setPreviewFile] = useState({ url: '', title: '' });
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
@@ -88,7 +95,7 @@ export const GradesScreen = (): React.JSX.Element => {
 
     setLoading(true);
     setError(null);
-    
+
     try {
       // Fetch all courses and student grades in parallel
       const [coursesData, gradesData] = await Promise.all([
@@ -97,7 +104,7 @@ export const GradesScreen = (): React.JSX.Element => {
       ]);
 
       // Sort courses alphabetically (A1, A2, B1, B2, etc.)
-      const sortedCourses = coursesData.sort((a: any, b: any) => 
+      const sortedCourses = coursesData.sort((a: any, b: any) =>
         a.name.localeCompare(b.name)
       );
 
@@ -113,12 +120,17 @@ export const GradesScreen = (): React.JSX.Element => {
         return {
           id: grade?.id || course.id,
           courseName: course.name,
-          status: grade 
-            ? (grade.grade === 'Pass' ? 'PASS' : grade.grade === 'Fail' ? 'FAIL' : 'NO GRADE')
+          status: grade
+            ? grade.grade === 'Pass'
+              ? 'PASS'
+              : grade.grade === 'Fail'
+              ? 'FAIL'
+              : 'NO GRADE'
             : 'NO GRADE',
           completedDate: grade?.updatedAt || null,
           courseId: course.id,
           studentId: user.id,
+          batchId: grade?.periodId || null,
           files: grade?.files || [],
         };
       });
@@ -143,38 +155,99 @@ export const GradesScreen = (): React.JSX.Element => {
     }
   };
 
-  const handleViewDetails = (grade: GradeData) => {
+  const handleViewDetails = async (grade: GradeData) => {
     if (grade.status === 'NO GRADE') {
       Alert.alert(
-        "You haven't taken this course",
-        'If you think this is a mistake please contact your instructor or administrator.',
+        'Not Available',
+        'Grade has not been graded or you have not completed the course yet.',
         [{ text: 'OK', style: 'default' }]
       );
-    } else {
-      // Open the latest file if available
-      if (grade.files && grade.files.length > 0) {
-        // Sort files by uploadedAt descending (latest first)
-        const sortedFiles = [...grade.files].sort(
-          (a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
-        );
-        const latestFile = sortedFiles[0];
-        if (latestFile.url) {
-          setPreviewFile({ url: latestFile.url, title: 'Certificate Preview' });
-          setShowPreview(true);
-        } else {
-          Alert.alert(
-            'File Error',
-            'No file URL found.',
-            [{ text: 'OK', style: 'default' }]
-          );
-        }
-      } else {
+      return;
+    }
+
+    try {
+      // Check for outstanding balance
+      console.log(
+        'Checking assessment for:',
+        grade.studentId,
+        grade.courseId,
+        grade.batchId
+      );
+
+      if (!grade.batchId) {
+        console.warn('[Grades Screen] No batchId found for grade:', grade);
+      }
+
+      const assessmentData = await assessmentApi.getStudentAssessments(
+        grade.studentId
+      );
+      console.log('Assessment Data:', assessmentData);
+
+      // Find assessment for this specific course and batch
+      const relevantAssessment = Array.isArray(assessmentData)
+        ? assessmentData.find(
+            (assessment: any) =>
+              assessment.courseId === grade.courseId &&
+              assessment.academicPeriodId === grade.batchId
+          )
+        : null;
+
+      if (relevantAssessment && relevantAssessment.remainingBalance > 0) {
         Alert.alert(
-          'No File Available',
-          'No grade file has been uploaded for this course.',
+          'Outstanding Balance',
+          'You have an outstanding balance for this course. Please clear your dues to access the certificate.',
           [{ text: 'OK', style: 'default' }]
         );
+        return;
       }
+    } catch (err) {
+      console.error('[Grades Screen] Error checking assessment balance:', err);
+      Alert.alert(
+        'Error',
+        'An error occurred while checking your assessment balance. Please try again later.',
+        [{ text: 'OK', style: 'default' }]
+      );
+      return;
+    }
+
+    // Open the latest file if available
+    if (grade.files && grade.files.length > 0) {
+      // Sort files by uploadedAt descending (latest first)
+      const sortedFiles = [...grade.files].sort(
+        (a, b) =>
+          new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
+      );
+      const latestFile = sortedFiles[0];
+      if (latestFile.url) {
+        // Open in browser instead of in-app preview
+        try {
+          const supported = await Linking.canOpenURL(latestFile.url);
+          if (supported) {
+            await Linking.openURL(latestFile.url);
+          } else {
+            Alert.alert(
+              'Error',
+              'Cannot open this URL. Please try again later.',
+              [{ text: 'OK', style: 'default' }]
+            );
+          }
+        } catch (error) {
+          console.error('[Grades Screen] Error opening URL:', error);
+          Alert.alert('Error', 'Failed to open certificate. Please try again.', [
+            { text: 'OK', style: 'default' },
+          ]);
+        }
+      } else {
+        Alert.alert('File Error', 'No file URL found.', [
+          { text: 'OK', style: 'default' },
+        ]);
+      }
+    } else {
+      Alert.alert(
+        'No File Available',
+        'No grade file has been uploaded for this course.',
+        [{ text: 'OK', style: 'default' }]
+      );
     }
   };
 
@@ -185,7 +258,7 @@ export const GradesScreen = (): React.JSX.Element => {
 
   return (
     <AppLayout
-      showNotifications={false}
+      showNotifications={true}
       enrollmentActive={isEnrollmentActive}
       paymentActive={false}
     >
@@ -215,7 +288,9 @@ export const GradesScreen = (): React.JSX.Element => {
               {/* Student Info */}
               {user && (
                 <Text style={styles.studentInfo}>
-                  {`${user.lastName?.toUpperCase() || ''}, ${user.firstName?.toUpperCase() || ''} ${user.middleName?.charAt(0)?.toUpperCase() || ''}.`}
+                  {`${user.lastName?.toUpperCase() || ''}, ${
+                    user.firstName?.toUpperCase() || ''
+                  } ${user.middleName?.charAt(0)?.toUpperCase() || ''}.`}
                 </Text>
               )}
 
@@ -228,7 +303,10 @@ export const GradesScreen = (): React.JSX.Element => {
                 <View style={styles.errorContainer}>
                   <Icon name="error-outline" size={48} color="#F44336" />
                   <Text style={styles.errorText}>{error}</Text>
-                  <TouchableOpacity style={styles.retryButton} onPress={fetchGrades}>
+                  <TouchableOpacity
+                    style={styles.retryButton}
+                    onPress={fetchGrades}
+                  >
                     <Text style={styles.retryButtonText}>Retry</Text>
                   </TouchableOpacity>
                 </View>
@@ -236,10 +314,18 @@ export const GradesScreen = (): React.JSX.Element => {
                 <>
                   {/* Table Header */}
                   <View style={styles.tableHeader}>
-                    <Text style={[styles.tableHeaderText, { flex: 2 }]}>Course</Text>
-                    <Text style={[styles.tableHeaderText, { flex: 1 }]}>Status</Text>
-                    <Text style={[styles.tableHeaderText, { flex: 1 }]}>Date</Text>
-                    <Text style={[styles.tableHeaderText, { flex: 0.5 }]}></Text>
+                    <Text style={[styles.tableHeaderText, { flex: 2 }]}>
+                      Course
+                    </Text>
+                    <Text style={[styles.tableHeaderText, { flex: 1 }]}>
+                      Status
+                    </Text>
+                    <Text style={[styles.tableHeaderText, { flex: 1 }]}>
+                      Date
+                    </Text>
+                    <Text
+                      style={[styles.tableHeaderText, { flex: 0.5 }]}
+                    ></Text>
                   </View>
 
                   {/* Grades List */}
@@ -265,17 +351,6 @@ export const GradesScreen = (): React.JSX.Element => {
           </View>
         </ScrollView>
       </View>
-
-      {/* File Preview Modal */}
-      <FilePreviewModal
-        visible={showPreview}
-        onClose={() => {
-          setShowPreview(false);
-          setPreviewFile({ url: '', title: '' });
-        }}
-        fileUrl={previewFile.url}
-        title={previewFile.title}
-      />
     </AppLayout>
   );
 };

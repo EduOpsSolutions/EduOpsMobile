@@ -3,9 +3,9 @@ export interface DocumentTemplate {
   id: string;
   documentName: string;
   description?: string;
-  price: 'free' | 'paid';
+  price: "free" | "paid";
   amount?: number;
-  privacy: 'public' | 'student_only' | 'teacher_only';
+  privacy: "public" | "student_only" | "teacher_only";
   downloadable: boolean;
   requestBasis: boolean;
   uploadFile?: string;
@@ -21,15 +21,17 @@ export interface DocumentTemplate {
 
 // Document Request Types
 export type RequestStatus =
-  | 'in_process'
-  | 'in_transit'
-  | 'delivered'
-  | 'fulfilled'
-  | 'failed';
+  | "in_process"
+  | "approved"
+  | "ready_for_pickup"
+  | "delivered"
+  | "rejected";
 
-export type RequestMode = 'pickup' | 'delivery';
+export type RequestMode = "pickup" | "delivery";
 
-export type PaymentMethod = 'online' | 'cashPickup';
+export type PaymentMethod = "online" | "cash";
+
+export type PaymentStatus = "pending" | "verified";
 
 export interface DocumentRequest {
   id: string;
@@ -49,6 +51,13 @@ export interface DocumentRequest {
   status: RequestStatus;
   remarks?: string;
   proofOfPayment?: string;
+  // Payment-related fields
+  paymentStatus?: PaymentStatus;
+  paymentAmount?: number;
+  paymentUrl?: string;
+  paymentId?: string;
+  fulfilledDocumentUrl?: string;
+  validationSignature?: string;
   createdAt: string;
   updatedAt: string;
   // Relations
@@ -65,6 +74,7 @@ export interface DocumentRequest {
   documentName?: string;
   displayDate?: string;
   displayStatus?: string;
+  displayPaymentStatus?: string;
 }
 
 // Form Data Types
@@ -102,6 +112,7 @@ export interface ApiResponse<T> {
 }
 
 export interface DocumentsResponse extends ApiResponse<DocumentTemplate[]> {}
-export interface DocumentRequestsResponse extends ApiResponse<DocumentRequest[]> {}
+export interface DocumentRequestsResponse
+  extends ApiResponse<DocumentRequest[]> {}
 export interface SingleDocumentResponse extends ApiResponse<DocumentTemplate> {}
 export interface SingleRequestResponse extends ApiResponse<DocumentRequest> {}

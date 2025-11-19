@@ -72,9 +72,6 @@ export const styles = StyleSheet.create({
     marginBottom: 12,
   },
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
     marginRight: 12,
   },
   authorInfo: {

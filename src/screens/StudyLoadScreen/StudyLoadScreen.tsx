@@ -1,11 +1,23 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  ActivityIndicator,
+  Alert,
+} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { Picker } from '@react-native-picker/picker';
+import * as Print from 'expo-print';
+import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system';
+import { Asset } from 'expo-asset';
 import { styles } from './StudyLoadScreen.styles';
 import { AppLayout } from '../../components/common';
 import { useAuthStore } from '@/src/stores/authStore';
 import axiosInstance from '@/src/utils/axios';
+import { generateStudyLoadPdfHtml } from '@/src/utils/studyLoadPdfTemplate';
 
 interface AcademicPeriod {
   id: string;
@@ -68,7 +80,9 @@ export const StudyLoadScreen = (): React.JSX.Element => {
   const { user, getUserFullName } = useAuthStore();
   const [periods, setPeriods] = useState<AcademicPeriod[]>([]);
   const [selectedBatch, setSelectedBatch] = useState<string>('');
-  const [selectedPeriod, setSelectedPeriod] = useState<AcademicPeriod | null>(null);
+  const [selectedPeriod, setSelectedPeriod] = useState<AcademicPeriod | null>(
+    null
+  );
   const [results, setResults] = useState<Schedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
@@ -221,6 +235,100 @@ export const StudyLoadScreen = (): React.JSX.Element => {
     }
   };
 
+  // Calculate total hours for all schedules
+  const calculateTotalHoursSum = (): string => {
+    let total = 0;
+    for (const schedule of results) {
+      const hours = calculateTotalHours(schedule);
+      if (hours !== '—') {
+        total += parseFloat(hours);
+      }
+    }
+    const fixed = total.toFixed(1);
+    return fixed.endsWith('.0') ? fixed.slice(0, -2) : fixed;
+  };
+
+  // Export PDF functionality
+  const handleExportPdf = async () => {
+    try {
+      if (results.length === 0 || !selectedPeriod) {
+        Alert.alert(
+          'No Data',
+          'Please select a batch with schedules to export.'
+        );
+        return;
+      }
+
+      // Load logo asset and convert to base64 data URI
+      let logoUri: string | undefined;
+      try {
+        const asset = Asset.fromModule(
+          require('../../../public/sprachins-logo-3.png')
+        );
+        await asset.downloadAsync();
+        const localUri = asset.localUri || asset.uri;
+
+        if (localUri) {
+          // Read the file as base64
+          const base64 = await FileSystem.readAsStringAsync(localUri, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+          // Create data URI
+          logoUri = `data:image/png;base64,${base64}`;
+        }
+      } catch (logoError) {
+        console.warn('Failed to load logo:', logoError);
+        // Continue without logo
+      }
+
+      // Prepare data for PDF
+      const schedules = results.map((schedule) => ({
+        courseName: schedule.courseName || '—',
+        days: schedule.days || '—',
+        time_start: schedule.time_start || '—',
+        time_end: schedule.time_end || '',
+        teacherName: schedule.teacherName || '—',
+        location: schedule.location || '—',
+        hours: calculateTotalHours(schedule),
+      }));
+
+      const studentName = user?.lastName
+        ? `${user.lastName}, ${user.firstName}`
+        : 'Student';
+
+      const studentId = user?.userId || user?.id || 'N/A';
+      const totalHours = calculateTotalHoursSum();
+      const printedAt = new Date().toLocaleString();
+
+      const htmlContent = generateStudyLoadPdfHtml({
+        studentName,
+        studentId,
+        batchName: selectedPeriod.batchName,
+        schedules,
+        totalHours,
+        printedAt,
+        logoUri,
+      });
+
+      // Generate PDF
+      const { uri } = await Print.printToFileAsync({ html: htmlContent });
+
+      // Share or save PDF
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(uri, {
+          mimeType: 'application/pdf',
+          dialogTitle: 'Study Load PDF',
+          UTI: 'com.adobe.pdf',
+        });
+      } else {
+        Alert.alert('Success', 'PDF generated successfully!');
+      }
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+      Alert.alert('Error', 'Failed to export PDF. Please try again.');
+    }
+  };
+
   const isScheduleActive = true;
 
   const renderBody = () => {
@@ -265,7 +373,9 @@ export const StudyLoadScreen = (): React.JSX.Element => {
     return (
       <View style={styles.scheduleList}>
         {results.map((schedule) => {
-          const scheduleText = `${schedule.days || '—'}\n${schedule.time_start || '—'}${schedule.time_end ? ` - ${schedule.time_end}` : ''}`;
+          const scheduleText = `${schedule.days || '—'}\n${
+            schedule.time_start || '—'
+          }${schedule.time_end ? ` - ${schedule.time_end}` : ''}`;
           return (
             <ScheduleItem
               key={schedule.id}
@@ -283,7 +393,7 @@ export const StudyLoadScreen = (): React.JSX.Element => {
 
   return (
     <AppLayout
-      showNotifications={false}
+      showNotifications={true}
       enrollmentActive={isScheduleActive}
       paymentActive={false}
     >
@@ -330,15 +440,29 @@ export const StudyLoadScreen = (): React.JSX.Element => {
                 </TouchableOpacity>
               </View>
 
-              {/* Student Name and Batch Info */}
+              {/* Student Name, Batch Info, and Export Button */}
               <View style={styles.infoSection}>
-                <Text style={styles.studentName}>
-                  {user?.lastName
-                    ? `${user.lastName}, ${user.firstName}`
-                    : getUserFullName() || 'Your Study Load'}
-                </Text>
-                {selectedPeriod && (
-                  <Text style={styles.batchInfo}>{selectedPeriod.batchName}</Text>
+                <View style={styles.infoTextContainer}>
+                  <Text style={styles.studentName}>
+                    {user?.lastName
+                      ? `${user.lastName}, ${user.firstName}`
+                      : getUserFullName() || 'Your Study Load'}
+                  </Text>
+                  {selectedPeriod && (
+                    <Text style={styles.batchInfo}>
+                      {selectedPeriod.batchName}
+                    </Text>
+                  )}
+                </View>
+                {results.length > 0 && selectedPeriod && (
+                  <TouchableOpacity
+                    style={styles.exportButton}
+                    onPress={handleExportPdf}
+                    activeOpacity={0.7}
+                  >
+                    <Icon name="picture-as-pdf" size={20} color="white" />
+                    <Text style={styles.exportButtonText}>Export PDF</Text>
+                  </TouchableOpacity>
                 )}
               </View>
 

@@ -3,9 +3,9 @@
  * Handles downloading files from URLs using expo-file-system
  */
 
-import * as FileSystem from 'expo-file-system';
-import { Alert, Platform } from 'react-native';
-import * as Sharing from 'expo-sharing';
+import * as FileSystem from "expo-file-system";
+import { Alert, Platform } from "react-native";
+import * as Sharing from "expo-sharing";
 
 /**
  * Download a file from URL and save to device
@@ -18,20 +18,28 @@ export const downloadFile = async (
   fileName: string
 ): Promise<{ success: boolean; uri?: string; error?: string }> => {
   try {
+    // Validate URL
+    if (!url || url.trim().length === 0) {
+      return {
+        success: false,
+        error: "Invalid file URL. The file may not be available.",
+      };
+    }
+
     // Parse URL to get pathname and remove query parameters
     let cleanFileName = fileName;
 
     // First, remove query parameters (anything after ? or &)
-    cleanFileName = cleanFileName.split('?')[0];
-    cleanFileName = cleanFileName.split('&')[0];
+    cleanFileName = cleanFileName.split("?")[0];
+    cleanFileName = cleanFileName.split("&")[0];
 
     // Extract just the filename without any path components
     // Handle both forward slashes and backslashes
-    cleanFileName = cleanFileName.split('/').pop() || cleanFileName;
-    cleanFileName = cleanFileName.split('\\').pop() || cleanFileName;
+    cleanFileName = cleanFileName.split("/").pop() || cleanFileName;
+    cleanFileName = cleanFileName.split("\\").pop() || cleanFileName;
 
     // Remove any invalid filename characters for safety
-    cleanFileName = cleanFileName.replace(/[<>:"|?*&=]/g, '_');
+    cleanFileName = cleanFileName.replace(/[<>:"|?*&=]/g, "_");
 
     // Ensure we have a valid filename
     if (!cleanFileName || cleanFileName.length === 0) {
@@ -47,7 +55,7 @@ export const downloadFile = async (
 
     if (fileInfo.exists) {
       // Add timestamp to make it unique
-      const dotIndex = cleanFileName.lastIndexOf('.');
+      const dotIndex = cleanFileName.lastIndexOf(".");
       if (dotIndex > 0) {
         const extension = cleanFileName.substring(dotIndex);
         const nameWithoutExt = cleanFileName.substring(0, dotIndex);
@@ -61,8 +69,8 @@ export const downloadFile = async (
       }
     }
 
-    console.log('Downloading from URL:', url);
-    console.log('Saving to path:', finalFileUri);
+    console.log("Downloading from URL:", url);
+    console.log("Saving to path:", finalFileUri);
 
     // Download the file
     const downloadResult = await FileSystem.downloadAsync(url, finalFileUri);
@@ -72,17 +80,57 @@ export const downloadFile = async (
         success: true,
         uri: downloadResult.uri,
       };
+    } else if (downloadResult.status === 404) {
+      return {
+        success: false,
+        error:
+          "File not found. The document may have been removed or is unavailable.",
+      };
+    } else if (downloadResult.status === 403) {
+      return {
+        success: false,
+        error:
+          "Access denied. You may not have permission to download this file.",
+      };
     } else {
       return {
         success: false,
-        error: `Download failed with status ${downloadResult.status}`,
+        error: `Download failed. The file may not be available. (Status: ${downloadResult.status})`,
       };
     }
   } catch (error: any) {
-    console.error('Download error:', error);
+    // Handle specific error messages
+    const errorMessage = error.message || "";
+
+    if (errorMessage.includes("404") || errorMessage.includes("not found")) {
+      return {
+        success: false,
+        error:
+          "File not found. The document may have been removed or is unavailable.",
+      };
+    } else if (
+      errorMessage.includes("network") ||
+      errorMessage.includes("connection")
+    ) {
+      return {
+        success: false,
+        error:
+          "Network error. Please check your internet connection and try again.",
+      };
+    } else if (
+      errorMessage.includes("permission") ||
+      errorMessage.includes("403")
+    ) {
+      return {
+        success: false,
+        error:
+          "Access denied. You may not have permission to download this file.",
+      };
+    }
+
     return {
       success: false,
-      error: error.message || 'Failed to download file',
+      error: "Failed to download file. The document may not be available.",
     };
   }
 };
@@ -101,7 +149,7 @@ export const downloadAndShare = async (
     const result = await downloadFile(url, fileName);
 
     if (!result.success || !result.uri) {
-      throw new Error(result.error || 'Download failed');
+      throw new Error(result.error || "Download failed");
     }
 
     // Check if sharing is available
@@ -109,9 +157,9 @@ export const downloadAndShare = async (
 
     if (!isSharingAvailable) {
       Alert.alert(
-        'Success',
+        "Success",
         `File downloaded successfully to:\n${result.uri}`,
-        [{ text: 'OK' }]
+        [{ text: "OK" }]
       );
       return;
     }
@@ -122,11 +170,10 @@ export const downloadAndShare = async (
       dialogTitle: `Save ${fileName}`,
     });
   } catch (error: any) {
-    console.error('Download and share error:', error);
     Alert.alert(
-      'Download Failed',
-      error.message || 'Failed to download file. Please try again.',
-      [{ text: 'OK' }]
+      "Download Failed",
+      error.message || "Failed to download file. Please try again.",
+      [{ text: "OK" }]
     );
   }
 };
@@ -144,18 +191,18 @@ export const showDownloadConfirmation = (
 ): void => {
   const sizeText = fileSize
     ? `\nSize: ${(fileSize / 1024 / 1024).toFixed(2)} MB`
-    : '';
+    : "";
 
   Alert.alert(
-    'Download File',
+    "Download File",
     `Do you want to download this file?\n\n${fileName}${sizeText}`,
     [
       {
-        text: 'Cancel',
-        style: 'cancel',
+        text: "Cancel",
+        style: "cancel",
       },
       {
-        text: 'Download',
+        text: "Download",
         onPress: onConfirm,
       },
     ]
@@ -168,24 +215,24 @@ export const showDownloadConfirmation = (
  * @returns MIME type string
  */
 const getMimeType = (fileName: string): string => {
-  const extension = fileName.split('.').pop()?.toLowerCase();
+  const extension = fileName.split(".").pop()?.toLowerCase();
 
   const mimeTypes: { [key: string]: string } = {
-    pdf: 'application/pdf',
-    doc: 'application/msword',
-    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    xls: 'application/vnd.ms-excel',
-    xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    ppt: 'application/vnd.ms-powerpoint',
-    pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-    txt: 'text/plain',
-    jpg: 'image/jpeg',
-    jpeg: 'image/jpeg',
-    png: 'image/png',
-    gif: 'image/gif',
-    zip: 'application/zip',
-    rar: 'application/x-rar-compressed',
+    pdf: "application/pdf",
+    doc: "application/msword",
+    docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    xls: "application/vnd.ms-excel",
+    xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    ppt: "application/vnd.ms-powerpoint",
+    pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    txt: "text/plain",
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    png: "image/png",
+    gif: "image/gif",
+    zip: "application/zip",
+    rar: "application/x-rar-compressed",
   };
 
-  return mimeTypes[extension || ''] || 'application/octet-stream';
+  return mimeTypes[extension || ""] || "application/octet-stream";
 };

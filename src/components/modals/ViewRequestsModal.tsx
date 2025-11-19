@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   View,
   Text,
@@ -7,10 +7,10 @@ import {
   StyleSheet,
   ScrollView,
   ActivityIndicator,
-} from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import { DocumentRequest } from '../../types/document';
-import documentApi from '../../utils/documentApi';
+} from "react-native";
+import Icon from "react-native-vector-icons/MaterialIcons";
+import { DocumentRequest } from "../../types/document";
+import documentApi from "../../utils/documentApi";
 
 interface ViewRequestsModalProps {
   visible: boolean;
@@ -35,17 +35,18 @@ export const ViewRequestsModal: React.FC<ViewRequestsModalProps> = ({
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'in_process':
-        return 'hourglass-empty';
-      case 'in_transit':
-        return 'local-shipping';
-      case 'delivered':
-      case 'fulfilled':
-        return 'check-circle';
-      case 'failed':
-        return 'error';
+      case "in_process":
+        return "hourglass-empty";
+      case "approved":
+        return "check";
+      case "ready_for_pickup":
+        return "store";
+      case "delivered":
+        return "local-shipping";
+      case "rejected":
+        return "close";
       default:
-        return 'info';
+        return "info";
     }
   };
 
@@ -133,15 +134,15 @@ export const ViewRequestsModal: React.FC<ViewRequestsModalProps> = ({
                       <View style={styles.detailRow}>
                         <Icon
                           name={
-                            request.mode === 'pickup'
-                              ? 'store'
-                              : 'local-shipping'
+                            request.mode === "pickup"
+                              ? "store"
+                              : "local-shipping"
                           }
                           size={14}
                           color="#6b7280"
                         />
                         <Text style={styles.detailText}>
-                          {request.mode === 'pickup' ? 'Pickup' : 'Delivery'}
+                          {request.mode === "pickup" ? "Pickup" : "Delivery"}
                         </Text>
                       </View>
                     </View>
@@ -151,7 +152,7 @@ export const ViewRequestsModal: React.FC<ViewRequestsModalProps> = ({
                         styles.statusBadge,
                         {
                           backgroundColor:
-                            getStatusColor(request.status) + '20',
+                            getStatusColor(request.status) + "20",
                         },
                       ]}
                     >
@@ -195,42 +196,42 @@ export const ViewRequestsModal: React.FC<ViewRequestsModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
   },
   modalContainer: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: '85%',
-    shadowColor: '#000',
+    maxHeight: "85%",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: "#e5e7eb",
   },
   headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#111827',
+    fontWeight: "600",
+    color: "#111827",
   },
   refreshButton: {
     padding: 4,
@@ -242,51 +243,51 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   loadingContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 40,
   },
   loadingText: {
     marginTop: 12,
     fontSize: 14,
-    color: '#6b7280',
+    color: "#6b7280",
   },
   emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 40,
   },
   emptyTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#111827',
+    fontWeight: "600",
+    color: "#111827",
     marginTop: 16,
   },
   emptyText: {
     fontSize: 14,
-    color: '#6b7280',
+    color: "#6b7280",
     marginTop: 8,
-    textAlign: 'center',
+    textAlign: "center",
   },
   requestsList: {
     gap: 12,
   },
   requestCard: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
-    shadowColor: '#000',
+    borderColor: "#e5e7eb",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 1,
   },
   requestHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     marginBottom: 12,
   },
   requestInfo: {
@@ -295,30 +296,30 @@ const styles = StyleSheet.create({
   },
   requestDocument: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
+    fontWeight: "600",
+    color: "#111827",
     marginBottom: 4,
   },
   requestDate: {
     fontSize: 12,
-    color: '#6b7280',
+    color: "#6b7280",
   },
   requestDetails: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 16,
     marginBottom: 12,
   },
   detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
   },
   detailText: {
     fontSize: 12,
-    color: '#6b7280',
+    color: "#6b7280",
   },
   statusBadge: {
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 6,
@@ -326,35 +327,35 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   viewDetailsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
     gap: 4,
     marginTop: 4,
   },
   viewDetailsText: {
     fontSize: 12,
-    color: '#2563eb',
-    fontWeight: '500',
+    color: "#2563eb",
+    fontWeight: "500",
   },
   footer: {
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
+    borderTopColor: "#e5e7eb",
   },
   closeFooterButton: {
     paddingVertical: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#d1d5db',
-    alignItems: 'center',
+    borderColor: "#d1d5db",
+    alignItems: "center",
   },
   closeFooterButtonText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
+    fontWeight: "600",
+    color: "#374151",
   },
 });

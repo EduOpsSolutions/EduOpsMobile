@@ -363,7 +363,6 @@ export const useAuthStore = create<AuthState>()(
             return false;
           }
         } catch (error) {
-          console.error('Token validation error:', error);
           return false;
         }
       },
@@ -379,7 +378,6 @@ export const useAuthStore = create<AuthState>()(
             set({ token: newToken });
           }
         } catch (error) {
-          console.error('Token refresh error:', error);
           await get().logout(false);
         }
       },
@@ -459,20 +457,16 @@ export const useAuthStore = create<AuthState>()(
         if (state?.token && state?.isAuthenticated) {
           // Check if the persisted token is expired
           if (isTokenExpired(state.token)) {
-            console.log('Persisted token is expired, clearing auth data');
             // Clear expired token and user data
             state.token = null;
             state.user = null;
             state.isAuthenticated = false;
             // Also clear from AsyncStorage
-            clearAuthData().catch(console.error);
+            clearAuthData().catch(() => {});
           } else {
-            console.log('Persisted token is valid, user remains authenticated');
             // Token is valid, keep user authenticated
             // The AuthWrapper will handle server validation
           }
-        } else {
-          console.log('No persisted auth data found');
         }
       },
     }

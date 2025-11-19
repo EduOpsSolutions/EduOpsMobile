@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,22 +7,19 @@ import {
   TextInput,
   ActivityIndicator,
   Alert,
-} from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import { styles } from './DocumentScreen.styles';
-import { AppLayout } from '../../components/common';
-import { useDocumentStore } from '../../stores/documentStore';
-import { DocumentTemplate } from '../../types/document';
+  Linking,
+} from "react-native";
+import Icon from "react-native-vector-icons/MaterialIcons";
+import { styles } from "./DocumentScreen.styles";
+import { AppLayout } from "../../components/common";
+import { useDocumentStore } from "../../stores/documentStore";
+import { DocumentTemplate } from "../../types/document";
 import {
   DocumentDetailsModal,
   RequestDocumentModal,
   ViewRequestsModal,
   RequestDetailsModal,
-} from '../../components/modals';
-import {
-  downloadAndShare,
-  showDownloadConfirmation,
-} from '../../utils/fileDownload';
+} from "../../components/modals";
 
 interface DocumentItemProps {
   document: DocumentTemplate;
@@ -72,6 +69,7 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
       activeOpacity={0.7}
     >
       <Text style={styles.feeText} numberOfLines={1} ellipsizeMode="tail">
+        {document.displayPrice}
         {document.displayPrice}
       </Text>
       <Text style={styles.nameText} numberOfLines={1} ellipsizeMode="tail">
@@ -134,31 +132,46 @@ export const DocumentScreen = (): React.JSX.Element => {
   );
 
   const handleDownloadDocument = async (document: DocumentTemplate) => {
-    if (!document.uploadFile) {
-      Alert.alert('Error', 'This document is not available for download.');
+    // Validate document has a file URL
+    if (!document.uploadFile || document.uploadFile.trim().length === 0) {
+      Alert.alert(
+        "File Not Available",
+        "This document does not have a file uploaded yet.",
+        [{ text: "OK" }]
+      );
       return;
     }
 
-    // Extract filename from URL (handle Firebase Storage URLs with query params)
-    let fileName = document.uploadFile.split('/').pop() || '';
-
-    // Remove query parameters if present
-    fileName = fileName.split('?')[0];
-
-    // Fallback to document name if extraction failed
-    if (!fileName || fileName.length === 0) {
-      fileName = `${document.documentName.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
+    // Validate URL format
+    try {
+      const urlObj = new URL(document.uploadFile);
+      if (!urlObj.protocol.startsWith("http")) {
+        throw new Error("Invalid URL protocol");
+      }
+    } catch (error) {
+      Alert.alert(
+        "Invalid File URL",
+        "The document file URL is invalid. Please contact support.",
+        [{ text: "OK" }]
+      );
+      return;
     }
 
-    // Show confirmation dialog before downloading (same as posts/homepage)
-    showDownloadConfirmation(fileName, undefined, async () => {
-      try {
-        await downloadAndShare(document.uploadFile!, fileName);
-      } catch (error: any) {
-        console.error('Download error:', error);
-        Alert.alert('Error', 'Failed to download document. Please try again.');
+    // Open URL in browser - let browser handle download/viewing
+    try {
+      const canOpen = await Linking.canOpenURL(document.uploadFile);
+      if (canOpen) {
+        await Linking.openURL(document.uploadFile);
+      } else {
+        Alert.alert("Error", "Unable to open the document. Please try again.", [
+          { text: "OK" },
+        ]);
       }
-    });
+    } catch (error) {
+      Alert.alert("Error", "Failed to open the document. Please try again.", [
+        { text: "OK" },
+      ]);
+    }
   };
 
   const handleDocumentAction = (document: DocumentTemplate) => {
@@ -176,7 +189,7 @@ export const DocumentScreen = (): React.JSX.Element => {
 
   return (
     <AppLayout
-      showNotifications={false}
+      showNotifications={true}
       enrollmentActive={false}
       paymentActive={false}
     >
@@ -239,8 +252,8 @@ export const DocumentScreen = (): React.JSX.Element => {
                 <Icon name="description" size={64} color="#d1d5db" />
                 <Text style={styles.emptyText}>
                   {searchQuery
-                    ? 'No documents found'
-                    : 'No documents available'}
+                    ? "No documents found"
+                    : "No documents available"}
                 </Text>
               </View>
             ) : (
