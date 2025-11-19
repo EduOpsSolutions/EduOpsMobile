@@ -1,6 +1,7 @@
 // Component exports
 export { NotificationDropdown } from './NotificationDropdown';
 export { UserAvatar } from './UserAvatar';
+export { PostAvatar } from './PostAvatar';
 export { AuthWrapper } from './AuthWrapper';
 export { ProtectedRoute } from './ProtectedRoute';
 export { BottomNavigation } from './BottomNavigation';

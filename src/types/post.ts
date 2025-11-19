@@ -34,7 +34,7 @@ export interface Post {
   user?: PostUser;
   files?: PostFile[];
   // Formatted fields
-  profilePic?: string;
+  profilePic?: string | null;
   postedBy?: string;
   department?: string;
   formattedDate?: string;

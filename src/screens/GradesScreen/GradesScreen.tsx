@@ -7,14 +7,14 @@ import {
   Alert,
   TouchableOpacity,
   RefreshControl,
+  Linking,
 } from 'react-native';
 import { useSegments } from 'expo-router';
 import { styles } from './GradesScreen.styles';
 import { AppLayout } from '../../components/common';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { gradesApi, coursesApi } from '../../utils/api';
+import { gradesApi, coursesApi, assessmentApi } from '../../utils/api';
 import { useAuthStore } from '../../stores/authStore';
-import { FilePreviewModal } from '../../components/modals/FilePreviewModal';
 
 interface GradeData {
   id: string;
@@ -23,6 +23,7 @@ interface GradeData {
   completedDate: string | null;
   courseId: string;
   studentId: string;
+  batchId: string | null;
   files: Array<{
     url: string;
     uploadedAt: string;
@@ -79,8 +80,6 @@ export const GradesScreen = (): React.JSX.Element => {
   const [gradesData, setGradesData] = useState<GradeData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showPreview, setShowPreview] = useState(false);
-  const [previewFile, setPreviewFile] = useState({ url: '', title: '' });
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
@@ -131,6 +130,7 @@ export const GradesScreen = (): React.JSX.Element => {
           completedDate: grade?.updatedAt || null,
           courseId: course.id,
           studentId: user.id,
+          batchId: grade?.periodId || null,
           files: grade?.files || [],
         };
       });
@@ -155,37 +155,99 @@ export const GradesScreen = (): React.JSX.Element => {
     }
   };
 
-  const handleViewDetails = (grade: GradeData) => {
+  const handleViewDetails = async (grade: GradeData) => {
     if (grade.status === 'NO GRADE') {
       Alert.alert(
-        "You haven't taken this course",
-        'If you think this is a mistake please contact your instructor or administrator.',
+        'Not Available',
+        'Grade has not been graded or you have not completed the course yet.',
         [{ text: 'OK', style: 'default' }]
       );
-    } else {
-      // Open the latest file if available
-      if (grade.files && grade.files.length > 0) {
-        // Sort files by uploadedAt descending (latest first)
-        const sortedFiles = [...grade.files].sort(
-          (a, b) =>
-            new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
+      return;
+    }
+
+    try {
+      // Check for outstanding balance
+      console.log(
+        'Checking assessment for:',
+        grade.studentId,
+        grade.courseId,
+        grade.batchId
+      );
+
+      if (!grade.batchId) {
+        console.warn('[Grades Screen] No batchId found for grade:', grade);
+      }
+
+      const assessmentData = await assessmentApi.getStudentAssessments(
+        grade.studentId
+      );
+      console.log('Assessment Data:', assessmentData);
+
+      // Find assessment for this specific course and batch
+      const relevantAssessment = Array.isArray(assessmentData)
+        ? assessmentData.find(
+            (assessment: any) =>
+              assessment.courseId === grade.courseId &&
+              assessment.academicPeriodId === grade.batchId
+          )
+        : null;
+
+      if (relevantAssessment && relevantAssessment.remainingBalance > 0) {
+        Alert.alert(
+          'Outstanding Balance',
+          'You have an outstanding balance for this course. Please clear your dues to access the certificate.',
+          [{ text: 'OK', style: 'default' }]
         );
-        const latestFile = sortedFiles[0];
-        if (latestFile.url) {
-          setPreviewFile({ url: latestFile.url, title: 'Certificate Preview' });
-          setShowPreview(true);
-        } else {
-          Alert.alert('File Error', 'No file URL found.', [
+        return;
+      }
+    } catch (err) {
+      console.error('[Grades Screen] Error checking assessment balance:', err);
+      Alert.alert(
+        'Error',
+        'An error occurred while checking your assessment balance. Please try again later.',
+        [{ text: 'OK', style: 'default' }]
+      );
+      return;
+    }
+
+    // Open the latest file if available
+    if (grade.files && grade.files.length > 0) {
+      // Sort files by uploadedAt descending (latest first)
+      const sortedFiles = [...grade.files].sort(
+        (a, b) =>
+          new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
+      );
+      const latestFile = sortedFiles[0];
+      if (latestFile.url) {
+        // Open in browser instead of in-app preview
+        try {
+          const supported = await Linking.canOpenURL(latestFile.url);
+          if (supported) {
+            await Linking.openURL(latestFile.url);
+          } else {
+            Alert.alert(
+              'Error',
+              'Cannot open this URL. Please try again later.',
+              [{ text: 'OK', style: 'default' }]
+            );
+          }
+        } catch (error) {
+          console.error('[Grades Screen] Error opening URL:', error);
+          Alert.alert('Error', 'Failed to open certificate. Please try again.', [
             { text: 'OK', style: 'default' },
           ]);
         }
       } else {
-        Alert.alert(
-          'No File Available',
-          'No grade file has been uploaded for this course.',
-          [{ text: 'OK', style: 'default' }]
-        );
+        Alert.alert('File Error', 'No file URL found.', [
+          { text: 'OK', style: 'default' },
+        ]);
       }
+    } else {
+      Alert.alert(
+        'No File Available',
+        'No grade file has been uploaded for this course.',
+        [{ text: 'OK', style: 'default' }]
+      );
     }
   };
 
@@ -289,17 +351,6 @@ export const GradesScreen = (): React.JSX.Element => {
           </View>
         </ScrollView>
       </View>
-
-      {/* File Preview Modal */}
-      <FilePreviewModal
-        visible={showPreview}
-        onClose={() => {
-          setShowPreview(false);
-          setPreviewFile({ url: '', title: '' });
-        }}
-        fileUrl={previewFile.url}
-        title={previewFile.title}
-      />
     </AppLayout>
   );
 };

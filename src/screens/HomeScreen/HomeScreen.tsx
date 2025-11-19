@@ -12,6 +12,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useSegments } from 'expo-router';
 import { styles } from './Homescreen.styles';
 import { AppLayout, ImageViewer } from '../../components/common';
+import { PostAvatar } from '../../components';
 import usePostsStore from '../../stores/postsStore';
 import { Post, PostFile } from '../../types/post';
 import {
@@ -108,10 +109,12 @@ const PostCard: React.FC<PostCardProps> = ({
   return (
     <View style={styles.postCard}>
       <View style={styles.postHeader}>
-        <Image
-          source={{ uri: post.profilePic }}
+        <PostAvatar
+          profilePicUrl={post.profilePic}
+          firstName={post.user?.firstName}
+          lastName={post.user?.lastName}
+          size={50}
           style={styles.avatar}
-          defaultSource={require('../../../assets/images/sprachins-logo-3.png')}
         />
         <View style={styles.authorInfo}>
           <Text style={styles.authorName}>{post.postedBy}</Text>

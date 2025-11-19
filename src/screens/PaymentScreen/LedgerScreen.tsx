@@ -6,6 +6,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  RefreshControl,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
@@ -59,6 +60,7 @@ export const LedgerScreen = (): React.JSX.Element => {
   const { ledgerEntries, isLoading, error, fetchLedger } = useLedgerStore();
   const { user, getUserFullName } = useAuthStore();
   const [isPdfLoading, setIsPdfLoading] = React.useState(false);
+  const [refreshing, setRefreshing] = React.useState(false);
 
   useEffect(() => {
     // Fetch ledger data when component mounts
@@ -111,6 +113,12 @@ export const LedgerScreen = (): React.JSX.Element => {
       return '';
     }
     return typeof amount === 'number' ? amount.toFixed(2) : amount;
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchLedger();
+    setRefreshing(false);
   };
 
   // Export PDF functionality
@@ -210,6 +218,14 @@ export const LedgerScreen = (): React.JSX.Element => {
         style={styles.mainContent}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={['#8B0E07']}
+            tintColor="#8B0E07"
+          />
+        }
       >
         <View style={styles.ledgerContainer}>
           {/* Ledger Card */}

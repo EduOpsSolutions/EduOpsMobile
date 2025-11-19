@@ -10,7 +10,6 @@ import {
   ActivityIndicator,
   Platform,
   Modal,
-  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -19,10 +18,12 @@ import { RelativePathString, useRouter } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
 import { useEnrollmentStore } from '../../stores/enrollmentStore';
+import { useAuthStore } from '../../stores/authStore';
 import { EnrollmentFormData } from '../../types/enrollment';
 import { GuestNavbar } from '../../components/common/GuestNavbar';
 import { checkOngoingEnrollmentPeriod } from '../../utils/enrollmentPeriodUtils';
 import { coursesApi, fileApi } from '../../utils/api';
+import MultiSelectField from '../../components/form/MultiSelectField';
 
 interface DropdownProps {
   placeholder: string;
@@ -31,6 +32,7 @@ interface DropdownProps {
   options: string[];
   title?: string;
   error?: string;
+  disabled?: boolean;
 }
 
 const Dropdown: React.FC<DropdownProps> = ({
@@ -40,19 +42,33 @@ const Dropdown: React.FC<DropdownProps> = ({
   options,
   title,
   error,
+  disabled = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <View style={styles.dropdownContainer}>
       <TouchableOpacity
-        style={[styles.dropdownButton, error && styles.inputError]}
-        onPress={() => setIsOpen(true)}
+        style={[
+          styles.dropdownButton,
+          error && styles.inputError,
+          disabled && styles.inputDisabled,
+        ]}
+        onPress={() => !disabled && setIsOpen(true)}
+        disabled={disabled}
       >
         <Text style={[styles.dropdownText, !value && styles.placeholderText]}>
           {value || placeholder}
         </Text>
-        <Icon name="keyboard-arrow-down" size={20} color="#666" />
+        {disabled && (
+          <Icon
+            name="lock"
+            size={16}
+            color="#666"
+            style={styles.lockIcon}
+          />
+        )}
+        {!disabled && <Icon name="keyboard-arrow-down" size={20} color="#666" />}
       </TouchableOpacity>
 
       <Modal
@@ -99,6 +115,15 @@ interface Course {
   visibility: string;
 }
 
+interface CourseOption {
+  value: string;
+  label: string;
+  price: number;
+  disabled: boolean;
+  helperText?: string;
+  corequisites?: string[];
+}
+
 interface EnrollmentPeriod {
   id: string;
   batchName: string;
@@ -108,6 +133,8 @@ interface EnrollmentPeriod {
 export default function EnrollmentFormScreen(): React.JSX.Element {
   const router = useRouter();
   const { createEnrollment } = useEnrollmentStore();
+  const { user, isAuthenticated } = useAuthStore();
+
   const [birthDateOpen, setBirthDateOpen] = useState(false);
   const [formData, setFormData] = useState<EnrollmentFormData>({
     firstName: '',
@@ -148,7 +175,18 @@ export default function EnrollmentFormScreen(): React.JSX.Element {
 
   // Course states
   const [courses, setCourses] = useState<Course[]>([]);
+  const [courseOptions, setCourseOptions] = useState<CourseOption[]>([]);
+  const [selectedCourses, setSelectedCourses] = useState<string[]>([]);
   const [coursesLoading, setCoursesLoading] = useState(false);
+
+  // Locked fields for logged-in users
+  const [lockedFields, setLockedFields] = useState({
+    firstName: false,
+    middleName: false,
+    lastName: false,
+    birthDate: false,
+    preferredEmail: false,
+  });
 
   // Enrollment period states
   const [enrollmentPeriodCheck, setEnrollmentPeriodCheck] = useState({
@@ -213,15 +251,137 @@ export default function EnrollmentFormScreen(): React.JSX.Element {
     }
   };
 
-  // Fetch courses
+  // Fetch courses with prerequisite and co-requisite support
   const fetchCourses = async () => {
     try {
       setCoursesLoading(true);
+      let visibleCourses: Course[] = [];
+      let academicPeriodCourseIds: string[] = [];
+
+      // If there is an open batch, fetch academic_period_courses for that period
+      if (enrollmentPeriodCheck.currentPeriod?.id) {
+        const apcRes = await coursesApi.getAcademicPeriodCourses(
+          enrollmentPeriodCheck.currentPeriod.id
+        );
+        academicPeriodCourseIds = apcRes.map((apc: any) => apc.courseId);
+      }
+
+      // Fetch all courses
       const response = await coursesApi.getCourses();
-      const visibleCourses = response.filter(
+      visibleCourses = response.filter(
         (course: Course) => course.visibility === 'visible'
       );
+
+      // If we have academic period course IDs, filter to only those
+      if (academicPeriodCourseIds.length > 0) {
+        visibleCourses = visibleCourses.filter((course) =>
+          academicPeriodCourseIds.includes(course.id)
+        );
+      }
+
       setCourses(visibleCourses);
+
+      const courseOpts: CourseOption[] = visibleCourses.map((course) => ({
+        value: course.id,
+        label: course.name,
+        price: course.price,
+        disabled: false,
+      }));
+
+      // Fetch ALL course requisites (prerequisites and co-requisites)
+      if (visibleCourses.length > 0) {
+        try {
+          const courseIds = visibleCourses.map((c) => c.id);
+          const requisitesRes = await coursesApi.getCourseRequisites(courseIds);
+
+          // Build a map of courseId -> { prerequisites: [...], corequisites: [...] }
+          const requisitesMap: Record<string, any> = {};
+          requisitesRes.forEach((req: any) => {
+            if (!requisitesMap[req.courseId]) {
+              requisitesMap[req.courseId] = {
+                prerequisites: [],
+                corequisites: [],
+              };
+            }
+            if (req.type === 'prerequisite') {
+              requisitesMap[req.courseId].prerequisites.push({
+                id: req.requisiteCourseId,
+                name: req.requisiteCourse.name,
+              });
+            } else if (req.type === 'corequisite') {
+              requisitesMap[req.courseId].corequisites.push({
+                id: req.requisiteCourseId,
+                name: req.requisiteCourse.name,
+              });
+            }
+          });
+
+          // For logged-in students, check eligibility
+          if (isAuthenticated && user?.id) {
+            try {
+              const eligibilityRes = await coursesApi.checkStudentEligibility(
+                user.id,
+                courseIds
+              );
+
+              const eligibilityMap: Record<string, any> = {};
+              eligibilityRes.forEach((item: any) => {
+                eligibilityMap[item.courseId] = item;
+              });
+
+              // Update course options based on eligibility
+              courseOpts.forEach((opt) => {
+                const requisites = requisitesMap[opt.value];
+                const eligibility = eligibilityMap[opt.value];
+
+                // Add all co-requisites for auto-selection
+                if (requisites?.corequisites && requisites.corequisites.length > 0) {
+                  opt.corequisites = requisites.corequisites.map((c: any) => c.id);
+                }
+
+                // Disable if student hasn't passed prerequisites
+                if (eligibility && !eligibility.eligible) {
+                  opt.disabled = true;
+                  const missingNames = eligibility.missingPrerequisites
+                    .map((p: any) => p.name)
+                    .join(', ');
+                  opt.helperText = `Prerequisites not met: ${missingNames}`;
+                } else if (requisites?.corequisites && requisites.corequisites.length > 0) {
+                  // Show co-requisites info (but don't disable)
+                  const coReqNames = requisites.corequisites
+                    .map((c: any) => c.name)
+                    .join(', ');
+                  opt.helperText = `Co-requisite: ${coReqNames} (will be auto-selected)`;
+                }
+              });
+            } catch (e) {
+              console.error('Failed to check student eligibility:', e);
+            }
+          } else {
+            // For guests: disable courses with prerequisites or co-requisites
+            courseOpts.forEach((opt) => {
+              const requisites = requisitesMap[opt.value];
+              if (requisites?.prerequisites && requisites.prerequisites.length > 0) {
+                opt.disabled = true;
+                const prereqNames = requisites.prerequisites
+                  .map((p: any) => p.name)
+                  .join(', ');
+                opt.helperText = `Requires: ${prereqNames} (Login to check eligibility)`;
+              } else if (requisites?.corequisites && requisites.corequisites.length > 0) {
+                opt.disabled = true;
+                const coReqNames = requisites.corequisites
+                  .map((c: any) => c.name)
+                  .join(', ');
+                opt.helperText = `Co-requisite: ${coReqNames} (Login required)`;
+              }
+            });
+          }
+        } catch (e) {
+          console.error('Failed to fetch course requisites:', e);
+        }
+      }
+
+      setCourseOptions(courseOpts);
     } catch (error) {
       console.error('Failed to fetch courses:', error);
       Alert.alert(
@@ -233,8 +393,39 @@ export default function EnrollmentFormScreen(): React.JSX.Element {
     }
   };
 
+  // Prefill form data for logged-in users
+  const prefillFormData = () => {
+    if (isAuthenticated && user) {
+      const birthDate = user.birthyear && user.birthmonth && user.birthdate
+        ? new Date(user.birthyear, user.birthmonth - 1, user.birthdate).toISOString()
+        : new Date().toISOString();
+
+      setFormData((prev) => ({
+        ...prev,
+        firstName: user.firstName || '',
+        middleName: user.middleName || '',
+        lastName: user.lastName || '',
+        birthDate: birthDate,
+        preferredEmail: user.email || '',
+        contactNumber: user.phoneNumber || '',
+      }));
+
+      // Lock the prefilled fields
+      setLockedFields({
+        firstName: true,
+        middleName: true,
+        lastName: true,
+        birthDate: true,
+        preferredEmail: true,
+      });
+    }
+  };
+
   useEffect(() => {
     const initializePage = async () => {
+      // Prefill data for logged-in users
+      prefillFormData();
+
       const periodCheck = await checkEnrollmentPeriod();
 
       // Only fetch courses if enrollment is available
@@ -244,7 +435,7 @@ export default function EnrollmentFormScreen(): React.JSX.Element {
     };
 
     initializePage();
-  }, []);
+  }, [isAuthenticated, user]);
 
   // Request image picker permissions
   useEffect(() => {
@@ -359,8 +550,8 @@ export default function EnrollmentFormScreen(): React.JSX.Element {
       newErrors.contactNumber = 'Contact number is required';
     if (!formData.preferredEmail.trim())
       newErrors.preferredEmail = 'Email is required';
-    if (!formData.coursesToEnroll)
-      newErrors.coursesToEnroll = 'Please select a course';
+    if (selectedCourses.length === 0)
+      newErrors.coursesToEnroll = 'Please select at least one course';
     if (!formData.validIdPath) newErrors.validIdPath = 'Valid ID is required';
     if (!formData.idPhotoPath)
       newErrors.idPhotoPath = '2x2 ID Photo is required';
@@ -429,19 +620,23 @@ export default function EnrollmentFormScreen(): React.JSX.Element {
 
     setIsSubmitting(true);
     try {
-      // Get selected course details (name and price) based on course ID
-      const selectedCourse = courses.find(
-        (course) => course.id === formData.coursesToEnroll
-      );
+      // Get selected course objects (names and IDs)
+      const selectedCourseObjects = courses
+        .filter((course) => selectedCourses.includes(course.id))
+        .map((course) => ({
+          id: course.id,
+          name: course.name,
+          price: course.price,
+        }));
 
-      if (!selectedCourse) {
-        throw new Error('Selected course not found');
+      if (selectedCourseObjects.length === 0) {
+        throw new Error('No courses selected');
       }
 
-      // Create enrollment data with course name (matching web app)
+      // Create enrollment data with course names (matching web app)
       const enrollmentData = {
         ...formData,
-        coursesToEnroll: selectedCourse.name,
+        coursesToEnroll: selectedCourseObjects.map((c) => c.name).join(', '),
       };
 
       const response = await createEnrollment(enrollmentData);
@@ -463,6 +658,13 @@ export default function EnrollmentFormScreen(): React.JSX.Element {
   ) => {
     const numericValue = value.replace(/\D/g, '');
     updateFormData(field, numericValue);
+  };
+
+  // Calculate total price of selected courses
+  const calculateTotalPrice = () => {
+    return courses
+      .filter((c) => selectedCourses.includes(c.id))
+      .reduce((sum, c) => sum + parseFloat(c.price?.toString() || '0'), 0);
   };
 
   // Loading state
@@ -568,6 +770,17 @@ export default function EnrollmentFormScreen(): React.JSX.Element {
             </View>
           )}
 
+          {/* Prefill Info Banner for Logged-in Users */}
+          {isAuthenticated && (
+            <View style={styles.infoBanner}>
+              <Icon name="info" size={20} color="#1e40af" />
+              <Text style={styles.infoBannerText}>
+                Some fields have been pre-filled with your account information.
+                Fields marked with a lock cannot be edited.
+              </Text>
+            </View>
+          )}
+
           <View style={styles.formCard}>
             <Text style={styles.formTitle}>Enrollment Form</Text>
             <Text style={styles.requiredText}>
@@ -578,22 +791,41 @@ export default function EnrollmentFormScreen(): React.JSX.Element {
             <View style={styles.row}>
               <View style={styles.fieldContainer}>
                 <Text style={styles.label}>First Name*</Text>
-                <TextInput
-                  style={[styles.input, errors.firstName && styles.inputError]}
-                  value={formData.firstName}
-                  onChangeText={(value) => updateFormData('firstName', value)}
-                />
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      errors.firstName && styles.inputError,
+                      lockedFields.firstName && styles.inputDisabled,
+                    ]}
+                    value={formData.firstName}
+                    onChangeText={(value) => updateFormData('firstName', value)}
+                    editable={!lockedFields.firstName}
+                  />
+                  {lockedFields.firstName && (
+                    <Icon name="lock" size={16} color="#666" style={styles.fieldLockIcon} />
+                  )}
+                </View>
                 {errors.firstName && (
                   <Text style={styles.errorText}>{errors.firstName}</Text>
                 )}
               </View>
               <View style={styles.fieldContainer}>
                 <Text style={styles.label}>Middle Name</Text>
-                <TextInput
-                  style={styles.input}
-                  value={formData.middleName}
-                  onChangeText={(value) => updateFormData('middleName', value)}
-                />
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      lockedFields.middleName && styles.inputDisabled,
+                    ]}
+                    value={formData.middleName}
+                    onChangeText={(value) => updateFormData('middleName', value)}
+                    editable={!lockedFields.middleName}
+                  />
+                  {lockedFields.middleName && (
+                    <Icon name="lock" size={16} color="#666" style={styles.fieldLockIcon} />
+                  )}
+                </View>
               </View>
             </View>
 
@@ -601,11 +833,21 @@ export default function EnrollmentFormScreen(): React.JSX.Element {
             <View style={styles.row}>
               <View style={styles.fieldContainer}>
                 <Text style={styles.label}>Last Name*</Text>
-                <TextInput
-                  style={[styles.input, errors.lastName && styles.inputError]}
-                  value={formData.lastName}
-                  onChangeText={(value) => updateFormData('lastName', value)}
-                />
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      errors.lastName && styles.inputError,
+                      lockedFields.lastName && styles.inputDisabled,
+                    ]}
+                    value={formData.lastName}
+                    onChangeText={(value) => updateFormData('lastName', value)}
+                    editable={!lockedFields.lastName}
+                  />
+                  {lockedFields.lastName && (
+                    <Icon name="lock" size={16} color="#666" style={styles.fieldLockIcon} />
+                  )}
+                </View>
                 {errors.lastName && (
                   <Text style={styles.errorText}>{errors.lastName}</Text>
                 )}
@@ -653,15 +895,23 @@ export default function EnrollmentFormScreen(): React.JSX.Element {
               <View style={styles.thirdFieldContainer}>
                 <Text style={styles.label}>Birth Date*</Text>
                 <TouchableOpacity
-                  onPress={() => setBirthDateOpen(true)}
-                  style={styles.dateInputContainer}
+                  onPress={() => !lockedFields.birthDate && setBirthDateOpen(true)}
+                  style={[
+                    styles.dateInputContainer,
+                    lockedFields.birthDate && styles.inputDisabled,
+                  ]}
+                  disabled={lockedFields.birthDate}
                 >
                   <Text style={styles.dateInput}>
                     {formData.birthDate
                       ? new Date(formData.birthDate).toLocaleDateString()
                       : 'Select birth date'}
                   </Text>
-                  <Icon name="calendar-today" size={20} color="#666" />
+                  {lockedFields.birthDate ? (
+                    <Icon name="lock" size={16} color="#666" />
+                  ) : (
+                    <Icon name="calendar-today" size={20} color="#666" />
+                  )}
                 </TouchableOpacity>
                 {errors.birthDate && (
                   <Text style={styles.errorText}>{errors.birthDate}</Text>
@@ -759,20 +1009,27 @@ export default function EnrollmentFormScreen(): React.JSX.Element {
             <View style={styles.row}>
               <View style={styles.fieldContainer}>
                 <Text style={styles.label}>Email Address*</Text>
-                <TextInput
-                  style={[
-                    styles.input,
-                    errors.preferredEmail && styles.inputError,
-                  ]}
-                  placeholder="johndoe@gmail.com"
-                  placeholderTextColor="#999"
-                  value={formData.preferredEmail}
-                  onChangeText={(value) =>
-                    updateFormData('preferredEmail', value)
-                  }
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      errors.preferredEmail && styles.inputError,
+                      lockedFields.preferredEmail && styles.inputDisabled,
+                    ]}
+                    placeholder="johndoe@gmail.com"
+                    placeholderTextColor="#999"
+                    value={formData.preferredEmail}
+                    onChangeText={(value) =>
+                      updateFormData('preferredEmail', value)
+                    }
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    editable={!lockedFields.preferredEmail}
+                  />
+                  {lockedFields.preferredEmail && (
+                    <Icon name="lock" size={16} color="#666" style={styles.fieldLockIcon} />
+                  )}
+                </View>
                 {errors.preferredEmail && (
                   <Text style={styles.errorText}>{errors.preferredEmail}</Text>
                 )}
@@ -874,32 +1131,41 @@ export default function EnrollmentFormScreen(): React.JSX.Element {
               </View>
             </View>
 
-            {/* Course Selection */}
+            {/* Course Selection - Multi-Select */}
             <View style={styles.fullWidth}>
-              <Text style={styles.label}>Course to Enroll*</Text>
-              <Dropdown
+              <MultiSelectField
+                label="Select Course(s) to Enroll*"
+                value={selectedCourses}
+                onChange={setSelectedCourses}
+                options={courseOptions}
                 placeholder={
                   coursesLoading
                     ? 'Loading courses...'
-                    : courses.length > 0
-                    ? 'Select a course'
+                    : courseOptions.length > 0
+                    ? 'Select courses...'
                     : 'No courses available'
                 }
-                value={
-                  courses.find((c) => c.id === formData.coursesToEnroll)
-                    ?.name || ''
-                }
-                onValueChange={(value) => {
-                  const selectedCourse = courses.find((c) => c.name === value);
-                  if (selectedCourse) {
-                    updateFormData('coursesToEnroll', selectedCourse.id);
-                  }
-                }}
-                options={courses.map((c) => c.name)}
+                searchPlaceholder="Search courses..."
+                disabled={coursesLoading}
+                required={true}
                 error={errors.coursesToEnroll}
               />
-              {errors.coursesToEnroll && (
-                <Text style={styles.errorText}>{errors.coursesToEnroll}</Text>
+
+              {/* Course Pricing Display */}
+              {selectedCourses.length > 0 && (
+                <View style={styles.coursePricingContainer}>
+                  <View style={styles.coursePricingHeader}>
+                    <Text style={styles.coursePricingTitle}>
+                      {selectedCourses.length} course{selectedCourses.length > 1 ? 's' : ''} selected
+                    </Text>
+                  </View>
+                  <View style={styles.coursePricingTotal}>
+                    <Text style={styles.coursePricingLabel}>Total Price:</Text>
+                    <Text style={styles.coursePricingAmount}>
+                      ₱{calculateTotalPrice().toLocaleString()}
+                    </Text>
+                  </View>
+                </View>
               )}
             </View>
 
@@ -995,7 +1261,7 @@ export default function EnrollmentFormScreen(): React.JSX.Element {
       </ScrollView>
 
       {/* Date Picker Modal */}
-      {birthDateOpen && (
+      {birthDateOpen && !lockedFields.birthDate && (
         <DateTimePicker
           value={formData.birthDate ? new Date(formData.birthDate) : new Date()}
           mode="date"

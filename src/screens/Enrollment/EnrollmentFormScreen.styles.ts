@@ -385,4 +385,71 @@ export const styles = StyleSheet.create({
     fontSize: 12,
     color: "#16a34a",
   },
+  // Lock icon and disabled input styles
+  inputContainer: {
+    position: "relative",
+    width: "100%",
+  },
+  inputDisabled: {
+    backgroundColor: "#f3f4f6",
+    color: "#6b7280",
+  },
+  fieldLockIcon: {
+    position: "absolute",
+    right: 10,
+    top: "50%",
+    transform: [{ translateY: -8 }],
+  },
+  lockIcon: {
+    marginLeft: 8,
+  },
+  // Info banner for logged-in users
+  infoBanner: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    backgroundColor: "#dbeafe",
+    borderWidth: 1,
+    borderColor: "#93c5fd",
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    gap: 10,
+  },
+  infoBannerText: {
+    flex: 1,
+    fontSize: 13,
+    color: "#1e40af",
+    lineHeight: 18,
+  },
+  // Course pricing display
+  coursePricingContainer: {
+    backgroundColor: "#eff6ff",
+    borderWidth: 1,
+    borderColor: "#bfdbfe",
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 8,
+  },
+  coursePricingHeader: {
+    marginBottom: 8,
+  },
+  coursePricingTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#1e40af",
+  },
+  coursePricingTotal: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  coursePricingLabel: {
+    fontSize: 13,
+    color: "#1e40af",
+  },
+  coursePricingAmount: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#1e40af",
+  },
 });
