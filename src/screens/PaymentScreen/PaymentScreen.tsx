@@ -91,6 +91,7 @@ export const PaymentScreen = (): React.JSX.Element => {
     validatePhoneNumber,
     preparePaymentData,
     resetForm,
+    resetPaymentFields,
     sendPaymentLinkEmail,
     setLoading,
   } = usePaymentStore();
@@ -98,6 +99,9 @@ export const PaymentScreen = (): React.JSX.Element => {
   const { user, isAuthenticated } = useAuthStore();
   const [isFetchingStudent, setIsFetchingStudent] = useState(false);
   const [showIdCopied, setShowIdCopied] = useState(false);
+  const [enrollments, setEnrollments] = useState<any[]>([]);
+  const [courses, setCourses] = useState<any[]>([]);
+  const [batches, setBatches] = useState<any[]>([]);
 
   // Auto-fill user details on component mount
   React.useEffect(() => {
@@ -117,6 +121,71 @@ export const PaymentScreen = (): React.JSX.Element => {
 
     autoFillUserDetails();
   }, [isAuthenticated, user]);
+
+  // Fetch enrollments for logged-in students
+  React.useEffect(() => {
+    const fetchEnrollments = async () => {
+      if (isAuthenticated && user?.role === 'student' && user?.id) {
+        try {
+          const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5555/api/v1';
+          const token = useAuthStore.getState().token;
+          const response = await fetch(`${apiUrl}/enrollment/${user.id}/enrollments`, {
+            headers: {
+              Authorization: token ? `Bearer ${token}` : '',
+              'Content-Type': 'application/json',
+            },
+          });
+          const data = await response.json();
+          console.log('Enrollments fetched:', data); // Debug log
+          setEnrollments(Array.isArray(data) ? data : []);
+        } catch (err) {
+          console.error('Error fetching enrollments:', err);
+          setEnrollments([]);
+        }
+      } else {
+        setEnrollments([]);
+      }
+    };
+    fetchEnrollments();
+  }, [isAuthenticated, user]);
+
+  // Fetch courses and batches for guest payments
+  React.useEffect(() => {
+    const fetchCoursesAndBatches = async () => {
+      if (!isAuthenticated) {
+        try {
+          const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5555/api/v1';
+
+          // Fetch courses
+          const coursesRes = await fetch(`${apiUrl}/courses`);
+          const coursesData = await coursesRes.json();
+          setCourses(Array.isArray(coursesData) ? coursesData : []);
+
+          // Fetch academic periods (batches)
+          const batchesRes = await fetch(`${apiUrl}/academic-periods`);
+          const batchesData = await batchesRes.json();
+          setBatches(Array.isArray(batchesData) ? batchesData : []);
+        } catch (err) {
+          console.error('Error fetching courses/batches:', err);
+          setCourses([]);
+          setBatches([]);
+        }
+      }
+    };
+    fetchCoursesAndBatches();
+  }, [isAuthenticated]);
+
+  // Handle course/batch selection
+  const handleCourseBatchChange = (value: string) => {
+    if (!value) {
+      updateFormField('courseId', null);
+      updateFormField('batchId', null);
+    } else {
+      const [courseId, batchId] = value.split('|');
+      updateFormField('courseId', courseId);
+      updateFormField('batchId', batchId);
+    }
+  };
 
   // Helper function to get proper fee type label
   const getFeeTypeLabel = (feeType: string) => {
@@ -192,6 +261,8 @@ export const PaymentScreen = (): React.JSX.Element => {
                 description: description,
                 feeType: paymentData.feeType,
                 userId: paymentData.userId,
+                courseId: paymentData.courseId || null,
+                batchId: paymentData.batchId || null,
               };
 
               const result = await sendPaymentLinkEmail(emailData);
@@ -231,7 +302,13 @@ export const PaymentScreen = (): React.JSX.Element => {
                   ]
                 );
 
-                resetForm();
+                // For authenticated users, only reset payment fields to keep user details pre-filled
+                // For guests, reset everything
+                if (isAuthenticated && user?.role === 'student') {
+                  resetPaymentFields();
+                } else {
+                  resetForm();
+                }
               } else {
                 Alert.alert(
                   'Error',
@@ -356,6 +433,91 @@ export const PaymentScreen = (): React.JSX.Element => {
               </View>
             </View>
 
+            {/* Course & Batch selection for logged-in students */}
+            {isAuthenticated && user?.role === 'student' && (
+              <View style={styles.fullWidth}>
+                <Text style={styles.label}>Course & Batch*</Text>
+                {enrollments.length > 0 ? (
+                  <Dropdown
+                    placeholder="Select course & batch"
+                    value={
+                      formData.courseId && formData.batchId
+                        ? `${formData.courseId}|${formData.batchId}`
+                        : ''
+                    }
+                    onValueChange={handleCourseBatchChange}
+                    options={[
+                      { value: '', label: 'Select course & batch' },
+                      ...enrollments.map((e: any) => ({
+                        value: `${e.courseId}|${e.batchId}`,
+                        label: `${e.course} - ${e.batch}${e.year ? ` (${e.year})` : ''}`,
+                      })),
+                    ]}
+                  />
+                ) : (
+                  <View style={styles.emptyStateContainer}>
+                    <Text style={styles.emptyStateText}>
+                      No enrollments found. Please enroll in a course first.
+                    </Text>
+                  </View>
+                )}
+              </View>
+            )}
+
+            {/* Course & Batch selection for guest payments */}
+            {!isAuthenticated && (
+              <View style={styles.row}>
+                <View style={styles.halfWidth}>
+                  <Text style={styles.label}>Course*</Text>
+                  {courses.length > 0 ? (
+                    <Dropdown
+                      placeholder="Select course"
+                      value={formData.courseId || ''}
+                      onValueChange={(value) => updateFormField('courseId', value)}
+                      options={[
+                        { value: '', label: 'Select course' },
+                        ...courses
+                          .filter((c: any) => !c.deletedAt)
+                          .map((c: any) => ({
+                            value: c.id,
+                            label: c.name,
+                          })),
+                      ]}
+                    />
+                  ) : (
+                    <View style={styles.emptyStateContainer}>
+                      <Text style={styles.emptyStateText}>Loading courses...</Text>
+                    </View>
+                  )}
+                </View>
+                <View style={styles.halfWidth}>
+                  <Text style={styles.label}>Batch/Academic Period*</Text>
+                  {batches.length > 0 ? (
+                    <Dropdown
+                      placeholder="Select batch"
+                      value={formData.batchId || ''}
+                      onValueChange={(value) => updateFormField('batchId', value)}
+                      options={[
+                        { value: '', label: 'Select batch' },
+                        ...batches
+                          .filter((b: any) => !b.deletedAt)
+                          .map((b: any) => ({
+                            value: b.id,
+                            label: `${b.batchName || b.name}${
+                              b.schoolYear ? ` (${b.schoolYear})` : ''
+                            }`,
+                          })),
+                      ]}
+                    />
+                  ) : (
+                    <View style={styles.emptyStateContainer}>
+                      <Text style={styles.emptyStateText}>Loading batches...</Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+            )}
+
             {/* First Row - First Name and Middle Name */}
             <View style={styles.row}>
               <View style={styles.halfWidth}>
@@ -459,13 +621,34 @@ export const PaymentScreen = (): React.JSX.Element => {
             <View style={styles.fullWidth}>
               <Text style={styles.label}>Amount (PHP)*</Text>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  isAuthenticated &&
+                    user?.role === 'student' &&
+                    formData.fee === 'document_fee' &&
+                    styles.inputReadOnly,
+                ]}
                 value={formData.amount}
                 onChangeText={(value) => updateFormField('amount', value)}
                 placeholder="0.00"
                 placeholderTextColor="#999"
                 keyboardType="decimal-pad"
+                editable={
+                  !(
+                    isAuthenticated &&
+                    user?.role === 'student' &&
+                    formData.fee === 'document_fee'
+                  )
+                }
               />
+              {isAuthenticated &&
+                user?.role === 'student' &&
+                formData.fee === 'document_fee' && (
+                  <Text style={styles.lockedAmountNote}>
+                    <Icon name="info" size={12} color="#6b7280" /> Amount is locked
+                    for document fees
+                  </Text>
+                )}
             </View>
 
             {/* Submit Button */}

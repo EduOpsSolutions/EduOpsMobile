@@ -22,14 +22,14 @@ export interface DocumentTemplate {
 // Document Request Types
 export type RequestStatus =
   | 'in_process'
-  | 'in_transit'
+  | 'approved'
+  | 'ready_for_pickup'
   | 'delivered'
-  | 'fulfilled'
-  | 'failed';
+  | 'rejected';
 
 export type RequestMode = 'pickup' | 'delivery';
 
-export type PaymentMethod = 'online' | 'cashPickup';
+export type PaymentMethod = 'online' | 'cash';
 
 export type PaymentStatus = 'pending' | 'verified';
 

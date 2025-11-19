@@ -45,7 +45,7 @@ export const EnrollmentDropdown: React.FC<EnrollmentDropdownProps> = ({
 
   const dropdownHeight = animation.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, 120],
+    outputRange: [0, 180], // Increased height to accommodate 3 items
   });
 
   const rotateIcon = animation.interpolate({
@@ -72,6 +72,23 @@ export const EnrollmentDropdown: React.FC<EnrollmentDropdownProps> = ({
       </TouchableOpacity>
 
       <Animated.View style={[styles.dropdown, { height: dropdownHeight }]}>
+        <TouchableOpacity
+          style={[
+            styles.dropdownItem,
+            currentRoute === '/form' && styles.activeDropdownItem,
+          ]}
+          onPress={() => navigateToScreen('/enrollment/form')}
+        >
+          <Text
+            style={[
+              styles.dropdownText,
+              currentRoute === '/form' && styles.activeDropdownText,
+            ]}
+          >
+            New Enrollment
+          </Text>
+        </TouchableOpacity>
+
         <TouchableOpacity
           style={[
             styles.dropdownItem,

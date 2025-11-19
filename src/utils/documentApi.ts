@@ -189,10 +189,10 @@ export const documentHelpers = {
     // Format status for display
     const statusMap: { [key: string]: string } = {
       in_process: 'In Process',
-      in_transit: 'In Transit',
+      approved: 'Approved',
+      ready_for_pickup: 'Ready for Pickup',
       delivered: 'Delivered',
-      failed: 'Failed',
-      fulfilled: 'Fulfilled',
+      rejected: 'Rejected',
     };
 
     // Format payment status for display
@@ -273,11 +273,11 @@ export const documentHelpers = {
   // Get status color for UI
   getStatusColor: (status: string) => {
     const statusColors: { [key: string]: string } = {
-      in_process: '#FFA500', // Orange
-      in_transit: '#1E90FF', // DodgerBlue
-      delivered: '#32CD32', // LimeGreen
-      fulfilled: '#32CD32', // LimeGreen
-      failed: '#DC143C', // Crimson
+      in_process: '#FFA500', // Orange/Yellow
+      approved: '#1E90FF', // Blue
+      ready_for_pickup: '#32CD32', // Green
+      delivered: '#9333EA', // Purple
+      rejected: '#DC143C', // Red
     };
     return statusColors[status] || '#666666';
   },
@@ -285,9 +285,8 @@ export const documentHelpers = {
   // Get payment method display text
   getPaymentMethodText: (method: string) => {
     const methodMap: { [key: string]: string } = {
-      online: 'Online (Maya)',
-      cod: 'Cash on Delivery',
-      cashPickup: 'Cash (Pay upon Pickup)',
+      online: 'Pay Online',
+      cash: 'Cash (Pickup Only)',
     };
     return methodMap[method] || method;
   },

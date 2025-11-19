@@ -10,6 +10,8 @@ interface FormData {
   phone_number: string;
   fee: string;
   amount: string;
+  courseId: string | null;
+  batchId: string | null;
 }
 
 interface StudentData {
@@ -35,9 +37,10 @@ interface PaymentState {
   studentData: StudentData | null;
   feesOptions: FeeOption[];
 
-  updateFormField: (name: keyof FormData, value: string) => void;
+  updateFormField: (name: keyof FormData, value: string | null) => void;
   validateAndFetchStudentByID: (studentId: string) => Promise<boolean>;
   resetForm: () => void;
+  resetPaymentFields: () => void;
   validateRequiredFields: () => boolean;
   validatePhoneNumber: () => boolean;
   preparePaymentData: () => any;
@@ -56,6 +59,8 @@ const initialFormData: FormData = {
   phone_number: '',
   fee: '',
   amount: '',
+  courseId: null,
+  batchId: null,
 };
 
 export const usePaymentStore = create<PaymentState>((set, get) => ({
@@ -73,7 +78,7 @@ export const usePaymentStore = create<PaymentState>((set, get) => ({
 
   setLoading: (loading: boolean) => set({ loading }),
 
-  updateFormField: (name: keyof FormData, value: string) => {
+  updateFormField: (name: keyof FormData, value: string | null) => {
     set((state) => ({
       formData: { ...state.formData, [name]: value },
     }));
@@ -162,6 +167,19 @@ export const usePaymentStore = create<PaymentState>((set, get) => ({
     });
   },
 
+  resetPaymentFields: () => {
+    set((state) => ({
+      formData: {
+        ...state.formData,
+        fee: '',
+        amount: '',
+        courseId: null,
+        batchId: null,
+      },
+      phoneError: '',
+    }));
+  },
+
   validateRequiredFields: () => {
     const { formData } = get();
     return !!(
@@ -197,6 +215,8 @@ export const usePaymentStore = create<PaymentState>((set, get) => ({
       phoneNumber: formData.phone_number || null,
       amount: parseFloat(formData.amount),
       feeType: formData.fee,
+      courseId: formData.courseId || null,
+      batchId: formData.batchId || null,
     };
   },
 

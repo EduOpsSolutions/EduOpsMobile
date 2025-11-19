@@ -7,6 +7,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  RefreshControl,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
@@ -123,6 +124,7 @@ export const AssessmentScreen = (): React.JSX.Element => {
   const [showResults, setShowResults] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
   const [academicPeriods, setAcademicPeriods] = useState<AcademicPeriod[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Fetch all courses on mount
   useEffect(() => {
@@ -255,6 +257,14 @@ export const AssessmentScreen = (): React.JSX.Element => {
     return new Number(amount).toFixed(2);
   };
 
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    if (user?.id) {
+      await fetchStudentAssessments();
+    }
+    setRefreshing(false);
+  };
+
   const isPaymentActive = true;
 
   return (
@@ -267,6 +277,14 @@ export const AssessmentScreen = (): React.JSX.Element => {
         style={styles.mainContent}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={['#8B0E07']}
+            tintColor="#8B0E07"
+          />
+        }
       >
         <View style={styles.assessmentContainer}>
           {/* Search Section */}

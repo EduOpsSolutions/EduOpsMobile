@@ -343,6 +343,39 @@ export const coursesApi = {
       throw new Error(handleApiError(error));
     }
   },
+
+  getCourseRequisites: async (courseIds: string[]) => {
+    try {
+      const response = await axiosInstance.get(
+        `/course-requisites?courseIds=${courseIds.join(',')}`
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  },
+
+  checkStudentEligibility: async (studentId: string, courseIds: string[]) => {
+    try {
+      const response = await axiosInstance.get(
+        `/course-requisites/check-student?studentId=${studentId}&courseIds=${courseIds.join(',')}`
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  },
+
+  getAcademicPeriodCourses: async (periodId: string) => {
+    try {
+      const response = await axiosInstance.get(
+        `/academic-period-courses/${periodId}/courses`
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  },
 };
 
 // Ledger API

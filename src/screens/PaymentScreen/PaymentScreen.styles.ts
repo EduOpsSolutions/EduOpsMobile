@@ -364,4 +364,25 @@ export const styles = StyleSheet.create({
     color: '#de0000',
     fontWeight: '500',
   },
+  lockedAmountNote: {
+    fontSize: 11,
+    color: '#6b7280',
+    marginTop: 4,
+    fontStyle: 'italic',
+  },
+  emptyStateContainer: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 14,
+    backgroundColor: '#f9f9f9',
+    minHeight: 44,
+    justifyContent: 'center',
+  },
+  emptyStateText: {
+    fontSize: 13,
+    color: '#999',
+    fontStyle: 'italic',
+  },
 });

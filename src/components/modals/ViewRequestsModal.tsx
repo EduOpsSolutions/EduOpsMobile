@@ -37,13 +37,14 @@ export const ViewRequestsModal: React.FC<ViewRequestsModalProps> = ({
     switch (status) {
       case 'in_process':
         return 'hourglass-empty';
-      case 'in_transit':
-        return 'local-shipping';
+      case 'approved':
+        return 'check';
+      case 'ready_for_pickup':
+        return 'store';
       case 'delivered':
-      case 'fulfilled':
-        return 'check-circle';
-      case 'failed':
-        return 'error';
+        return 'local-shipping';
+      case 'rejected':
+        return 'close';
       default:
         return 'info';
     }

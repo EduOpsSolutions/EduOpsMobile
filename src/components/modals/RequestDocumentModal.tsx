@@ -41,7 +41,7 @@ export const RequestDocumentModal: React.FC<RequestDocumentModalProps> = ({
     email: '',
     phone: '',
     mode: 'pickup',
-    paymentMethod: 'cashPickup',
+    paymentMethod: 'online',
     purpose: '',
     additionalNotes: '',
     address: '',
@@ -60,7 +60,7 @@ export const RequestDocumentModal: React.FC<RequestDocumentModalProps> = ({
         email: user.email || '',
         phone: user.phone || '',
         mode: 'pickup',
-        paymentMethod: document.price === 'free' ? 'cashPickup' : 'online',
+        paymentMethod: 'online',
         purpose: '',
         additionalNotes: '',
         address: '',
@@ -77,10 +77,9 @@ export const RequestDocumentModal: React.FC<RequestDocumentModalProps> = ({
     setFormData((prev) => ({
       ...prev,
       mode,
+      // If cash payment and switching to delivery, change to online
       paymentMethod:
-        mode === 'pickup'
-          ? 'cashPickup'
-          : prev.paymentMethod === 'cashPickup'
+        prev.paymentMethod === 'cash' && mode === 'delivery'
           ? 'online'
           : prev.paymentMethod,
     }));
@@ -91,7 +90,7 @@ export const RequestDocumentModal: React.FC<RequestDocumentModalProps> = ({
       ...prev,
       paymentMethod,
       // If cash is selected, force pickup mode
-      mode: paymentMethod === 'cashPickup' ? 'pickup' : prev.mode,
+      mode: paymentMethod === 'cash' ? 'pickup' : prev.mode,
     }));
   };
 
@@ -196,11 +195,11 @@ export const RequestDocumentModal: React.FC<RequestDocumentModalProps> = ({
                 <TouchableOpacity
                   style={[
                     styles.radioOption,
-                    formData.paymentMethod === 'cashPickup' &&
+                    formData.paymentMethod === 'cash' &&
                       styles.radioOptionDisabled,
                   ]}
                   onPress={() => handleModeChange('delivery')}
-                  disabled={formData.paymentMethod === 'cashPickup'}
+                  disabled={formData.paymentMethod === 'cash'}
                 >
                   <Icon
                     name={
@@ -210,7 +209,7 @@ export const RequestDocumentModal: React.FC<RequestDocumentModalProps> = ({
                     }
                     size={20}
                     color={
-                      formData.paymentMethod === 'cashPickup'
+                      formData.paymentMethod === 'cash'
                         ? '#d1d5db'
                         : '#2563eb'
                     }
@@ -218,7 +217,7 @@ export const RequestDocumentModal: React.FC<RequestDocumentModalProps> = ({
                   <Text
                     style={[
                       styles.radioLabel,
-                      formData.paymentMethod === 'cashPickup' &&
+                      formData.paymentMethod === 'cash' &&
                         styles.radioLabelDisabled,
                     ]}
                   >
@@ -226,7 +225,7 @@ export const RequestDocumentModal: React.FC<RequestDocumentModalProps> = ({
                   </Text>
                 </TouchableOpacity>
               </View>
-              {formData.paymentMethod === 'cashPickup' && (
+              {formData.paymentMethod === 'cash' && (
                 <Text style={styles.helperText}>
                   * Cash payment is only available for pickup
                 </Text>
@@ -243,13 +242,8 @@ export const RequestDocumentModal: React.FC<RequestDocumentModalProps> = ({
                     onValueChange={handlePaymentMethodChange}
                     style={styles.picker}
                   >
-                    {formData.mode === 'pickup' && (
-                      <Picker.Item
-                        label="Cash (Pay upon Pickup)"
-                        value="cashPickup"
-                      />
-                    )}
-                    <Picker.Item label="Online (via Paymongo)" value="online" />
+                    <Picker.Item label="Cash (Pickup Only)" value="cash" />
+                    <Picker.Item label="Pay Online" value="online" />
                   </Picker>
                 </View>
               </View>

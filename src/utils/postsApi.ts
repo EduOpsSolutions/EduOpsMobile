@@ -74,9 +74,7 @@ export const formatBackendPost = (backendPost: any): Post => {
     user: backendPost.user,
     files: backendPost.files || [],
     // Formatted fields for display
-    profilePic:
-      backendPost.user?.profilePicLink ||
-      "https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=1",
+    profilePic: backendPost.user?.profilePicLink || null,
     postedBy: backendPost.user
       ? `${backendPost.user.firstName} ${backendPost.user.lastName}`
       : "Unknown",
