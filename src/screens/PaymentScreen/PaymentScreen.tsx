@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -8,14 +8,14 @@ import {
   Alert,
   ActivityIndicator,
   Linking,
-} from 'react-native';
-import * as Clipboard from 'expo-clipboard';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import { useSegments } from 'expo-router';
-import { styles } from './PaymentScreen.styles';
-import { AppLayout } from '../../components/common';
-import { usePaymentStore } from '@/src/stores/paymentStore';
-import { useAuthStore } from '@/src/stores/authStore';
+} from "react-native";
+import * as Clipboard from "expo-clipboard";
+import Icon from "react-native-vector-icons/MaterialIcons";
+import { useSegments } from "expo-router";
+import { styles } from "./PaymentScreen.styles";
+import { AppLayout } from "../../components/common";
+import { usePaymentStore } from "@/src/stores/paymentStore";
+import { useAuthStore } from "@/src/stores/authStore";
 
 interface DropdownProps {
   placeholder: string;
@@ -32,7 +32,7 @@ const Dropdown: React.FC<DropdownProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  const selectedLabel = options.find((opt) => opt.value === value)?.label || '';
+  const selectedLabel = options.find((opt) => opt.value === value)?.label || "";
 
   return (
     <View style={styles.dropdownContainer}>
@@ -45,7 +45,7 @@ const Dropdown: React.FC<DropdownProps> = ({
           {selectedLabel || placeholder}
         </Text>
         <Icon
-          name={isOpen ? 'keyboard-arrow-up' : 'keyboard-arrow-down'}
+          name={isOpen ? "keyboard-arrow-up" : "keyboard-arrow-down"}
           size={20}
           color="#666"
         />
@@ -106,15 +106,15 @@ export const PaymentScreen = (): React.JSX.Element => {
   // Auto-fill user details on component mount
   React.useEffect(() => {
     const autoFillUserDetails = async () => {
-      if (isAuthenticated && user?.userId && user?.role === 'student') {
-        updateFormField('student_id', user.userId);
+      if (isAuthenticated && user?.userId && user?.role === "student") {
+        updateFormField("student_id", user.userId);
 
         setIsFetchingStudent(true);
         await validateAndFetchStudentByID(user.userId);
         setIsFetchingStudent(false);
 
         if (user?.email) {
-          updateFormField('email_address', user.email);
+          updateFormField("email_address", user.email);
         }
       }
     };
@@ -125,21 +125,25 @@ export const PaymentScreen = (): React.JSX.Element => {
   // Fetch enrollments for logged-in students
   React.useEffect(() => {
     const fetchEnrollments = async () => {
-      if (isAuthenticated && user?.role === 'student' && user?.id) {
+      if (isAuthenticated && user?.role === "student" && user?.id) {
         try {
-          const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5555/api/v1';
+          const apiUrl =
+            process.env.EXPO_PUBLIC_API_URL || "http://localhost:5555/api/v1";
           const token = useAuthStore.getState().token;
-          const response = await fetch(`${apiUrl}/enrollment/${user.id}/enrollments`, {
-            headers: {
-              Authorization: token ? `Bearer ${token}` : '',
-              'Content-Type': 'application/json',
-            },
-          });
+          const response = await fetch(
+            `${apiUrl}/enrollment/${user.id}/enrollments`,
+            {
+              headers: {
+                Authorization: token ? `Bearer ${token}` : "",
+                "Content-Type": "application/json",
+              },
+            }
+          );
           const data = await response.json();
-          console.log('Enrollments fetched:', data); // Debug log
+          console.log("Enrollments fetched:", data); // Debug log
           setEnrollments(Array.isArray(data) ? data : []);
         } catch (err) {
-          console.error('Error fetching enrollments:', err);
+          console.error("Error fetching enrollments:", err);
           setEnrollments([]);
         }
       } else {
@@ -154,7 +158,8 @@ export const PaymentScreen = (): React.JSX.Element => {
     const fetchCoursesAndBatches = async () => {
       if (!isAuthenticated) {
         try {
-          const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5555/api/v1';
+          const apiUrl =
+            process.env.EXPO_PUBLIC_API_URL || "http://localhost:5555/api/v1";
 
           // Fetch courses
           const coursesRes = await fetch(`${apiUrl}/courses`);
@@ -166,7 +171,7 @@ export const PaymentScreen = (): React.JSX.Element => {
           const batchesData = await batchesRes.json();
           setBatches(Array.isArray(batchesData) ? batchesData : []);
         } catch (err) {
-          console.error('Error fetching courses/batches:', err);
+          console.error("Error fetching courses/batches:", err);
           setCourses([]);
           setBatches([]);
         }
@@ -178,29 +183,29 @@ export const PaymentScreen = (): React.JSX.Element => {
   // Handle course/batch selection
   const handleCourseBatchChange = (value: string) => {
     if (!value) {
-      updateFormField('courseId', null);
-      updateFormField('batchId', null);
+      updateFormField("courseId", null);
+      updateFormField("batchId", null);
     } else {
-      const [courseId, batchId] = value.split('|');
-      updateFormField('courseId', courseId);
-      updateFormField('batchId', batchId);
+      const [courseId, batchId] = value.split("|");
+      updateFormField("courseId", courseId);
+      updateFormField("batchId", batchId);
     }
   };
 
   // Helper function to get proper fee type label
   const getFeeTypeLabel = (feeType: string) => {
     const feeTypeMap: Record<string, string> = {
-      down_payment: 'Down Payment',
-      tuition_fee: 'Tuition Fee',
-      document_fee: 'Document Fee',
-      book_fee: 'Book Fee',
+      down_payment: "Down Payment",
+      tuition_fee: "Tuition Fee",
+      document_fee: "Document Fee",
+      book_fee: "Book Fee",
     };
 
     if (!feeType) {
-      return 'Payment';
+      return "Payment";
     }
 
-    return feeTypeMap[feeType] || feeType.replace('_', ' ');
+    return feeTypeMap[feeType] || feeType.replace("_", " ");
   };
 
   const handleStudentIdBlur = async () => {
@@ -225,9 +230,9 @@ export const PaymentScreen = (): React.JSX.Element => {
   const handleSubmit = async () => {
     if (!validateRequiredFields()) {
       Alert.alert(
-        'Missing Required Fields',
-        'Please fill in all required fields before submitting.',
-        [{ text: 'OK' }]
+        "Missing Required Fields",
+        "Please fill in all required fields before submitting.",
+        [{ text: "OK" }]
       );
       return;
     }
@@ -237,12 +242,12 @@ export const PaymentScreen = (): React.JSX.Element => {
     const feeLabel = getFeeTypeLabel(formData.fee);
 
     Alert.alert(
-      'Confirm Payment',
+      "Confirm Payment",
       `Are you sure you want to pay ₱${formData.amount} for ${feeLabel}?\n\nPayment link will be sent to: ${formData.email_address}`,
       [
         {
-          text: 'Cancel',
-          style: 'cancel',
+          text: "Cancel",
+          style: "cancel",
         },
         {
           text: "Yes, I'm sure",
@@ -273,27 +278,27 @@ export const PaymentScreen = (): React.JSX.Element => {
                 const paymentId = result?.data?.data?.paymentId;
 
                 Alert.alert(
-                  'Email Sent Successfully!',
+                  "Email Sent Successfully!",
                   `A payment link has been sent to ${paymentData.email}\n\nYou can complete your payment using the link in your email.`,
                   [
                     {
-                      text: 'Close',
-                      style: 'cancel',
+                      text: "Close",
+                      style: "cancel",
                     },
                     {
-                      text: 'Open Payment Link',
+                      text: "Open Payment Link",
                       onPress: () => {
                         if (paymentId) {
                           const clientBaseUrl =
                             `${process.env.EXPO_PUBLIC_CLIENT_URL}` ||
-                            'https://eduops.vercel.app';
+                            "https://eduops.vercel.app";
                           // For mobile, open a new tab with the payment URL - browser is used instead
                           const paymentUrl = `${clientBaseUrl}/payment?paymentId=${paymentId}`;
                           Linking.openURL(paymentUrl).catch((err) => {
-                            console.error('Failed to open payment link:', err);
+                            console.error("Failed to open payment link:", err);
                             Alert.alert(
-                              'Error',
-                              'Could not open payment link. Please check your email.'
+                              "Error",
+                              "Could not open payment link. Please check your email."
                             );
                           });
                         }
@@ -304,26 +309,26 @@ export const PaymentScreen = (): React.JSX.Element => {
 
                 // For authenticated users, only reset payment fields to keep user details pre-filled
                 // For guests, reset everything
-                if (isAuthenticated && user?.role === 'student') {
+                if (isAuthenticated && user?.role === "student") {
                   resetPaymentFields();
                 } else {
                   resetForm();
                 }
               } else {
                 Alert.alert(
-                  'Error',
+                  "Error",
                   result.error ||
-                    'Failed to send payment link. Please try again.',
-                  [{ text: 'OK' }]
+                    "Failed to send payment link. Please try again.",
+                  [{ text: "OK" }]
                 );
               }
             } catch (error) {
               setLoading(false);
-              console.error('Error sending payment link:', error);
+              console.error("Error sending payment link:", error);
               Alert.alert(
-                'Error',
-                'An unexpected error occurred. Please try again.',
-                [{ text: 'OK' }]
+                "Error",
+                "An unexpected error occurred. Please try again.",
+                [{ text: "OK" }]
               );
             }
           },
@@ -333,8 +338,8 @@ export const PaymentScreen = (): React.JSX.Element => {
   };
 
   // Dynamically determine if payment is active based on current route
-  const currentRoute = '/' + (useSegments()[useSegments().length - 1] || '');
-  const isPaymentActive = currentRoute === '/paymentform';
+  const currentRoute = "/" + (useSegments()[useSegments().length - 1] || "");
+  const isPaymentActive = currentRoute === "/paymentform";
 
   return (
     <AppLayout
@@ -358,23 +363,26 @@ export const PaymentScreen = (): React.JSX.Element => {
             </Text>
 
             {/* Info Banner for Logged-in Users */}
-            {isAuthenticated && user?.userId && user?.role === 'student' && (
+            {isAuthenticated && user?.userId && user?.role === "student" && (
               <View style={styles.infoBanner}>
                 <View style={styles.infoBannerContent}>
                   <View style={styles.infoBannerRow}>
                     <Text style={styles.infoBannerLabel}>Your ID: </Text>
                     <Text style={styles.infoBannerValue}>{user.userId}</Text>
-                    <TouchableOpacity onPress={handleCopyId} style={styles.copyButton}>
+                    <TouchableOpacity
+                      onPress={handleCopyId}
+                      style={styles.copyButton}
+                    >
                       <Text style={styles.copyButtonText}>
-                        {showIdCopied ? 'Copied!' : 'Copy'}
+                        {showIdCopied ? "Copied!" : "Copy"}
                       </Text>
                     </TouchableOpacity>
                   </View>
                   <Text style={styles.infoBannerNote}>
-                    <Text style={{ fontWeight: '600' }}>Note:</Text> Your details
-                    have been automatically filled. You can only process payments
-                    for yourself. For guest payments, you can share your ID to
-                    allow others to pay without logging in.
+                    <Text style={{ fontWeight: "600" }}>Note:</Text> Your
+                    details have been automatically filled. You can only process
+                    payments for yourself. For guest payments, you can share
+                    your ID to allow others to pay without logging in.
                   </Text>
                 </View>
               </View>
@@ -385,8 +393,8 @@ export const PaymentScreen = (): React.JSX.Element => {
               <View style={styles.infoNote}>
                 <View
                   style={{
-                    flexDirection: 'row',
-                    alignItems: 'flex-start',
+                    flexDirection: "row",
+                    alignItems: "flex-start",
                     gap: 8,
                   }}
                 >
@@ -397,9 +405,9 @@ export const PaymentScreen = (): React.JSX.Element => {
                     style={{ marginTop: 1 }}
                   />
                   <Text style={styles.infoNoteText}>
-                    <Text style={{ fontWeight: '600' }}>Tip:</Text> Enter the
-                    Student ID to fetch student details and proceed with payment.
-                    If you don't have a Student ID, please contact the
+                    <Text style={{ fontWeight: "600" }}>Tip:</Text> Enter the
+                    Student ID to fetch student details and proceed with
+                    payment. If you don't have a Student ID, please contact the
                     administration.
                   </Text>
                 </View>
@@ -417,7 +425,7 @@ export const PaymentScreen = (): React.JSX.Element => {
                     isAuthenticated && styles.inputReadOnly,
                   ]}
                   value={formData.student_id}
-                  onChangeText={(value) => updateFormField('student_id', value)}
+                  onChangeText={(value) => updateFormField("student_id", value)}
                   onBlur={handleStudentIdBlur}
                   placeholder="Enter Student ID"
                   placeholderTextColor="#999"
@@ -434,7 +442,7 @@ export const PaymentScreen = (): React.JSX.Element => {
             </View>
 
             {/* Course & Batch selection for logged-in students */}
-            {isAuthenticated && user?.role === 'student' && (
+            {isAuthenticated && user?.role === "student" && (
               <View style={styles.fullWidth}>
                 <Text style={styles.label}>Course & Batch*</Text>
                 {enrollments.length > 0 ? (
@@ -443,14 +451,16 @@ export const PaymentScreen = (): React.JSX.Element => {
                     value={
                       formData.courseId && formData.batchId
                         ? `${formData.courseId}|${formData.batchId}`
-                        : ''
+                        : ""
                     }
                     onValueChange={handleCourseBatchChange}
                     options={[
-                      { value: '', label: 'Select course & batch' },
+                      { value: "", label: "Select course & batch" },
                       ...enrollments.map((e: any) => ({
                         value: `${e.courseId}|${e.batchId}`,
-                        label: `${e.course} - ${e.batch}${e.year ? ` (${e.year})` : ''}`,
+                        label: `${e.course} - ${e.batch}${
+                          e.year ? ` (${e.year})` : ""
+                        }`,
                       })),
                     ]}
                   />
@@ -472,10 +482,12 @@ export const PaymentScreen = (): React.JSX.Element => {
                   {courses.length > 0 ? (
                     <Dropdown
                       placeholder="Select course"
-                      value={formData.courseId || ''}
-                      onValueChange={(value) => updateFormField('courseId', value)}
+                      value={formData.courseId || ""}
+                      onValueChange={(value) =>
+                        updateFormField("courseId", value)
+                      }
                       options={[
-                        { value: '', label: 'Select course' },
+                        { value: "", label: "Select course" },
                         ...courses
                           .filter((c: any) => !c.deletedAt)
                           .map((c: any) => ({
@@ -486,7 +498,9 @@ export const PaymentScreen = (): React.JSX.Element => {
                     />
                   ) : (
                     <View style={styles.emptyStateContainer}>
-                      <Text style={styles.emptyStateText}>Loading courses...</Text>
+                      <Text style={styles.emptyStateText}>
+                        Loading courses...
+                      </Text>
                     </View>
                   )}
                 </View>
@@ -495,23 +509,27 @@ export const PaymentScreen = (): React.JSX.Element => {
                   {batches.length > 0 ? (
                     <Dropdown
                       placeholder="Select batch"
-                      value={formData.batchId || ''}
-                      onValueChange={(value) => updateFormField('batchId', value)}
+                      value={formData.batchId || ""}
+                      onValueChange={(value) =>
+                        updateFormField("batchId", value)
+                      }
                       options={[
-                        { value: '', label: 'Select batch' },
+                        { value: "", label: "Select batch" },
                         ...batches
                           .filter((b: any) => !b.deletedAt)
                           .map((b: any) => ({
                             value: b.id,
                             label: `${b.batchName || b.name}${
-                              b.schoolYear ? ` (${b.schoolYear})` : ''
+                              b.schoolYear ? ` (${b.schoolYear})` : ""
                             }`,
                           })),
                       ]}
                     />
                   ) : (
                     <View style={styles.emptyStateContainer}>
-                      <Text style={styles.emptyStateText}>Loading batches...</Text>
+                      <Text style={styles.emptyStateText}>
+                        Loading batches...
+                      </Text>
                     </View>
                   )}
                 </View>
@@ -576,7 +594,7 @@ export const PaymentScreen = (): React.JSX.Element => {
                 style={styles.input}
                 value={formData.email_address}
                 onChangeText={(value) =>
-                  updateFormField('email_address', value)
+                  updateFormField("email_address", value)
                 }
                 placeholder="johndoe@gmail.com"
                 placeholderTextColor="#999"
@@ -591,7 +609,7 @@ export const PaymentScreen = (): React.JSX.Element => {
               <TextInput
                 style={[styles.input, phoneError && styles.inputError]}
                 value={formData.phone_number}
-                onChangeText={(value) => updateFormField('phone_number', value)}
+                onChangeText={(value) => updateFormField("phone_number", value)}
                 placeholder="09xxxxxxxxx"
                 placeholderTextColor="#999"
                 keyboardType="phone-pad"
@@ -612,7 +630,7 @@ export const PaymentScreen = (): React.JSX.Element => {
               <Dropdown
                 placeholder="Select Fee Type"
                 value={formData.fee}
-                onValueChange={(value) => updateFormField('fee', value)}
+                onValueChange={(value) => updateFormField("fee", value)}
                 options={feesOptions}
               />
             </View>
@@ -624,29 +642,29 @@ export const PaymentScreen = (): React.JSX.Element => {
                 style={[
                   styles.input,
                   isAuthenticated &&
-                    user?.role === 'student' &&
-                    formData.fee === 'document_fee' &&
+                    user?.role === "student" &&
+                    formData.fee === "document_fee" &&
                     styles.inputReadOnly,
                 ]}
                 value={formData.amount}
-                onChangeText={(value) => updateFormField('amount', value)}
+                onChangeText={(value) => updateFormField("amount", value)}
                 placeholder="0.00"
                 placeholderTextColor="#999"
                 keyboardType="decimal-pad"
                 editable={
                   !(
                     isAuthenticated &&
-                    user?.role === 'student' &&
-                    formData.fee === 'document_fee'
+                    user?.role === "student" &&
+                    formData.fee === "document_fee"
                   )
                 }
               />
               {isAuthenticated &&
-                user?.role === 'student' &&
-                formData.fee === 'document_fee' && (
+                user?.role === "student" &&
+                formData.fee === "document_fee" && (
                   <Text style={styles.lockedAmountNote}>
-                    <Icon name="info" size={12} color="#6b7280" /> Amount is locked
-                    for document fees
+                    <Icon name="info" size={12} color="#6b7280" /> Amount is
+                    locked for document fees
                   </Text>
                 )}
             </View>

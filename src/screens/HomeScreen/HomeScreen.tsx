@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -7,18 +7,18 @@ import {
   Image,
   RefreshControl,
   ActivityIndicator,
-} from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import { useSegments } from 'expo-router';
-import { styles } from './Homescreen.styles';
-import { AppLayout, ImageViewer } from '../../components/common';
-import { PostAvatar } from '../../components';
-import usePostsStore from '../../stores/postsStore';
-import { Post, PostFile } from '../../types/post';
+} from "react-native";
+import Icon from "react-native-vector-icons/MaterialIcons";
+import { useSegments } from "expo-router";
+import { styles } from "./Homescreen.styles";
+import { AppLayout, ImageViewer } from "../../components/common";
+import { PostAvatar } from "../../components";
+import usePostsStore from "../../stores/postsStore";
+import { Post, PostFile } from "../../types/post";
 import {
   showDownloadConfirmation,
   downloadAndShare,
-} from '../../utils/fileDownload';
+} from "../../utils/fileDownload";
 
 interface PostCardProps {
   post: Post;
@@ -29,14 +29,14 @@ interface PostCardProps {
 const PostTag: React.FC<{ tag: string }> = ({ tag }) => {
   const getTagStyle = () => {
     switch (tag) {
-      case 'global':
-        return { backgroundColor: '#f59e0b', text: 'Global' };
-      case 'student':
-        return { backgroundColor: '#ff0A04', text: 'Student' };
-      case 'teacher':
-        return { backgroundColor: '#10b981', text: 'Teacher' };
+      case "global":
+        return { backgroundColor: "#f59e0b", text: "Global" };
+      case "student":
+        return { backgroundColor: "#ff0A04", text: "Student" };
+      case "teacher":
+        return { backgroundColor: "#10b981", text: "Teacher" };
       default:
-        return { backgroundColor: '#3b82f6', text: tag };
+        return { backgroundColor: "#3b82f6", text: tag };
     }
   };
 
@@ -55,7 +55,7 @@ const FileAttachment: React.FC<{ file: PostFile; onPress: () => void }> = ({
   file,
   onPress,
 }) => {
-  const isImage = file.fileType?.startsWith('image/');
+  const isImage = file.fileType?.startsWith("image/");
 
   if (isImage) {
     return (
@@ -82,7 +82,7 @@ const FileAttachment: React.FC<{ file: PostFile; onPress: () => void }> = ({
         <Text style={styles.fileSize}>
           {file.fileSize
             ? `${(file.fileSize / 1024 / 1024).toFixed(2)} MB`
-            : 'File'}
+            : "File"}
         </Text>
       </View>
       <Icon name="download" size={20} color="#666" />
@@ -96,9 +96,9 @@ const PostCard: React.FC<PostCardProps> = ({
   onFilePress,
 }) => {
   const images =
-    post.files?.filter((f) => f.fileType?.startsWith('image/')) || [];
+    post.files?.filter((f) => f.fileType?.startsWith("image/")) || [];
   const documents =
-    post.files?.filter((f) => !f.fileType?.startsWith('image/')) || [];
+    post.files?.filter((f) => !f.fileType?.startsWith("image/")) || [];
 
   const handleImagePress = (file: PostFile) => {
     const imageIndex = images.findIndex((img) => img.id === file.id);
@@ -177,7 +177,7 @@ const PostCard: React.FC<PostCardProps> = ({
 
 export const HomeScreen = (): React.JSX.Element => {
   const segments = useSegments();
-  const currentRoute = '/' + (segments[segments.length - 1] || '');
+  const currentRoute = "/" + (segments[segments.length - 1] || "");
 
   const [imageViewerVisible, setImageViewerVisible] = useState(false);
   const [currentImages, setCurrentImages] = useState<{ uri: string }[]>([]);
@@ -193,7 +193,7 @@ export const HomeScreen = (): React.JSX.Element => {
     clearError,
   } = usePostsStore();
 
-  const visiblePosts = getVisiblePosts('student');
+  const visiblePosts = getVisiblePosts("student");
 
   useEffect(() => {
     fetchPosts();
@@ -221,10 +221,10 @@ export const HomeScreen = (): React.JSX.Element => {
   };
 
   const isEnrollmentActive =
-    currentRoute === '/enrollment' ||
-    currentRoute === '/enrollment-status' ||
-    currentRoute === '/schedule';
-  const isPaymentActive = ['/paymentform', '/assessment', '/ledger'].includes(
+    currentRoute === "/enrollment" ||
+    currentRoute === "/enrollment-status" ||
+    currentRoute === "/schedule";
+  const isPaymentActive = ["/paymentform", "/assessment", "/ledger"].includes(
     currentRoute
   );
 
@@ -256,7 +256,7 @@ export const HomeScreen = (): React.JSX.Element => {
             <RefreshControl
               refreshing={isRefreshing}
               onRefresh={refreshPosts}
-              colors={['#de0000']}
+              colors={["#de0000"]}
               tintColor="#de0000"
             />
           }

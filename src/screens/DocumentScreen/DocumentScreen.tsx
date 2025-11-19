@@ -7,7 +7,10 @@ import {
   TextInput,
   ActivityIndicator,
   Alert,
+<<<<<<< HEAD
   Linking,
+=======
+>>>>>>> 651fc52127e3c51fc1816a72ac262f9503e2968f
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { styles } from './DocumentScreen.styles';
@@ -20,6 +23,13 @@ import {
   ViewRequestsModal,
   RequestDetailsModal,
 } from '../../components/modals';
+<<<<<<< HEAD
+=======
+import {
+  downloadAndShare,
+  showDownloadConfirmation,
+} from '../../utils/fileDownload';
+>>>>>>> 651fc52127e3c51fc1816a72ac262f9503e2968f
 
 interface DocumentItemProps {
   document: DocumentTemplate;
@@ -131,6 +141,7 @@ export const DocumentScreen = (): React.JSX.Element => {
   );
 
   const handleDownloadDocument = async (document: DocumentTemplate) => {
+<<<<<<< HEAD
     // Validate document has a file URL
     if (!document.uploadFile || document.uploadFile.trim().length === 0) {
       Alert.alert(
@@ -175,6 +186,33 @@ export const DocumentScreen = (): React.JSX.Element => {
         [{ text: 'OK' }]
       );
     }
+=======
+    if (!document.uploadFile) {
+      Alert.alert('Error', 'This document is not available for download.');
+      return;
+    }
+
+    // Extract filename from URL (handle Firebase Storage URLs with query params)
+    let fileName = document.uploadFile.split('/').pop() || '';
+
+    // Remove query parameters if present
+    fileName = fileName.split('?')[0];
+
+    // Fallback to document name if extraction failed
+    if (!fileName || fileName.length === 0) {
+      fileName = `${document.documentName.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
+    }
+
+    // Show confirmation dialog before downloading (same as posts/homepage)
+    showDownloadConfirmation(fileName, undefined, async () => {
+      try {
+        await downloadAndShare(document.uploadFile!, fileName);
+      } catch (error: any) {
+        console.error('Download error:', error);
+        Alert.alert('Error', 'Failed to download document. Please try again.');
+      }
+    });
+>>>>>>> 651fc52127e3c51fc1816a72ac262f9503e2968f
   };
 
   const handleDocumentAction = (document: DocumentTemplate) => {

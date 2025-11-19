@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,16 +8,16 @@ import {
   ScrollView,
   TextInput,
   Alert,
-} from 'react-native';
-import { Picker } from '@react-native-picker/picker';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+} from "react-native";
+import { Picker } from "@react-native-picker/picker";
+import Icon from "react-native-vector-icons/MaterialIcons";
 import {
   DocumentTemplate,
   DocumentRequestFormData,
   RequestMode,
   PaymentMethod,
-} from '../../types/document';
-import { useAuthStore } from '../../stores/authStore';
+} from "../../types/document";
+import { useAuthStore } from "../../stores/authStore";
 
 interface RequestDocumentModalProps {
   visible: boolean;
@@ -37,18 +37,18 @@ export const RequestDocumentModal: React.FC<RequestDocumentModalProps> = ({
   const user = useAuthStore((state) => state.user);
 
   const [formData, setFormData] = useState<DocumentRequestFormData>({
-    documentId: '',
-    email: '',
-    phone: '',
-    mode: 'pickup',
-    paymentMethod: 'online',
-    purpose: '',
-    additionalNotes: '',
-    address: '',
-    city: '',
-    state: '',
-    zipCode: '',
-    country: '',
+    documentId: "",
+    email: "",
+    phone: "",
+    mode: "pickup",
+    paymentMethod: "online",
+    purpose: "",
+    additionalNotes: "",
+    address: "",
+    city: "",
+    state: "",
+    zipCode: "",
+    country: "",
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -57,17 +57,17 @@ export const RequestDocumentModal: React.FC<RequestDocumentModalProps> = ({
     if (visible && document && user) {
       setFormData({
         documentId: document.id,
-        email: user.email || '',
-        phone: user.phone || '',
-        mode: 'pickup',
-        paymentMethod: 'online',
-        purpose: '',
-        additionalNotes: '',
-        address: '',
-        city: '',
-        state: '',
-        zipCode: '',
-        country: '',
+        email: user.email || "",
+        phone: user.phone || "",
+        mode: "pickup",
+        paymentMethod: "online",
+        purpose: "",
+        additionalNotes: "",
+        address: "",
+        city: "",
+        state: "",
+        zipCode: "",
+        country: "",
       });
       setErrors({});
     }
@@ -79,8 +79,8 @@ export const RequestDocumentModal: React.FC<RequestDocumentModalProps> = ({
       mode,
       // If cash payment and switching to delivery, change to online
       paymentMethod:
-        prev.paymentMethod === 'cash' && mode === 'delivery'
-          ? 'online'
+        prev.paymentMethod === "cash" && mode === "delivery"
+          ? "online"
           : prev.paymentMethod,
     }));
   };
@@ -90,7 +90,7 @@ export const RequestDocumentModal: React.FC<RequestDocumentModalProps> = ({
       ...prev,
       paymentMethod,
       // If cash is selected, force pickup mode
-      mode: paymentMethod === 'cash' ? 'pickup' : prev.mode,
+      mode: paymentMethod === "cash" ? "pickup" : prev.mode,
     }));
   };
 
@@ -105,8 +105,8 @@ export const RequestDocumentModal: React.FC<RequestDocumentModalProps> = ({
 
   if (!document) return null;
 
-  const isPaid = document.price === 'paid';
-  const showDeliveryFields = formData.mode === 'delivery';
+  const isPaid = document.price === "paid";
+  const showDeliveryFields = formData.mode === "delivery";
 
   return (
     <Modal
@@ -179,13 +179,13 @@ export const RequestDocumentModal: React.FC<RequestDocumentModalProps> = ({
               <View style={styles.radioGroup}>
                 <TouchableOpacity
                   style={styles.radioOption}
-                  onPress={() => handleModeChange('pickup')}
+                  onPress={() => handleModeChange("pickup")}
                 >
                   <Icon
                     name={
-                      formData.mode === 'pickup'
-                        ? 'radio-button-checked'
-                        : 'radio-button-unchecked'
+                      formData.mode === "pickup"
+                        ? "radio-button-checked"
+                        : "radio-button-unchecked"
                     }
                     size={20}
                     color="#2563eb"
@@ -195,29 +195,27 @@ export const RequestDocumentModal: React.FC<RequestDocumentModalProps> = ({
                 <TouchableOpacity
                   style={[
                     styles.radioOption,
-                    formData.paymentMethod === 'cash' &&
+                    formData.paymentMethod === "cash" &&
                       styles.radioOptionDisabled,
                   ]}
-                  onPress={() => handleModeChange('delivery')}
-                  disabled={formData.paymentMethod === 'cash'}
+                  onPress={() => handleModeChange("delivery")}
+                  disabled={formData.paymentMethod === "cash"}
                 >
                   <Icon
                     name={
-                      formData.mode === 'delivery'
-                        ? 'radio-button-checked'
-                        : 'radio-button-unchecked'
+                      formData.mode === "delivery"
+                        ? "radio-button-checked"
+                        : "radio-button-unchecked"
                     }
                     size={20}
                     color={
-                      formData.paymentMethod === 'cash'
-                        ? '#d1d5db'
-                        : '#2563eb'
+                      formData.paymentMethod === "cash" ? "#d1d5db" : "#2563eb"
                     }
                   />
                   <Text
                     style={[
                       styles.radioLabel,
-                      formData.paymentMethod === 'cash' &&
+                      formData.paymentMethod === "cash" &&
                         styles.radioLabelDisabled,
                     ]}
                   >
@@ -225,7 +223,7 @@ export const RequestDocumentModal: React.FC<RequestDocumentModalProps> = ({
                   </Text>
                 </TouchableOpacity>
               </View>
-              {formData.paymentMethod === 'cash' && (
+              {formData.paymentMethod === "cash" && (
                 <Text style={styles.helperText}>
                   * Cash payment is only available for pickup
                 </Text>
@@ -383,37 +381,37 @@ export const RequestDocumentModal: React.FC<RequestDocumentModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
   },
   modalContainer: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: '90%',
-    shadowColor: '#000',
+    maxHeight: "90%",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: "#e5e7eb",
   },
   headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#111827',
+    fontWeight: "600",
+    color: "#111827",
   },
   closeButton: {
     padding: 4,
@@ -422,47 +420,47 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   documentInfo: {
-    backgroundColor: '#f3f4f6',
+    backgroundColor: "#f3f4f6",
     padding: 16,
     borderRadius: 8,
     marginBottom: 20,
   },
   documentName: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
+    fontWeight: "600",
+    color: "#111827",
     marginBottom: 4,
   },
   documentPrice: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#059669',
+    fontWeight: "700",
+    color: "#059669",
   },
   section: {
     marginBottom: 20,
   },
   sectionTitle: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#111827',
+    fontWeight: "600",
+    color: "#111827",
     marginBottom: 12,
   },
   label: {
     fontSize: 12,
-    fontWeight: '500',
-    color: '#6b7280',
+    fontWeight: "500",
+    color: "#6b7280",
     marginBottom: 6,
     marginTop: 12,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#d1d5db',
+    borderColor: "#d1d5db",
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 14,
-    color: '#111827',
-    backgroundColor: 'white',
+    color: "#111827",
+    backgroundColor: "white",
   },
   textArea: {
     minHeight: 80,
@@ -470,57 +468,57 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 12,
-    color: '#dc2626',
+    color: "#dc2626",
     marginTop: 4,
   },
   radioGroup: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 20,
   },
   radioOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   radioLabel: {
     fontSize: 14,
-    color: '#374151',
+    color: "#374151",
   },
   radioOptionDisabled: {
     opacity: 0.5,
   },
   radioLabelDisabled: {
-    color: '#9ca3af',
+    color: "#9ca3af",
   },
   helperText: {
     fontSize: 12,
-    color: '#6b7280',
+    color: "#6b7280",
     marginTop: 8,
-    fontStyle: 'italic',
+    fontStyle: "italic",
   },
   pickerContainer: {
     borderWidth: 1,
-    borderColor: '#d1d5db',
+    borderColor: "#d1d5db",
     borderRadius: 8,
-    overflow: 'hidden',
-    backgroundColor: 'white',
+    overflow: "hidden",
+    backgroundColor: "white",
   },
   picker: {
     height: 54,
   },
   row: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
   },
   halfWidth: {
     flex: 1,
   },
   footer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
+    borderTopColor: "#e5e7eb",
   },
   cancelButton: {
     flex: 1,
@@ -528,31 +526,31 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#d1d5db',
-    alignItems: 'center',
+    borderColor: "#d1d5db",
+    alignItems: "center",
   },
   cancelButtonText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
+    fontWeight: "600",
+    color: "#374151",
   },
   submitButton: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 6,
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 8,
-    backgroundColor: '#2563eb',
+    backgroundColor: "#2563eb",
   },
   submitButtonDisabled: {
-    backgroundColor: '#93c5fd',
+    backgroundColor: "#93c5fd",
   },
   submitButtonText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: 'white',
+    fontWeight: "600",
+    color: "white",
   },
 });
