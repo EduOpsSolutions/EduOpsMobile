@@ -11,13 +11,14 @@ import {
   StatusBar,
   KeyboardAvoidingView,
   Platform,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { EyeIcon, Fullscreen, LockIcon, UserIcon } from 'lucide-react-native';
 import { styles } from './LoginScreen.styles';
 import { RelativePathString, useRouter } from 'expo-router';
 import { useAuthStore } from '../../stores/authStore';
-import { TrackEnrollmentModal } from '../../components/modals';
+import { TrackEnrollmentModal, ForgotPasswordModal } from '../../components/modals';
 import { cn } from '../../utils/cn';
 
 export const LoginScreen = (): React.JSX.Element => {
@@ -25,6 +26,7 @@ export const LoginScreen = (): React.JSX.Element => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [trackModalOpen, setTrackModalOpen] = useState(false);
+  const [forgotPasswordModalOpen, setForgotPasswordModalOpen] = useState(false);
   const router = useRouter();
 
   // Get login function and loading state from auth store
@@ -140,7 +142,10 @@ export const LoginScreen = (): React.JSX.Element => {
               </View>
 
               {/* Forgot password */}
-              <TouchableOpacity style={styles.forgotWrapper}>
+              <TouchableOpacity
+                style={styles.forgotWrapper}
+                onPress={() => setForgotPasswordModalOpen(true)}
+              >
                 <Text style={styles.forgotText}>Forgot password?</Text>
               </TouchableOpacity>
 
@@ -213,8 +218,26 @@ export const LoginScreen = (): React.JSX.Element => {
               {/* Terms and Privacy */}
               <Text style={styles.termsText}>
                 By using this service, you understood and agree to our{' '}
-                <Text style={styles.termsLink}>Terms</Text> and{' '}
-                <Text style={styles.termsLink}>Privacy Policy</Text>.
+                <Text
+                  style={styles.termsLink}
+                  onPress={() => {
+                    const baseUrl = process.env.EXPO_PUBLIC_CLIENT_URL || 'https://eduops.vercel.app';
+                    Linking.openURL(`${baseUrl}/legal/terms`);
+                  }}
+                >
+                  Terms
+                </Text>{' '}
+                and{' '}
+                <Text
+                  style={styles.termsLink}
+                  onPress={() => {
+                    const baseUrl = process.env.EXPO_PUBLIC_CLIENT_URL || 'https://eduops.vercel.app';
+                    Linking.openURL(`${baseUrl}/legal/privacy-policy`);
+                  }}
+                >
+                  Privacy Policy
+                </Text>
+                .
               </Text>
             </View>
           </View>
@@ -225,6 +248,12 @@ export const LoginScreen = (): React.JSX.Element => {
       <TrackEnrollmentModal
         isOpen={trackModalOpen}
         onClose={() => setTrackModalOpen(false)}
+      />
+
+      {/* Forgot Password Modal */}
+      <ForgotPasswordModal
+        isOpen={forgotPasswordModalOpen}
+        onClose={() => setForgotPasswordModalOpen(false)}
       />
     </SafeAreaView>
   );

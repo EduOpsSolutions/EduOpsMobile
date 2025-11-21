@@ -1,5 +1,6 @@
 export { TrackEnrollmentModal } from './TrackEnrollmentModal';
 export { ForgotEnrollmentIdModal } from './ForgotEnrollmentIdModal';
+export { ForgotPasswordModal } from './ForgotPasswordModal';
 export { FilePreviewModal } from './FilePreviewModal';
 export { ChangePasswordModal } from './ChangePasswordModal';
 export { DocumentDetailsModal } from './DocumentDetailsModal';
