@@ -181,21 +181,32 @@ export const useEnrollmentStore = create<EnrollmentStoreState>()(
             formData
           );
 
+          console.log("Enrollment API response:", JSON.stringify(response));
+
           if (response.error) {
             throw new Error(response.message || "Failed to create enrollment");
           }
 
+          // Safely access response data
+          const enrollmentData = response.data || response;
+          const enrollmentId = enrollmentData.enrollmentId || enrollmentData.id;
+
+          if (!enrollmentId) {
+            console.error("No enrollment ID in response:", response);
+            throw new Error("Enrollment created but no ID returned");
+          }
+
           Alert.alert(
             "Success",
-            `Enrollment submitted successfully!\n\nYour Enrollment ID: ${response.data.enrollmentId}\n\nPlease save this ID for tracking your enrollment.`,
+            `Enrollment submitted successfully!\n\nYour Enrollment ID: ${enrollmentId}\n\nPlease save this ID for tracking your enrollment.`,
             [{ text: "OK" }]
           );
 
           // Set the enrollment ID and initial data
           set({
-            enrollmentId: response.data.enrollmentId,
-            email: response.data.email || formData.preferredEmail,
-            enrollmentStatus: response.data.enrollmentStatus || "pending",
+            enrollmentId: enrollmentId,
+            email: enrollmentData.email || enrollmentData.preferredEmail || formData.preferredEmail,
+            enrollmentStatus: enrollmentData.enrollmentStatus || "pending",
             currentStep: 1,
             completedSteps: [1],
             remarkMsg:
@@ -206,7 +217,7 @@ export const useEnrollmentStore = create<EnrollmentStoreState>()(
             coursesToEnroll: formData.coursesToEnroll,
           });
 
-          return response.data;
+          return enrollmentData;
         } catch (error: any) {
           console.error("Error creating enrollment:", error);
           Alert.alert(

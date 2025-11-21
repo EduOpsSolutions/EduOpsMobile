@@ -76,6 +76,22 @@ export const enrollmentApi = {
       throw new Error(handleApiError(error));
     }
   },
+
+  trackEnrollmentByEmail: async (email: string) => {
+    try {
+      const response = await axiosInstance.get(
+        `/enrollment/track/email/${encodeURIComponent(email)}`
+      );
+      return response.data;
+    } catch (error: any) {
+      // Return a structured error response instead of throwing
+      // This allows the caller to handle 404 (no enrollment found) gracefully
+      if (error.response?.status === 404) {
+        return { error: true, status: 404, message: 'No enrollment found' };
+      }
+      throw new Error(handleApiError(error));
+    }
+  },
 };
 
 // Posts API
@@ -378,6 +394,24 @@ export const coursesApi = {
   },
 };
 
+// Auth API
+export const authApi = {
+  requestResetPassword: async (email: string) => {
+    try {
+      const response = await axiosInstance.post('/auth/request-reset-password', {
+        email,
+      });
+      return response.data;
+    } catch (error: any) {
+      // Handle specific error responses
+      if (error.response?.data) {
+        return error.response.data;
+      }
+      throw new Error(handleApiError(error));
+    }
+  },
+};
+
 // Ledger API
 export const ledgerApi = {
   getStudentLedger: async (studentId: string) => {
@@ -410,4 +444,5 @@ export default {
   file: fileApi,
   courses: coursesApi,
   ledger: ledgerApi,
+  auth: authApi,
 };

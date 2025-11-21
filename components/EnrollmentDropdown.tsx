@@ -5,9 +5,13 @@ import {
   TouchableOpacity,
   StyleSheet,
   Animated,
+  Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useRouter, useSegments } from 'expo-router';
+import { useAuthStore } from '../src/stores/authStore';
+import { useEnrollmentStore } from '../src/stores/enrollmentStore';
+import { enrollmentApi } from '../src/utils/api';
 
 interface EnrollmentDropdownProps {
   isActive: boolean;
@@ -18,9 +22,12 @@ export const EnrollmentDropdown: React.FC<EnrollmentDropdownProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [animation] = useState(new Animated.Value(0));
+  const [isCheckingEnrollment, setIsCheckingEnrollment] = useState(false);
   const router = useRouter();
   const segments = useSegments();
   const currentRoute = '/' + (segments[segments.length - 1] || '');
+  const { user, isAuthenticated } = useAuthStore();
+  const { setEnrollmentData } = useEnrollmentStore();
 
   const toggleDropdown = () => {
     const toValue = isOpen ? 0 : 1;
@@ -41,6 +48,50 @@ export const EnrollmentDropdown: React.FC<EnrollmentDropdownProps> = ({
       duration: 200,
       useNativeDriver: false,
     }).start();
+  };
+
+  const handleNewEnrollmentPress = async () => {
+    // Close dropdown first
+    setIsOpen(false);
+    Animated.timing(animation, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: false,
+    }).start();
+
+    // Check if user is authenticated and has an email
+    if (isAuthenticated && user?.email) {
+      setIsCheckingEnrollment(true);
+      try {
+        const response = await enrollmentApi.trackEnrollmentByEmail(user.email);
+
+        // If enrollment found (no error and has data), redirect to tracking
+        if (!response.error && response.data) {
+          // Set enrollment data in store
+          setEnrollmentData(response.data);
+
+          Alert.alert(
+            'Existing Enrollment Found',
+            'You already have an active enrollment for the current period. Redirecting to your enrollment status.',
+            [
+              {
+                text: 'OK',
+                onPress: () => router.replace('/enrollment/status' as any),
+              },
+            ]
+          );
+          return;
+        }
+      } catch (error) {
+        // If error (other than 404), log it but still allow navigation to form
+        console.error('Error checking existing enrollment:', error);
+      } finally {
+        setIsCheckingEnrollment(false);
+      }
+    }
+
+    // No existing enrollment found, navigate to enrollment form
+    router.replace('/enrollment/form' as any);
   };
 
   const dropdownHeight = animation.interpolate({
@@ -77,12 +128,18 @@ export const EnrollmentDropdown: React.FC<EnrollmentDropdownProps> = ({
             styles.dropdownItem,
             currentRoute === '/form' && styles.activeDropdownItem,
           ]}
+          onPress={handleNewEnrollmentPress}
+          disabled={isCheckingEnrollment}
           onPress={() => navigateToScreen('/enrollment/form')}
         >
           <Text
             style={[
               styles.dropdownText,
               currentRoute === '/form' && styles.activeDropdownText,
+              isCheckingEnrollment && styles.disabledText,
+            ]}
+          >
+            {isCheckingEnrollment ? 'Checking...' : 'New Enrollment'}
             ]}
           >
             New Enrollment
@@ -190,5 +247,8 @@ const styles = StyleSheet.create({
   activeDropdownText: {
     color: '#de0000',
     fontWeight: '700',
+  },
+  disabledText: {
+    color: '#999',
   },
 });

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect } from "react";
 import {
   View,
   Text,
@@ -7,18 +7,18 @@ import {
   ActivityIndicator,
   Alert,
   RefreshControl,
-} from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import { useRouter } from 'expo-router';
-import * as Print from 'expo-print';
-import * as Sharing from 'expo-sharing';
-import * as FileSystem from 'expo-file-system';
-import { Asset } from 'expo-asset';
-import { styles } from './LedgerScreen.styles';
-import { AppLayout } from '../../components/common';
-import { useLedgerStore } from '../../stores/ledgerStore';
-import { useAuthStore } from '../../stores/authStore';
-import { generateLedgerPdfHtml } from '../../utils/ledgerPdfTemplate';
+} from "react-native";
+import Icon from "react-native-vector-icons/MaterialIcons";
+import { useRouter } from "expo-router";
+import * as Print from "expo-print";
+import * as Sharing from "expo-sharing";
+import * as FileSystem from "expo-file-system";
+import { Asset } from "expo-asset";
+import { styles } from "./LedgerScreen.styles";
+import { AppLayout } from "../../components/common";
+import { useLedgerStore } from "../../stores/ledgerStore";
+import { useAuthStore } from "../../stores/authStore";
+import { generateLedgerPdfHtml } from "../../utils/ledgerPdfTemplate";
 
 interface LedgerItemProps {
   date: string;
@@ -43,14 +43,30 @@ const LedgerItem: React.FC<LedgerItemProps> = ({
 }) => {
   return (
     <View style={styles.ledgerRow}>
-      <Text style={styles.dateText}>{date}</Text>
-      <Text style={styles.timeText}>{time}</Text>
-      <Text style={styles.orNumberText}>{orNumber}</Text>
-      <Text style={styles.debitText}>{debit}</Text>
-      <Text style={styles.creditText}>{credit}</Text>
-      <Text style={styles.balanceText}>{balance}</Text>
-      <Text style={styles.typeText}>{type}</Text>
-      <Text style={styles.remarksText}>{remarks}</Text>
+      <Text style={styles.dateText} numberOfLines={1}>
+        {date}
+      </Text>
+      <Text style={styles.timeText} numberOfLines={1}>
+        {time}
+      </Text>
+      <Text style={styles.orNumberText} numberOfLines={2}>
+        {orNumber}
+      </Text>
+      <Text style={styles.debitText} numberOfLines={1}>
+        {debit}
+      </Text>
+      <Text style={styles.creditText} numberOfLines={1}>
+        {credit}
+      </Text>
+      <Text style={styles.balanceText} numberOfLines={1}>
+        {balance}
+      </Text>
+      <Text style={styles.typeText} numberOfLines={2}>
+        {type}
+      </Text>
+      <Text style={styles.remarksText} numberOfLines={2}>
+        {remarks}
+      </Text>
     </View>
   );
 };
@@ -70,36 +86,39 @@ export const LedgerScreen = (): React.JSX.Element => {
   // Show error alert if there's an error
   useEffect(() => {
     if (error) {
-      Alert.alert('Error', error, [{ text: 'OK' }]);
+      Alert.alert("Error", error, [{ text: "OK" }]);
     }
   }, [error]);
 
   const formatDateTime = (dateString: string) => {
     try {
-      const dt = new Date(dateString);
-      if (isNaN(dt.getTime())) return { date: '', time: '' };
+      // Handle database format "2025-11-21 19:36:13.272" - treat as local time
+      // Replace space with T but don't add Z (which would make it UTC)
+      const normalizedDate = dateString.replace(" ", "T");
+      const dt = new Date(normalizedDate);
+      if (isNaN(dt.getTime())) return { date: "", time: "" };
 
-      const date = dt.toLocaleDateString('en-US', {
-        month: 'numeric',
-        day: 'numeric',
-        year: '2-digit',
+      const date = dt.toLocaleDateString("en-US", {
+        month: "numeric",
+        day: "numeric",
+        year: "2-digit",
       });
 
-      const time = dt.toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
+      const time = dt.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
       });
 
       return { date, time };
     } catch (err) {
-      return { date: '', time: '' };
+      return { date: "", time: "" };
     }
   };
 
   const formatFeeType = (feeType: string) => {
-    if (!feeType) return '';
-    return feeType.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+    if (!feeType) return "";
+    return feeType.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
   };
 
   const formatAmount = (amount: number | string | null | undefined) => {
@@ -107,12 +126,12 @@ export const LedgerScreen = (): React.JSX.Element => {
       amount === null ||
       amount === undefined ||
       amount === 0 ||
-      amount === '0' ||
-      amount === '0.00'
+      amount === "0" ||
+      amount === "0.00"
     ) {
-      return '';
+      return "";
     }
-    return typeof amount === 'number' ? amount.toFixed(2) : amount;
+    return typeof amount === "number" ? amount.toFixed(2) : amount;
   };
 
   const handleRefresh = async () => {
@@ -125,8 +144,8 @@ export const LedgerScreen = (): React.JSX.Element => {
   const handleExportPdf = async () => {
     try {
       if (ledgerEntries.length === 0) {
-        Alert.alert('No Data', 'There are no transactions to export.', [
-          { text: 'OK' },
+        Alert.alert("No Data", "There are no transactions to export.", [
+          { text: "OK" },
         ]);
         return;
       }
@@ -137,7 +156,7 @@ export const LedgerScreen = (): React.JSX.Element => {
       let logoUri: string | undefined;
       try {
         const asset = Asset.fromModule(
-          require('../../../public/sprachins-logo-3.png')
+          require("../../../public/sprachins-logo-3.png")
         );
         await asset.downloadAsync();
         const localUri = asset.localUri || asset.uri;
@@ -151,7 +170,7 @@ export const LedgerScreen = (): React.JSX.Element => {
           logoUri = `data:image/png;base64,${base64}`;
         }
       } catch (logoError) {
-        console.warn('Failed to load logo:', logoError);
+        console.warn("Failed to load logo:", logoError);
         // Continue without logo
       }
 
@@ -161,12 +180,12 @@ export const LedgerScreen = (): React.JSX.Element => {
         return {
           date,
           time,
-          orNumber: entry.orNumber || '',
+          orNumber: entry.orNumber || "",
           debit: formatAmount(entry.debit),
           credit: formatAmount(entry.credit),
-          balance: entry.balance?.toString() || '0.00',
+          balance: entry.balance?.toString() || "0.00",
           type: formatFeeType(entry.type),
-          remarks: entry.remarks || '',
+          remarks: entry.remarks || "",
         };
       });
 
@@ -174,7 +193,7 @@ export const LedgerScreen = (): React.JSX.Element => {
         ? `${user.lastName}, ${user.firstName}`
         : getUserFullName();
 
-      const studentId = user?.userId || user?.id || 'N/A';
+      const studentId = user?.userId || user?.id || "N/A";
       const printedAt = new Date().toLocaleString();
 
       const htmlContent = generateLedgerPdfHtml({
@@ -191,16 +210,16 @@ export const LedgerScreen = (): React.JSX.Element => {
       // Share or save PDF
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(uri, {
-          mimeType: 'application/pdf',
-          dialogTitle: 'Student Ledger PDF',
-          UTI: 'com.adobe.pdf',
+          mimeType: "application/pdf",
+          dialogTitle: "Student Ledger PDF",
+          UTI: "com.adobe.pdf",
         });
       } else {
-        Alert.alert('Success', 'PDF generated successfully!');
+        Alert.alert("Success", "PDF generated successfully!");
       }
     } catch (error) {
-      console.error('Error exporting PDF:', error);
-      Alert.alert('Error', 'Failed to export PDF. Please try again.');
+      console.error("Error exporting PDF:", error);
+      Alert.alert("Error", "Failed to export PDF. Please try again.");
     } finally {
       setIsPdfLoading(false);
     }
@@ -222,7 +241,7 @@ export const LedgerScreen = (): React.JSX.Element => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            colors={['#8B0E07']}
+            colors={["#8B0E07"]}
             tintColor="#8B0E07"
           />
         }
@@ -233,7 +252,7 @@ export const LedgerScreen = (): React.JSX.Element => {
             {/* Student Info and Print Button */}
             <View style={styles.ledgerHeader}>
               <Text style={styles.studentName}>
-                {getUserFullName().toUpperCase() || 'STUDENT NAME'}
+                {getUserFullName().toUpperCase() || "STUDENT NAME"}
               </Text>
               <TouchableOpacity
                 style={[
@@ -263,18 +282,6 @@ export const LedgerScreen = (): React.JSX.Element => {
               </TouchableOpacity>
             </View>
 
-            {/* Table Header */}
-            <View style={styles.tableHeader}>
-              <Text style={styles.tableHeaderText}>Date</Text>
-              <Text style={styles.tableHeaderText}>Time</Text>
-              <Text style={styles.tableHeaderText}>O.R. No.</Text>
-              <Text style={styles.tableHeaderText}>Debit</Text>
-              <Text style={styles.tableHeaderText}>Credit</Text>
-              <Text style={styles.tableHeaderText}>Balance</Text>
-              <Text style={styles.tableHeaderText}>Type</Text>
-              <Text style={styles.tableHeaderText}>Remarks</Text>
-            </View>
-
             {/* Loading State */}
             {isLoading && (
               <View style={styles.loadingContainer}>
@@ -297,40 +304,104 @@ export const LedgerScreen = (): React.JSX.Element => {
               </View>
             )}
 
-            {/* Ledger List */}
-            {!isLoading && !error && (
-              <View style={styles.ledgerList}>
-                {ledgerEntries.length > 0 ? (
-                  ledgerEntries.map((entry, index) => {
-                    const { date, time } = formatDateTime(entry.date);
-                    const orNumber = entry.orNumber || '';
-                    const debit = formatAmount(entry.debit);
-                    const credit = formatAmount(entry.credit);
-                    const balance = entry.balance?.toString() || '0.00';
-                    const type = formatFeeType(entry.type);
-                    const remarks = entry.remarks || '';
-
-                    return (
-                      <LedgerItem
-                        key={index}
-                        date={date}
-                        time={time}
-                        orNumber={orNumber}
-                        debit={debit}
-                        credit={credit}
-                        balance={balance}
-                        type={type}
-                        remarks={remarks}
-                      />
-                    );
-                  })
-                ) : (
-                  <View style={styles.emptyContainer}>
-                    <Icon name="receipt-long" size={48} color="#9CA3AF" />
-                    <Text style={styles.emptyText}>No transactions found</Text>
-                  </View>
-                )}
+            {/* Empty State */}
+            {!isLoading && !error && ledgerEntries.length === 0 && (
+              <View style={styles.emptyContainer}>
+                <Icon name="receipt-long" size={48} color="#9CA3AF" />
+                <Text style={styles.emptyText}>No transactions found</Text>
               </View>
+            )}
+
+            {/* Horizontal Scrollable Table */}
+            {!isLoading && !error && ledgerEntries.length > 0 && (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={true}
+                style={styles.tableScrollContainer}
+                contentContainerStyle={styles.tableScrollContent}
+              >
+                <View>
+                  {/* Table Header */}
+                  <View style={styles.tableHeader}>
+                    <Text
+                      style={[styles.tableHeaderText, styles.tableHeaderDate]}
+                    >
+                      Date
+                    </Text>
+                    <Text
+                      style={[styles.tableHeaderText, styles.tableHeaderTime]}
+                    >
+                      Time
+                    </Text>
+                    <Text
+                      style={[
+                        styles.tableHeaderText,
+                        styles.tableHeaderOrNumber,
+                      ]}
+                    >
+                      O.R. No.
+                    </Text>
+                    <Text
+                      style={[styles.tableHeaderText, styles.tableHeaderDebit]}
+                    >
+                      Debit
+                    </Text>
+                    <Text
+                      style={[styles.tableHeaderText, styles.tableHeaderCredit]}
+                    >
+                      Credit
+                    </Text>
+                    <Text
+                      style={[
+                        styles.tableHeaderText,
+                        styles.tableHeaderBalance,
+                      ]}
+                    >
+                      Balance
+                    </Text>
+                    <Text
+                      style={[styles.tableHeaderText, styles.tableHeaderType]}
+                    >
+                      Type
+                    </Text>
+                    <Text
+                      style={[
+                        styles.tableHeaderText,
+                        styles.tableHeaderRemarks,
+                      ]}
+                    >
+                      Remarks
+                    </Text>
+                  </View>
+
+                  {/* Ledger List */}
+                  <View style={styles.ledgerList}>
+                    {ledgerEntries.map((entry, index) => {
+                      const { date, time } = formatDateTime(entry.date);
+                      const orNumber = entry.orNumber || "";
+                      const debit = formatAmount(entry.debit);
+                      const credit = formatAmount(entry.credit);
+                      const balance = entry.balance?.toString() || "0.00";
+                      const type = formatFeeType(entry.type);
+                      const remarks = entry.remarks || "";
+
+                      return (
+                        <LedgerItem
+                          key={index}
+                          date={date}
+                          time={time}
+                          orNumber={orNumber}
+                          debit={debit}
+                          credit={credit}
+                          balance={balance}
+                          type={type}
+                          remarks={remarks}
+                        />
+                      );
+                    })}
+                  </View>
+                </View>
+              </ScrollView>
             )}
           </View>
         </View>
