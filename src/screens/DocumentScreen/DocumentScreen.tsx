@@ -70,6 +70,7 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
     >
       <Text style={styles.feeText} numberOfLines={1} ellipsizeMode="tail">
         {document.displayPrice}
+        {document.displayPrice}
       </Text>
       <Text style={styles.nameText} numberOfLines={1} ellipsizeMode="tail">
         {document.documentName}

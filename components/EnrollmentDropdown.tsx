@@ -130,6 +130,7 @@ export const EnrollmentDropdown: React.FC<EnrollmentDropdownProps> = ({
           ]}
           onPress={handleNewEnrollmentPress}
           disabled={isCheckingEnrollment}
+          onPress={() => navigateToScreen('/enrollment/form')}
         >
           <Text
             style={[
@@ -139,6 +140,9 @@ export const EnrollmentDropdown: React.FC<EnrollmentDropdownProps> = ({
             ]}
           >
             {isCheckingEnrollment ? 'Checking...' : 'New Enrollment'}
+            ]}
+          >
+            New Enrollment
           </Text>
         </TouchableOpacity>
 
