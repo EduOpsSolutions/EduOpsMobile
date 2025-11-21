@@ -2,6 +2,7 @@ import axios from 'axios';
 import { Alert } from 'react-native';
 import { getToken, isTokenExpired, clearAuthData } from './jwt';
 import { router } from 'expo-router';
+import { getLoggingOut } from './logoutState';
 
 /**
  * Axios instance configured for EduOps Mobile App
@@ -125,26 +126,33 @@ axiosInstance.interceptors.response.use(
           router.replace('/');
         }, 100);
       } else if (error.response?.status === 401) {
-        // 401 without expired token - possibly invalid token
-        await clearAuthData();
+        // Skip session invalid alert for login endpoint - 401 is expected for wrong credentials
+        const isLoginRequest = originalRequest?.url?.includes('/auth/login');
+        // Skip alert if user is intentionally logging out
+        const isLoggingOut = getLoggingOut();
 
-        Alert.alert(
-          'Session Invalid',
-          'Your session is no longer valid. Please login again.',
-          [
-            {
-              text: 'OK',
-              onPress: () => {
-                router.replace('/');
+        if (!isLoginRequest && !isLoggingOut) {
+          // 401 without expired token - possibly invalid token (but not a login attempt)
+          await clearAuthData();
+
+          Alert.alert(
+            'Session Invalid',
+            'Your session is no longer valid. Please login again.',
+            [
+              {
+                text: 'OK',
+                onPress: () => {
+                  router.replace('/');
+                },
               },
-            },
-          ],
-          { cancelable: false }
-        );
+            ],
+            { cancelable: false }
+          );
 
-        setTimeout(() => {
-          router.replace('/');
-        }, 100);
+          setTimeout(() => {
+            router.replace('/');
+          }, 100);
+        }
       }
     }
 

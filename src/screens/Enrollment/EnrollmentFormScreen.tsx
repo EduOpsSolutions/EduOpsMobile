@@ -634,10 +634,14 @@ export default function EnrollmentFormScreen(): React.JSX.Element {
       }
 
       // Create enrollment data with course names (matching web app)
-      const enrollmentData = {
+      const enrollmentData: any = {
         ...formData,
         coursesToEnroll: selectedCourseObjects.map((c) => c.name).join(', '),
       };
+
+      // Note: userId is NOT sent from mobile app - the backend will automatically
+      // link the enrollment to an existing user by looking up the preferredEmail
+      // This avoids issues with different ID fields (id vs userId)
 
       const response = await createEnrollment(enrollmentData);
 

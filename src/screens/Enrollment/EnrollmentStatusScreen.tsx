@@ -14,6 +14,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { RelativePathString, useRouter } from 'expo-router';
 import { styles } from './EnrollmentStatusScreen.styles';
 import { useEnrollmentStore } from '../../stores/enrollmentStore';
+import { useAuthStore } from '../../stores/authStore';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import { GuestNavbar } from '../../components/common/GuestNavbar';
@@ -67,6 +68,7 @@ const StepIndicator: React.FC<StepProps> = ({
 
 export const EnrollmentStatusScreen = (): React.JSX.Element => {
   const router = useRouter();
+  const { isAuthenticated, user } = useAuthStore();
 
   const copyToClipboard = async (string: string) => {
     await Clipboard.setStringAsync(string);
@@ -333,9 +335,12 @@ export const EnrollmentStatusScreen = (): React.JSX.Element => {
                   <TouchableOpacity
                     style={styles.goToPaymentButton}
                     onPress={() => {
-                      router.push(
-                        `/guest-payment?studentId=${studentId}` as any
-                      );
+                      // Use authenticated payment form for logged-in users, guest payment for others
+                      if (isAuthenticated && user?.role === 'student') {
+                        router.push('/paymentform' as any);
+                      } else {
+                        router.push(`/guest-payment?studentId=${studentId}` as any);
+                      }
                     }}
                   >
                     <Icon name="payment" size={20} color="white" />

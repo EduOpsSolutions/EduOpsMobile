@@ -11,6 +11,7 @@ import {
   clearAuthData,
   isTokenExpired,
 } from '../utils/jwt';
+import { setLoggingOut } from '../utils/logoutState';
 import { Alert } from 'react-native';
 import { router } from 'expo-router';
 import { clearProfilePictureCache } from '../components/UserAvatar';
@@ -158,6 +159,9 @@ export const useAuthStore = create<AuthState>()(
       // Logout action
       logout: async (redirectToLogin = true) => {
         try {
+          // Set logging out flag to prevent "Session Invalid" alerts
+          setLoggingOut(true);
+
           // Get user ID before clearing auth data
           const userId = get().user?.id;
 
@@ -182,6 +186,8 @@ export const useAuthStore = create<AuthState>()(
           }
         } catch (error) {
           console.error('Error during logout:', error);
+        } finally {
+          setLoggingOut(false);
         }
       },
 

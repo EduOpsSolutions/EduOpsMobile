@@ -76,6 +76,22 @@ export const enrollmentApi = {
       throw new Error(handleApiError(error));
     }
   },
+
+  trackEnrollmentByEmail: async (email: string) => {
+    try {
+      const response = await axiosInstance.get(
+        `/enrollment/track/email/${encodeURIComponent(email)}`
+      );
+      return response.data;
+    } catch (error: any) {
+      // Return a structured error response instead of throwing
+      // This allows the caller to handle 404 (no enrollment found) gracefully
+      if (error.response?.status === 404) {
+        return { error: true, status: 404, message: 'No enrollment found' };
+      }
+      throw new Error(handleApiError(error));
+    }
+  },
 };
 
 // Posts API
