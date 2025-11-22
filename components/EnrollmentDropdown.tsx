@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,12 +6,12 @@ import {
   StyleSheet,
   Animated,
   Alert,
-} from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import { useRouter, useSegments } from 'expo-router';
-import { useAuthStore } from '../src/stores/authStore';
-import { useEnrollmentStore } from '../src/stores/enrollmentStore';
-import { enrollmentApi } from '../src/utils/api';
+} from "react-native";
+import Icon from "react-native-vector-icons/MaterialIcons";
+import { useRouter, useSegments } from "expo-router";
+import { useAuthStore } from "../src/stores/authStore";
+import { useEnrollmentStore } from "../src/stores/enrollmentStore";
+import { enrollmentApi } from "../src/utils/api";
 
 interface EnrollmentDropdownProps {
   isActive: boolean;
@@ -25,7 +25,7 @@ export const EnrollmentDropdown: React.FC<EnrollmentDropdownProps> = ({
   const [isCheckingEnrollment, setIsCheckingEnrollment] = useState(false);
   const router = useRouter();
   const segments = useSegments();
-  const currentRoute = '/' + (segments[segments.length - 1] || '');
+  const currentRoute = "/" + (segments[segments.length - 1] || "");
   const { user, isAuthenticated } = useAuthStore();
   const { setEnrollmentData } = useEnrollmentStore();
 
@@ -71,12 +71,12 @@ export const EnrollmentDropdown: React.FC<EnrollmentDropdownProps> = ({
           setEnrollmentData(response.data);
 
           Alert.alert(
-            'Existing Enrollment Found',
-            'You already have an active enrollment for the current period. Redirecting to your enrollment status.',
+            "Existing Enrollment Found",
+            "You already have an active enrollment for the current period. Redirecting to your enrollment status.",
             [
               {
-                text: 'OK',
-                onPress: () => router.replace('/enrollment/status' as any),
+                text: "OK",
+                onPress: () => router.replace("/enrollment/status" as any),
               },
             ]
           );
@@ -84,14 +84,14 @@ export const EnrollmentDropdown: React.FC<EnrollmentDropdownProps> = ({
         }
       } catch (error) {
         // If error (other than 404), log it but still allow navigation to form
-        console.error('Error checking existing enrollment:', error);
+        console.error("Error checking existing enrollment:", error);
       } finally {
         setIsCheckingEnrollment(false);
       }
     }
 
     // No existing enrollment found, navigate to enrollment form
-    router.replace('/enrollment/form' as any);
+    router.replace("/enrollment/form" as any);
   };
 
   const dropdownHeight = animation.interpolate({
@@ -101,13 +101,13 @@ export const EnrollmentDropdown: React.FC<EnrollmentDropdownProps> = ({
 
   const rotateIcon = animation.interpolate({
     inputRange: [0, 1],
-    outputRange: ['0deg', '180deg'],
+    outputRange: ["0deg", "180deg"],
   });
 
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.navItem} onPress={toggleDropdown}>
-        <Icon name="school" size={24} color={isActive ? '#de0000' : '#666'} />
+        <Icon name="school" size={24} color={isActive ? "#de0000" : "#666"} />
         <View style={styles.textContainer}>
           <Text style={[styles.navText, isActive && styles.activeNavText]}>
             Enrollment
@@ -116,7 +116,7 @@ export const EnrollmentDropdown: React.FC<EnrollmentDropdownProps> = ({
             <Icon
               name="keyboard-arrow-down"
               size={12}
-              color={isActive ? '#de0000' : '#666'}
+              color={isActive ? "#de0000" : "#666"}
             />
           </Animated.View>
         </View>
@@ -126,37 +126,33 @@ export const EnrollmentDropdown: React.FC<EnrollmentDropdownProps> = ({
         <TouchableOpacity
           style={[
             styles.dropdownItem,
-            currentRoute === '/form' && styles.activeDropdownItem,
+            currentRoute === "/form" && styles.activeDropdownItem,
           ]}
           onPress={handleNewEnrollmentPress}
           disabled={isCheckingEnrollment}
-          onPress={() => navigateToScreen('/enrollment/form')}
         >
           <Text
             style={[
               styles.dropdownText,
-              currentRoute === '/form' && styles.activeDropdownText,
+              currentRoute === "/form" && styles.activeDropdownText,
               isCheckingEnrollment && styles.disabledText,
             ]}
           >
-            {isCheckingEnrollment ? 'Checking...' : 'New Enrollment'}
-            ]}
-          >
-            New Enrollment
+            {isCheckingEnrollment ? "Checking..." : "New Enrollment"}
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[
             styles.dropdownItem,
-            currentRoute === '/studyload' && styles.activeDropdownItem,
+            currentRoute === "/studyload" && styles.activeDropdownItem,
           ]}
-          onPress={() => navigateToScreen('/studyload')}
+          onPress={() => navigateToScreen("/studyload")}
         >
           <Text
             style={[
               styles.dropdownText,
-              currentRoute === '/studyload' && styles.activeDropdownText,
+              currentRoute === "/studyload" && styles.activeDropdownText,
             ]}
           >
             Study Load
@@ -166,14 +162,14 @@ export const EnrollmentDropdown: React.FC<EnrollmentDropdownProps> = ({
         <TouchableOpacity
           style={[
             styles.dropdownItem,
-            currentRoute === '/schedule' && styles.activeDropdownItem,
+            currentRoute === "/schedule" && styles.activeDropdownItem,
           ]}
-          onPress={() => navigateToScreen('/schedule')}
+          onPress={() => navigateToScreen("/schedule")}
         >
           <Text
             style={[
               styles.dropdownText,
-              currentRoute === '/schedule' && styles.activeDropdownText,
+              currentRoute === "/schedule" && styles.activeDropdownText,
             ]}
           >
             Schedule
@@ -187,68 +183,68 @@ export const EnrollmentDropdown: React.FC<EnrollmentDropdownProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    position: 'relative',
+    position: "relative",
     zIndex: 10001,
   },
   navItem: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: 8,
   },
   textContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginTop: 2,
   },
   navText: {
     fontSize: 10,
-    color: '#666',
-    textAlign: 'center',
+    color: "#666",
+    textAlign: "center",
     marginRight: 2,
   },
   activeNavText: {
-    color: '#de0000',
-    fontWeight: '500',
+    color: "#de0000",
+    fontWeight: "500",
   },
   dropdown: {
-    position: 'absolute',
-    bottom: '113%',
+    position: "absolute",
+    bottom: "113%",
     left: -50,
     right: -50,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: '#e0e0e0',
-    overflow: 'hidden',
+    borderColor: "#e0e0e0",
+    overflow: "hidden",
     borderRadius: 12,
     zIndex: 10002,
     elevation: 20,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
   },
   dropdownItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 16,
     paddingHorizontal: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: "#f0f0f0",
   },
   activeDropdownItem: {
-    backgroundColor: '#fff3e0',
+    backgroundColor: "#fff3e0",
   },
   dropdownText: {
     fontSize: 14,
-    color: '#333',
-    fontWeight: '500',
+    color: "#333",
+    fontWeight: "500",
   },
   activeDropdownText: {
-    color: '#de0000',
-    fontWeight: '700',
+    color: "#de0000",
+    fontWeight: "700",
   },
   disabledText: {
-    color: '#999',
+    color: "#999",
   },
 });
