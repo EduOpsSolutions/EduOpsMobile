@@ -8,6 +8,8 @@ import {
   ActivityIndicator,
   Alert,
   RefreshControl,
+  Modal,
+  Pressable,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
@@ -72,6 +74,150 @@ const Dropdown: React.FC<DropdownProps> = ({
   );
 };
 
+interface PickerModalProps {
+  visible: boolean;
+  onClose: () => void;
+  onSelect: (value: string) => void;
+  options: string[];
+  selectedValue: string;
+  title: string;
+  anyOptionLabel: string;
+}
+
+const PickerModal: React.FC<PickerModalProps> = ({
+  visible,
+  onClose,
+  onSelect,
+  options,
+  selectedValue,
+  title,
+  anyOptionLabel,
+}) => {
+  return (
+    <Modal
+      visible={visible}
+      transparent={true}
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      <Pressable style={modalStyles.overlay} onPress={onClose}>
+        <View style={modalStyles.container}>
+          <View style={modalStyles.header}>
+            <Text style={modalStyles.title}>{title}</Text>
+            <TouchableOpacity onPress={onClose} style={modalStyles.closeButton}>
+              <Icon name="close" size={24} color="#333" />
+            </TouchableOpacity>
+          </View>
+          <ScrollView style={modalStyles.optionsList} showsVerticalScrollIndicator={true}>
+            <TouchableOpacity
+              style={[
+                modalStyles.option,
+                selectedValue === '' && modalStyles.selectedOption,
+              ]}
+              onPress={() => {
+                onSelect('');
+                onClose();
+              }}
+            >
+              <Text
+                style={[
+                  modalStyles.optionText,
+                  selectedValue === '' && modalStyles.selectedOptionText,
+                ]}
+              >
+                {anyOptionLabel}
+              </Text>
+              {selectedValue === '' && (
+                <Icon name="check" size={20} color="#8B0E07" />
+              )}
+            </TouchableOpacity>
+            {options.map((option, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  modalStyles.option,
+                  selectedValue === option && modalStyles.selectedOption,
+                ]}
+                onPress={() => {
+                  onSelect(option);
+                  onClose();
+                }}
+              >
+                <Text
+                  style={[
+                    modalStyles.optionText,
+                    selectedValue === option && modalStyles.selectedOptionText,
+                  ]}
+                >
+                  {option}
+                </Text>
+                {selectedValue === option && (
+                  <Icon name="check" size={20} color="#8B0E07" />
+                )}
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      </Pressable>
+    </Modal>
+  );
+};
+
+const modalStyles = {
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+  },
+  container: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    width: '80%' as unknown as number,
+    maxHeight: '60%' as unknown as number,
+    overflow: 'hidden' as const,
+  },
+  header: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'center' as const,
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: 'bold' as const,
+    color: '#333',
+  },
+  closeButton: {
+    padding: 4,
+  },
+  optionsList: {
+    maxHeight: 300,
+  },
+  option: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'center' as const,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  selectedOption: {
+    backgroundColor: '#fff5f5',
+  },
+  optionText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  selectedOptionText: {
+    color: '#8B0E07',
+    fontWeight: '600' as const,
+  },
+};
+
 interface FeeItemProps {
   description: string;
   amount: string;
@@ -125,6 +271,9 @@ export const AssessmentScreen = (): React.JSX.Element => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [academicPeriods, setAcademicPeriods] = useState<AcademicPeriod[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [courseModalVisible, setCourseModalVisible] = useState(false);
+  const [batchModalVisible, setBatchModalVisible] = useState(false);
+  const [yearModalVisible, setYearModalVisible] = useState(false);
 
   // Fetch all courses on mount
   useEffect(() => {
@@ -302,35 +451,41 @@ export const AssessmentScreen = (): React.JSX.Element => {
               <View style={[styles.searchRow, { zIndex: 2 }]}>
                 <View style={styles.searchField}>
                   <Text style={styles.searchLabel}>Course</Text>
-                  <Dropdown
-                    placeholder="Select Course"
-                    value={searchData.course}
-                    onValueChange={(value) => updateSearchData('course', value)}
-                    options={courseOptions}
-                    zIndex={3000}
-                  />
+                  <TouchableOpacity
+                    style={styles.dropdownButton}
+                    onPress={() => setCourseModalVisible(true)}
+                  >
+                    <Text style={[styles.dropdownText, !searchData.course && styles.placeholderText]}>
+                      {searchData.course || 'Any Course'}
+                    </Text>
+                    <Icon name="keyboard-arrow-down" size={16} color="#666" />
+                  </TouchableOpacity>
                 </View>
                 <View style={styles.searchField}>
                   <Text style={styles.searchLabel}>Batch</Text>
-                  <Dropdown
-                    placeholder="Select Batch"
-                    value={searchData.batch}
-                    onValueChange={(value) => updateSearchData('batch', value)}
-                    options={batchOptions}
-                    zIndex={2000}
-                  />
+                  <TouchableOpacity
+                    style={styles.dropdownButton}
+                    onPress={() => setBatchModalVisible(true)}
+                  >
+                    <Text style={[styles.dropdownText, !searchData.batch && styles.placeholderText]}>
+                      {searchData.batch || 'Any Batch'}
+                    </Text>
+                    <Icon name="keyboard-arrow-down" size={16} color="#666" />
+                  </TouchableOpacity>
                 </View>
               </View>
               <View style={[styles.searchRow, { zIndex: 1 }]}>
                 <View style={styles.searchField}>
                   <Text style={styles.searchLabel}>Year</Text>
-                  <Dropdown
-                    placeholder="Select Year"
-                    value={searchData.year}
-                    onValueChange={(value) => updateSearchData('year', value)}
-                    options={yearOptions}
-                    zIndex={1000}
-                  />
+                  <TouchableOpacity
+                    style={styles.dropdownButton}
+                    onPress={() => setYearModalVisible(true)}
+                  >
+                    <Text style={[styles.dropdownText, !searchData.year && styles.placeholderText]}>
+                      {searchData.year || 'Any Year'}
+                    </Text>
+                    <Icon name="keyboard-arrow-down" size={16} color="#666" />
+                  </TouchableOpacity>
                 </View>
                 <View style={styles.searchButtonContainer}>
                   <TouchableOpacity
@@ -538,6 +693,39 @@ export const AssessmentScreen = (): React.JSX.Element => {
           )}
         </View>
       </ScrollView>
+
+      {/* Course Picker Modal */}
+      <PickerModal
+        visible={courseModalVisible}
+        onClose={() => setCourseModalVisible(false)}
+        onSelect={(value) => updateSearchData('course', value)}
+        options={courseOptions}
+        selectedValue={searchData.course}
+        title="Select Course"
+        anyOptionLabel="Any Course"
+      />
+
+      {/* Batch Picker Modal */}
+      <PickerModal
+        visible={batchModalVisible}
+        onClose={() => setBatchModalVisible(false)}
+        onSelect={(value) => updateSearchData('batch', value)}
+        options={batchOptions}
+        selectedValue={searchData.batch}
+        title="Select Batch"
+        anyOptionLabel="Any Batch"
+      />
+
+      {/* Year Picker Modal */}
+      <PickerModal
+        visible={yearModalVisible}
+        onClose={() => setYearModalVisible(false)}
+        onSelect={(value) => updateSearchData('year', value)}
+        options={yearOptions}
+        selectedValue={searchData.year}
+        title="Select Year"
+        anyOptionLabel="Any Year"
+      />
     </AppLayout>
   );
 };
