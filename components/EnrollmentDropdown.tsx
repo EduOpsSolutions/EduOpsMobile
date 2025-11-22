@@ -250,4 +250,7 @@ const styles = StyleSheet.create({
   disabledText: {
     color: '#999',
   },
+  disabledText: {
+    color: '#999',
+  },
 });
