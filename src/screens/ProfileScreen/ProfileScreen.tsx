@@ -99,7 +99,7 @@ export const ProfileScreen = (): React.JSX.Element => {
 
   return (
     <AppLayout
-      showNotifications={false}
+      showNotifications={true}
       enrollmentActive={isEnrollmentActive}
       paymentActive={false}
     >
