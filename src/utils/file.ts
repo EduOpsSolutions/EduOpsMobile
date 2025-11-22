@@ -1,9 +1,31 @@
 import axiosInstance from "./axios";
 
-export const guestUploadFile = async (file: File, directory: string) => {
+// Type for React Native file objects (from ImagePicker, DocumentPicker, etc.)
+interface RNFileAsset {
+  uri: string;
+  fileName?: string;
+  mimeType?: string;
+  type?: string;
+  name?: string;
+}
+
+// Helper to format file for React Native FormData
+const formatFileForFormData = (file: RNFileAsset) => {
+  const fileUri = file.uri;
+  const fileName = file.fileName || file.name || file.uri?.split('/').pop() || 'file.jpg';
+  const fileType = file.mimeType || file.type || 'image/jpeg';
+
+  return {
+    uri: fileUri,
+    name: fileName,
+    type: fileType,
+  };
+};
+
+export const guestUploadFile = async (file: RNFileAsset, directory: string) => {
   try {
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", formatFileForFormData(file) as any);
     formData.append("directory", directory);
     const response = await axiosInstance.post(
       `/upload/guest?directory=${directory}`,
@@ -21,10 +43,10 @@ export const guestUploadFile = async (file: File, directory: string) => {
   }
 };
 
-export const uploadFile = async (file: File, directory: string) => {
+export const uploadFile = async (file: RNFileAsset, directory: string) => {
   try {
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", formatFileForFormData(file) as any);
     formData.append("directory", directory);
     const response = await axiosInstance.post(
       `/upload?directory=${directory}`,
@@ -42,11 +64,11 @@ export const uploadFile = async (file: File, directory: string) => {
   }
 };
 
-export const uploadMultipleFiles = async (files: File[], directory: string) => {
+export const uploadMultipleFiles = async (files: RNFileAsset[], directory: string) => {
   try {
     const formData = new FormData();
     files.forEach((file) => {
-      formData.append("files", file);
+      formData.append("files", formatFileForFormData(file) as any);
     });
     formData.append("directory", directory);
     const response = await axiosInstance.post(
@@ -66,13 +88,13 @@ export const uploadMultipleFiles = async (files: File[], directory: string) => {
 };
 
 export const guestUploadMultipleFiles = async (
-  files: File[],
+  files: RNFileAsset[],
   directory: string
 ) => {
   try {
     const formData = new FormData();
     files.forEach((file) => {
-      formData.append("files", file);
+      formData.append("files", formatFileForFormData(file) as any);
     });
     formData.append("directory", directory);
     const response = await axiosInstance.post(

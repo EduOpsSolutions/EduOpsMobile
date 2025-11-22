@@ -313,7 +313,18 @@ export const fileApi = {
   uploadFile: async (file: any, directory: string) => {
     try {
       const formData = new FormData();
-      formData.append('file', file);
+
+      // React Native requires file to be formatted with uri, name, and type
+      // ImagePicker returns { uri, type, fileName, ... }
+      const fileUri = file.uri;
+      const fileName = file.fileName || file.uri?.split('/').pop() || 'file.jpg';
+      const fileType = file.mimeType || file.type || 'image/jpeg';
+
+      formData.append('file', {
+        uri: fileUri,
+        name: fileName,
+        type: fileType,
+      } as any);
       formData.append('directory', directory);
 
       const response = await axiosInstance.post(
@@ -332,7 +343,18 @@ export const fileApi = {
   guestUploadFile: async (file: any, directory: string) => {
     try {
       const formData = new FormData();
-      formData.append('file', file);
+
+      // React Native requires file to be formatted with uri, name, and type
+      // ImagePicker returns { uri, type, fileName, ... }
+      const fileUri = file.uri;
+      const fileName = file.fileName || file.uri?.split('/').pop() || 'file.jpg';
+      const fileType = file.mimeType || file.type || 'image/jpeg';
+
+      formData.append('file', {
+        uri: fileUri,
+        name: fileName,
+        type: fileType,
+      } as any);
       formData.append('directory', directory);
 
       const response = await axiosInstance.post(
