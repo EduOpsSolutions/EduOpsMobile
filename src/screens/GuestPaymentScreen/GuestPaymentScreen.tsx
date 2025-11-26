@@ -120,11 +120,13 @@ export const GuestPaymentScreen = (): React.JSX.Element => {
     loading,
     phoneError,
     nameError,
+    amountError,
     feesOptions,
     updateFormField,
     validateAndFetchStudentByID,
     validateRequiredFields,
     validatePhoneNumber,
+    validateDownPaymentAmount,
     preparePaymentData,
     resetForm,
     sendPaymentLinkEmail,
@@ -215,6 +217,15 @@ export const GuestPaymentScreen = (): React.JSX.Element => {
     }
 
     if (!validatePhoneNumber()) return;
+
+    if (!validateDownPaymentAmount()) {
+      Alert.alert(
+        "Invalid Payment Amount",
+        "Down payment must be at least ₱3,000",
+        [{ text: "OK" }]
+      );
+      return;
+    }
 
     const feeLabel = getFeeTypeLabel(formData.fee);
 
@@ -514,13 +525,19 @@ export const GuestPaymentScreen = (): React.JSX.Element => {
             <View style={styles.fullWidth}>
               <Text style={styles.label}>Amount*</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, amountError && styles.inputError]}
                 value={formData.amount}
                 onChangeText={(value) => updateFormField("amount", value)}
                 placeholder="0.00"
                 placeholderTextColor="#999"
                 keyboardType="decimal-pad"
               />
+              {amountError && (
+                <Text style={styles.errorText}>{amountError}</Text>
+              )}
+              {formData.fee === "down_payment" && !amountError && (
+                <Text style={styles.hintText}>Minimum down payment: ₱3,000</Text>
+              )}
             </View>
 
             {/* Submit Button */}

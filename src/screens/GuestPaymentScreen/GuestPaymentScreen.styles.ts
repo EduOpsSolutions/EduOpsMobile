@@ -100,6 +100,11 @@ export const styles = StyleSheet.create({
     color: "#de0000",
     marginTop: 4,
   },
+  hintText: {
+    fontSize: 11,
+    color: "#666",
+    marginTop: 4,
+  },
   dropdownContainer: {
     position: "relative",
     zIndex: 1000,

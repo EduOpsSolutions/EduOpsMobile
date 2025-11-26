@@ -386,6 +386,46 @@ export const styles = StyleSheet.create({
     color: '#666',
     lineHeight: 20,
   },
+  adminRemarksSection: {
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 20,
+    borderLeftWidth: 4,
+  },
+  adminRemarksRejected: {
+    backgroundColor: '#fef2f2',
+    borderLeftColor: '#dc2626',
+  },
+  adminRemarksOther: {
+    backgroundColor: '#eff6ff',
+    borderLeftColor: '#2563eb',
+  },
+  adminRemarksHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  adminRemarksTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  adminRemarksTitleRejected: {
+    color: '#991b1b',
+  },
+  adminRemarksTitleOther: {
+    color: '#1e40af',
+  },
+  adminRemarksText: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  adminRemarksTextRejected: {
+    color: '#b91c1c',
+  },
+  adminRemarksTextOther: {
+    color: '#1d4ed8',
+  },
   noteSection: {
     backgroundColor: '#E3F2FD',
     borderRadius: 8,

@@ -31,6 +31,7 @@ export interface EnrollmentData {
   currentStep: number;
   completedSteps: number[];
   remarkMsg: string;
+  remarks?: string;
   fullName: string;
   email: string;
   createdAt: string;
@@ -54,6 +55,7 @@ export interface EnrollmentStoreState {
   studentId: string | null;
   enrollmentStatus: EnrollmentStatus;
   remarkMsg: string;
+  remarks: string | null;
   fullName: string;
   email: string;
   coursesToEnroll: string;
@@ -88,6 +90,7 @@ export interface TrackEnrollmentResponse {
   currentStep: number;
   completedSteps: number[];
   remarkMsg: string;
+  remarks?: string;
   fullName: string;
   email: string;
   createdAt: string;

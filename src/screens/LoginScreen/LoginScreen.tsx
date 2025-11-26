@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -12,19 +12,23 @@ import {
   KeyboardAvoidingView,
   Platform,
   Linking,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { EyeIcon, Fullscreen, LockIcon, UserIcon } from 'lucide-react-native';
-import { styles } from './LoginScreen.styles';
-import { RelativePathString, useRouter } from 'expo-router';
-import { useAuthStore } from '../../stores/authStore';
-import { TrackEnrollmentModal, ForgotPasswordModal } from '../../components/modals';
-import { cn } from '../../utils/cn';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { EyeIcon, Fullscreen, LockIcon, UserIcon } from "lucide-react-native";
+import { styles } from "./LoginScreen.styles";
+import { RelativePathString, useRouter } from "expo-router";
+import { useAuthStore } from "../../stores/authStore";
+import {
+  TrackEnrollmentModal,
+  ForgotPasswordModal,
+} from "../../components/modals";
+import { cn } from "../../utils/cn";
 
 export const LoginScreen = (): React.JSX.Element => {
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [errors, setErrors] = useState({ email: "", password: "" });
   const [trackModalOpen, setTrackModalOpen] = useState(false);
   const [forgotPasswordModalOpen, setForgotPasswordModalOpen] = useState(false);
   const router = useRouter();
@@ -32,18 +36,40 @@ export const LoginScreen = (): React.JSX.Element => {
   // Get login function and loading state from auth store
   const { login, isLoading, error, user } = useAuthStore();
 
-  // Handle login
-  const handleLogin = async () => {
-    // Validate inputs
-    if (!email || !password) {
-      Alert.alert('Incorrect Input', 'Please enter both email and password');
-      return;
+  // Client-side validation function
+  const validateForm = () => {
+    const newErrors = { email: "", password: "" };
+    let isValid = true;
+
+    // Email validation
+    if (!email.trim()) {
+      newErrors.email = "Email is required";
+      isValid = false;
+    } else {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        newErrors.email = "Please enter a valid email address";
+        isValid = false;
+      }
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      Alert.alert('Incorrect Input', 'Please enter a valid email address');
+    // Password validation
+    if (!password) {
+      newErrors.password = "Password is required";
+      isValid = false;
+    } else if (password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  // Handle login
+  const handleLogin = async () => {
+    // Validate form before sending to backend
+    if (!validateForm()) {
       return;
     }
 
@@ -56,36 +82,54 @@ export const LoginScreen = (): React.JSX.Element => {
 
       if (currentUser) {
         // Navigate based on role
-        if (currentUser.role === 'student') {
-          router.replace('/home');
-        } else if (currentUser.role === 'admin') {
-          router.replace('/home'); // Change to admin home when available
-        } else if (currentUser.role === 'teacher') {
-          router.replace('/home'); // Change to teacher home when available
+        if (currentUser.role === "student") {
+          router.replace("/home");
+        } else if (currentUser.role === "admin") {
+          router.replace("/home"); // Change to admin home when available
+        } else if (currentUser.role === "teacher") {
+          router.replace("/home"); // Change to teacher home when available
         } else {
-          router.replace('/home');
+          router.replace("/home");
         }
       }
     } catch (error: any) {
       // Error is already handled in the store, just show alert
-      Alert.alert('Login Failed', error.message || 'Invalid email or password');
+      Alert.alert("Login Failed", error.message || "Invalid email or password");
+    }
+  };
+
+  // Handle email change
+  const handleEmailChange = (value: string) => {
+    setEmail(value);
+    // Clear email error when user starts typing
+    if (errors.email) {
+      setErrors((prev) => ({ ...prev, email: "" }));
+    }
+  };
+
+  // Handle password change
+  const handlePasswordChange = (value: string) => {
+    setPassword(value);
+    // Clear password error when user starts typing
+    if (errors.password) {
+      setErrors((prev) => ({ ...prev, password: "" }));
     }
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
       <StatusBar backgroundColor="#de0000" barStyle="light-content" />
       {/* Header */}
       <View style={styles.header}>
         <Image
           style={styles.headerLogo}
-          source={require('../../../assets/images/sprachins-logo-3.png')}
+          source={require("../../../assets/images/sprachins-logo-3.png")}
           resizeMode="contain"
         />
       </View>
 
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
       >
         <ScrollView
@@ -101,12 +145,14 @@ export const LoginScreen = (): React.JSX.Element => {
               {/* Logo */}
               <Image
                 style={styles.logo}
-                source={require('../../../assets/images/sprachins-logo-3.png')}
+                source={require("../../../assets/images/sprachins-logo-3.png")}
                 resizeMode="contain"
               />
 
               {/* Email input */}
-              <View style={styles.inputWrapper}>
+              <View
+                style={[styles.inputWrapper, errors.email && styles.inputError]}
+              >
                 <UserIcon size={24} color="#6d6d6d" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
@@ -115,13 +161,21 @@ export const LoginScreen = (): React.JSX.Element => {
                   autoCapitalize="none"
                   keyboardType="email-address"
                   value={email}
-                  onChangeText={setEmail}
+                  onChangeText={handleEmailChange}
                   editable={!isLoading}
                 />
               </View>
+              {errors.email && (
+                <Text style={styles.errorText}>{errors.email}</Text>
+              )}
 
               {/* Password input */}
-              <View style={styles.inputWrapper}>
+              <View
+                style={[
+                  styles.inputWrapper,
+                  errors.password && styles.inputError,
+                ]}
+              >
                 <LockIcon size={24} color="#6d6d6d" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
@@ -129,7 +183,7 @@ export const LoginScreen = (): React.JSX.Element => {
                   placeholderTextColor="#6d6d6d"
                   secureTextEntry={!showPassword}
                   value={password}
-                  onChangeText={setPassword}
+                  onChangeText={handlePasswordChange}
                   editable={!isLoading}
                   onSubmitEditing={handleLogin}
                 />
@@ -140,6 +194,9 @@ export const LoginScreen = (): React.JSX.Element => {
                   <EyeIcon size={20} color="#6d6d6d" />
                 </TouchableOpacity>
               </View>
+              {errors.password && (
+                <Text style={styles.errorText}>{errors.password}</Text>
+              )}
 
               {/* Forgot password */}
               <TouchableOpacity
@@ -173,7 +230,7 @@ export const LoginScreen = (): React.JSX.Element => {
                   style={[styles.loginButton, isLoading && { opacity: 0.6 }]}
                   onPress={() =>
                     router.replace(
-                      '/enrollment/form' as any as RelativePathString
+                      "/enrollment/form" as any as RelativePathString
                     )
                   }
                   disabled={isLoading}
@@ -205,7 +262,7 @@ export const LoginScreen = (): React.JSX.Element => {
                     isLoading && { opacity: 0.6 },
                   ]}
                   onPress={() =>
-                    router.push('/guest-payment' as any as RelativePathString)
+                    router.push("/guest-payment" as any as RelativePathString)
                   }
                   disabled={isLoading}
                 >
@@ -217,21 +274,25 @@ export const LoginScreen = (): React.JSX.Element => {
 
               {/* Terms and Privacy */}
               <Text style={styles.termsText}>
-                By using this service, you understood and agree to our{' '}
+                By using this service, you understood and agree to our{" "}
                 <Text
                   style={styles.termsLink}
                   onPress={() => {
-                    const baseUrl = process.env.EXPO_PUBLIC_CLIENT_URL || 'https://eduops.vercel.app';
+                    const baseUrl =
+                      process.env.EXPO_PUBLIC_CLIENT_URL ||
+                      "https://eduops.vercel.app";
                     Linking.openURL(`${baseUrl}/legal/terms`);
                   }}
                 >
                   Terms
-                </Text>{' '}
-                and{' '}
+                </Text>{" "}
+                and{" "}
                 <Text
                   style={styles.termsLink}
                   onPress={() => {
-                    const baseUrl = process.env.EXPO_PUBLIC_CLIENT_URL || 'https://eduops.vercel.app';
+                    const baseUrl =
+                      process.env.EXPO_PUBLIC_CLIENT_URL ||
+                      "https://eduops.vercel.app";
                     Linking.openURL(`${baseUrl}/legal/privacy-policy`);
                   }}
                 >

@@ -84,11 +84,13 @@ export const PaymentScreen = (): React.JSX.Element => {
     loading,
     phoneError,
     nameError,
+    amountError,
     feesOptions,
     updateFormField,
     validateAndFetchStudentByID,
     validateRequiredFields,
     validatePhoneNumber,
+    validateDownPaymentAmount,
     preparePaymentData,
     resetForm,
     resetPaymentFields,
@@ -238,6 +240,15 @@ export const PaymentScreen = (): React.JSX.Element => {
     }
 
     if (!validatePhoneNumber()) return;
+
+    if (!validateDownPaymentAmount()) {
+      Alert.alert(
+        "Invalid Payment Amount",
+        "Down payment must be at least ₱3,000",
+        [{ text: "OK" }]
+      );
+      return;
+    }
 
     const feeLabel = getFeeTypeLabel(formData.fee);
 
@@ -641,6 +652,7 @@ export const PaymentScreen = (): React.JSX.Element => {
               <TextInput
                 style={[
                   styles.input,
+                  amountError && styles.inputError,
                   isAuthenticated &&
                     user?.role === "student" &&
                     formData.fee === "document_fee" &&
@@ -659,6 +671,12 @@ export const PaymentScreen = (): React.JSX.Element => {
                   )
                 }
               />
+              {amountError && (
+                <Text style={styles.errorText}>{amountError}</Text>
+              )}
+              {formData.fee === "down_payment" && !amountError && (
+                <Text style={styles.hintText}>Minimum down payment: ₱3,000</Text>
+              )}
               {isAuthenticated &&
                 user?.role === "student" &&
                 formData.fee === "document_fee" && (
