@@ -34,6 +34,7 @@ interface PaymentState {
   loading: boolean;
   phoneError: string;
   nameError: string;
+  amountError: string;
   studentData: StudentData | null;
   feesOptions: FeeOption[];
 
@@ -43,6 +44,7 @@ interface PaymentState {
   resetPaymentFields: () => void;
   validateRequiredFields: () => boolean;
   validatePhoneNumber: () => boolean;
+  validateDownPaymentAmount: () => boolean;
   preparePaymentData: () => any;
   sendPaymentLinkEmail: (
     paymentData: any
@@ -68,6 +70,7 @@ export const usePaymentStore = create<PaymentState>((set, get) => ({
   loading: false,
   phoneError: '',
   nameError: '',
+  amountError: '',
   studentData: null,
   feesOptions: [
     { value: 'down_payment', label: 'Down Payment' },
@@ -89,6 +92,10 @@ export const usePaymentStore = create<PaymentState>((set, get) => ({
       name === 'student_id'
     ) {
       set({ nameError: '' });
+    }
+
+    if (name === 'amount' || name === 'fee') {
+      set({ amountError: '' });
     }
   },
 
@@ -163,6 +170,7 @@ export const usePaymentStore = create<PaymentState>((set, get) => ({
       formData: { ...initialFormData },
       phoneError: '',
       nameError: '',
+      amountError: '',
       studentData: null,
     });
   },
@@ -199,6 +207,18 @@ export const usePaymentStore = create<PaymentState>((set, get) => ({
       return false;
     }
     set({ phoneError: '' });
+    return true;
+  },
+
+  validateDownPaymentAmount: () => {
+    const { formData } = get();
+    const amount = parseFloat(formData.amount);
+
+    if (formData.fee === 'down_payment' && amount < 3000) {
+      set({ amountError: 'Down payment must be at least ₱3,000' });
+      return false;
+    }
+    set({ amountError: '' });
     return true;
   },
 

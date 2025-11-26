@@ -18,6 +18,7 @@ export const useEnrollmentStore = create<EnrollmentStoreState>()(
       studentId: null,
       enrollmentStatus: "pending" as EnrollmentStatus,
       remarkMsg: "Please track your enrollment to view progress.",
+      remarks: null,
       fullName: "",
       email: "",
       coursesToEnroll: "",
@@ -53,6 +54,7 @@ export const useEnrollmentStore = create<EnrollmentStoreState>()(
           currentStep,
           completedSteps,
           remarkMsg: data.remarkMsg || get().remarkMsg,
+          remarks: data.remarks || null,
           fullName: data.fullName || get().fullName,
           email: data.email || get().email,
           coursesToEnroll: data.coursesToEnroll || get().coursesToEnroll,
@@ -71,6 +73,7 @@ export const useEnrollmentStore = create<EnrollmentStoreState>()(
           studentId: null,
           enrollmentStatus: "pending",
           remarkMsg: "Please track your enrollment to view progress.",
+          remarks: null,
           fullName: "",
           email: "",
           coursesToEnroll: "",
@@ -94,11 +97,18 @@ export const useEnrollmentStore = create<EnrollmentStoreState>()(
         }
 
         try {
-          console.log("Refetching enrollment data...");
+          console.log("=== FETCH ENROLLMENT DATA ===");
+          console.log("Using enrollmentId:", enrollmentId);
+          console.log("Using email:", email);
+
           const response = await enrollmentApi.trackEnrollment(
             enrollmentId,
             email
           );
+
+          console.log("=== API RESPONSE ===");
+          console.log("Full response:", JSON.stringify(response, null, 2));
+          console.log("Response data:", JSON.stringify(response.data, null, 2));
 
           if (response.error) {
             throw new Error(response.message || "Failed to fetch enrollment data");
@@ -112,6 +122,7 @@ export const useEnrollmentStore = create<EnrollmentStoreState>()(
             currentStep: response.data.currentStep,
             completedSteps: response.data.completedSteps,
             remarkMsg: response.data.remarkMsg,
+            remarks: response.data.remarks,
             fullName: response.data.fullName,
             email: response.data.email,
             createdAt: response.data.createdAt,
@@ -137,10 +148,18 @@ export const useEnrollmentStore = create<EnrollmentStoreState>()(
             throw new Error("Please provide an enrollment ID or email address");
           }
 
+          console.log("=== TRACK ENROLLMENT ===");
+          console.log("Tracking with enrollmentId:", enrollmentId);
+          console.log("Tracking with email:", email);
+
           const response = await enrollmentApi.trackEnrollment(
             enrollmentId,
             email
           );
+
+          console.log("=== TRACK API RESPONSE ===");
+          console.log("Full response:", JSON.stringify(response, null, 2));
+          console.log("Response data:", JSON.stringify(response.data, null, 2));
 
           if (response.error) {
             throw new Error(response.message || "Failed to track enrollment");
@@ -154,6 +173,7 @@ export const useEnrollmentStore = create<EnrollmentStoreState>()(
             currentStep: response.data.currentStep,
             completedSteps: response.data.completedSteps,
             remarkMsg: response.data.remarkMsg,
+            remarks: response.data.remarks,
             fullName: response.data.fullName,
             email: response.data.email,
             createdAt: response.data.createdAt,
@@ -177,11 +197,15 @@ export const useEnrollmentStore = create<EnrollmentStoreState>()(
       // Create new enrollment
       createEnrollment: async (formData: EnrollmentFormData) => {
         try {
+          console.log("=== CREATE ENROLLMENT ===");
+          console.log("Submitting enrollment for:", formData.firstName, formData.lastName);
+
           const response = await enrollmentApi.createEnrollmentRequest(
             formData
           );
 
-          console.log("Enrollment API response:", JSON.stringify(response));
+          console.log("=== CREATE ENROLLMENT API RESPONSE ===");
+          console.log("Full response:", JSON.stringify(response, null, 2));
 
           if (response.error) {
             throw new Error(response.message || "Failed to create enrollment");
@@ -190,6 +214,10 @@ export const useEnrollmentStore = create<EnrollmentStoreState>()(
           // Safely access response data
           const enrollmentData = response.data || response;
           const enrollmentId = enrollmentData.enrollmentId || enrollmentData.id;
+
+          console.log("=== NEW ENROLLMENT CREATED ===");
+          console.log("New Enrollment ID:", enrollmentId);
+          console.log("Email:", enrollmentData.email || enrollmentData.preferredEmail || formData.preferredEmail);
 
           if (!enrollmentId) {
             console.error("No enrollment ID in response:", response);
@@ -201,6 +229,9 @@ export const useEnrollmentStore = create<EnrollmentStoreState>()(
             `Enrollment submitted successfully!\n\nYour Enrollment ID: ${enrollmentId}\n\nPlease save this ID for tracking your enrollment.`,
             [{ text: "OK" }]
           );
+
+          console.log("=== UPDATING STORE WITH NEW ENROLLMENT ===");
+          console.log("Setting enrollmentId to:", enrollmentId);
 
           // Set the enrollment ID and initial data
           set({
@@ -350,6 +381,7 @@ export const useEnrollmentStore = create<EnrollmentStoreState>()(
         studentId: state.studentId,
         enrollmentStatus: state.enrollmentStatus,
         remarkMsg: state.remarkMsg,
+        remarks: state.remarks,
         fullName: state.fullName,
         email: state.email,
         coursesToEnroll: state.coursesToEnroll,

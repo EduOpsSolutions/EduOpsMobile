@@ -79,6 +79,7 @@ export const EnrollmentStatusScreen = (): React.JSX.Element => {
     studentId,
     enrollmentStatus,
     remarkMsg,
+    remarks,
     currentStep,
     completedSteps,
     fullName,
@@ -100,8 +101,20 @@ export const EnrollmentStatusScreen = (): React.JSX.Element => {
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    fetchEnrollmentData();
-  }, []);
+    // Auto-refresh enrollment data when screen is focused
+    // This ensures we always show fresh data from the API
+    console.log("=== ENROLLMENT STATUS SCREEN ===");
+    console.log("Current enrollmentId:", enrollmentId);
+    console.log("Current studentId:", studentId);
+    console.log("Current status:", enrollmentStatus);
+
+    if (enrollmentId) {
+      console.log("EnrollmentStatusScreen - fetching fresh data for:", enrollmentId);
+      fetchEnrollmentData();
+    } else {
+      console.log("EnrollmentStatusScreen - NO enrollmentId found, cannot fetch");
+    }
+  }, [enrollmentId]); // Re-fetch when enrollmentId changes
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -328,6 +341,54 @@ export const EnrollmentStatusScreen = (): React.JSX.Element => {
                 <Text style={styles.sectionTitle}>Remarks</Text>
                 <Text style={styles.remarksText}>{remarkMsg}</Text>
               </View>
+
+              {/* Admin Remarks Section - Show if exists */}
+              {remarks && (
+                <View
+                  style={[
+                    styles.adminRemarksSection,
+                    enrollmentStatus?.toLowerCase() === 'rejected'
+                      ? styles.adminRemarksRejected
+                      : styles.adminRemarksOther,
+                  ]}
+                >
+                  <View style={styles.adminRemarksHeader}>
+                    <Icon
+                      name={
+                        enrollmentStatus?.toLowerCase() === 'rejected'
+                          ? 'error'
+                          : 'info'
+                      }
+                      size={20}
+                      color={
+                        enrollmentStatus?.toLowerCase() === 'rejected'
+                          ? '#dc2626'
+                          : '#2563eb'
+                      }
+                    />
+                    <Text
+                      style={[
+                        styles.adminRemarksTitle,
+                        enrollmentStatus?.toLowerCase() === 'rejected'
+                          ? styles.adminRemarksTitleRejected
+                          : styles.adminRemarksTitleOther,
+                      ]}
+                    >
+                      Admin Remarks
+                    </Text>
+                  </View>
+                  <Text
+                    style={[
+                      styles.adminRemarksText,
+                      enrollmentStatus?.toLowerCase() === 'rejected'
+                        ? styles.adminRemarksTextRejected
+                        : styles.adminRemarksTextOther,
+                    ]}
+                  >
+                    {remarks}
+                  </Text>
+                </View>
+              )}
 
               {/* Payment Button - Show only on step 3 */}
               {currentStep === 3 && studentId && (
