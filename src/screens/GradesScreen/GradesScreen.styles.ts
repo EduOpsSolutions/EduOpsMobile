@@ -106,6 +106,32 @@ export const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 20,
   },
+  filterContainer: {
+    marginBottom: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#f8f8f8',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  filterLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+  },
+  pickerWrapper: {
+    backgroundColor: '#fff',
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: '#de0000',
+    overflow: 'hidden',
+  },
+  picker: {
+    height: 50,
+    width: '100%',
+  },
   tableHeader: {
     flexDirection: 'row',
     backgroundColor: '#f8f8f8',
