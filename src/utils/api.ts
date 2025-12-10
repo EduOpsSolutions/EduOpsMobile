@@ -223,9 +223,12 @@ export const gradesApi = {
     }
   },
 
-  getStudentGrades: async (studentId: string) => {
+  getStudentGrades: async (studentId: string, periodId?: string) => {
     try {
-      const response = await axiosInstance.get(`/grades/student/${studentId}`);
+      const url = periodId
+        ? `/grades/student/${studentId}?periodId=${periodId}`
+        : `/grades/student/${studentId}`;
+      const response = await axiosInstance.get(url);
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -434,6 +437,18 @@ export const authApi = {
   },
 };
 
+// Academic Periods API
+export const academicPeriodsApi = {
+  getAcademicPeriods: async () => {
+    try {
+      const response = await axiosInstance.get('/academic-periods');
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  },
+};
+
 // Ledger API
 export const ledgerApi = {
   getStudentLedger: async (studentId: string) => {
@@ -465,6 +480,7 @@ export default {
   schedule: scheduleApi,
   file: fileApi,
   courses: coursesApi,
+  academicPeriods: academicPeriodsApi,
   ledger: ledgerApi,
   auth: authApi,
 };
