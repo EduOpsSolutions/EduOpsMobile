@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,18 +8,19 @@ import {
   TouchableOpacity,
   RefreshControl,
   Linking,
-} from 'react-native';
-import { useSegments } from 'expo-router';
-import { styles } from './GradesScreen.styles';
-import { AppLayout } from '../../components/common';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import { gradesApi, coursesApi, assessmentApi } from '../../utils/api';
-import { useAuthStore } from '../../stores/authStore';
+} from "react-native";
+import { Picker } from "@react-native-picker/picker";
+import { useSegments } from "expo-router";
+import { styles } from "./GradesScreen.styles";
+import { AppLayout } from "../../components/common";
+import Icon from "react-native-vector-icons/MaterialIcons";
+import { gradesApi, academicPeriodsApi, assessmentApi } from "../../utils/api";
+import { useAuthStore } from "../../stores/authStore";
 
 interface GradeData {
   id: string;
   courseName: string;
-  status: 'NO GRADE' | 'PASS' | 'FAIL';
+  status: "NO GRADE" | "PASS" | "FAIL";
   completedDate: string | null;
   courseId: string;
   studentId: string;
@@ -30,6 +31,15 @@ interface GradeData {
   }>;
 }
 
+interface AcademicPeriod {
+  id: string;
+  batchName: string;
+  startAt: string;
+  endAt: string;
+  enrollmentStatus: string;
+  batchStatus: string;
+}
+
 interface GradeItemProps {
   grade: GradeData;
   onViewDetails: () => void;
@@ -38,9 +48,9 @@ interface GradeItemProps {
 const GradeItem: React.FC<GradeItemProps> = ({ grade, onViewDetails }) => {
   const getStatusStyle = () => {
     switch (grade.status) {
-      case 'PASS':
+      case "PASS":
         return styles.passStatus;
-      case 'FAIL':
+      case "FAIL":
         return styles.failStatus;
       default:
         return styles.noGradeStatus;
@@ -48,11 +58,11 @@ const GradeItem: React.FC<GradeItemProps> = ({ grade, onViewDetails }) => {
   };
 
   const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
@@ -65,7 +75,7 @@ const GradeItem: React.FC<GradeItemProps> = ({ grade, onViewDetails }) => {
         <Icon
           name="description"
           size={20}
-          color={grade.status === 'NO GRADE' ? '#999' : '#de0000'}
+          color={grade.status === "NO GRADE" ? "#999" : "#de0000"}
         />
       </View>
     </TouchableOpacity>
@@ -74,21 +84,55 @@ const GradeItem: React.FC<GradeItemProps> = ({ grade, onViewDetails }) => {
 
 export const GradesScreen = (): React.JSX.Element => {
   const segments = useSegments();
-  const currentRoute = '/' + (segments[segments.length - 1] || '');
+  const currentRoute = "/" + (segments[segments.length - 1] || "");
 
   const { user } = useAuthStore();
   const [gradesData, setGradesData] = useState<GradeData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [academicPeriods, setAcademicPeriods] = useState<AcademicPeriod[]>([]);
+  const [selectedPeriod, setSelectedPeriod] = useState<string | null>(null);
+  const [periodsLoading, setPeriodsLoading] = useState(true);
 
+  // Fetch academic periods on mount
   useEffect(() => {
-    fetchGrades();
-  }, [user]);
+    const fetchAcademicPeriods = async () => {
+      setPeriodsLoading(true);
+      try {
+        const periods = await academicPeriodsApi.getAcademicPeriods();
+
+        // Sort periods by startAt date (latest first)
+        const sortedPeriods = periods.sort(
+          (a: AcademicPeriod, b: AcademicPeriod) =>
+            new Date(b.startAt).getTime() - new Date(a.startAt).getTime()
+        );
+
+        setAcademicPeriods(sortedPeriods);
+
+        // Set default to the latest/current period (first in sorted list)
+        if (sortedPeriods.length > 0) {
+          setSelectedPeriod(sortedPeriods[0].id);
+        }
+      } catch (err: any) {
+        console.error("[Grades Screen] Error fetching academic periods:", err);
+      } finally {
+        setPeriodsLoading(false);
+      }
+    };
+    fetchAcademicPeriods();
+  }, []);
+
+  // Fetch grades when selectedPeriod changes
+  useEffect(() => {
+    if (user && !periodsLoading) {
+      fetchGrades();
+    }
+  }, [user, selectedPeriod, periodsLoading]);
 
   const fetchGrades = async () => {
     if (!user?.id) {
-      console.warn('[Grades Screen] No user ID found, not fetching grades.');
+      console.warn("[Grades Screen] No user ID found, not fetching grades.");
       setLoading(false);
       return;
     }
@@ -97,48 +141,43 @@ export const GradesScreen = (): React.JSX.Element => {
     setError(null);
 
     try {
-      // Fetch all courses and student grades in parallel
-      const [coursesData, gradesData] = await Promise.all([
-        coursesApi.getCourses(),
-        gradesApi.getStudentGrades(user.id),
-      ]);
+      console.log('[Grades Debug] Selected Period:', selectedPeriod);
 
-      // Sort courses alphabetically (A1, A2, B1, B2, etc.)
-      const sortedCourses = coursesData.sort((a: any, b: any) =>
-        a.name.localeCompare(b.name)
+      // Fetch grades with optional periodId parameter
+      const gradesData = await gradesApi.getStudentGrades(
+        user.id,
+        selectedPeriod || undefined
       );
 
-      // Create a map of student grades by courseId for quick lookup
-      const gradesMap: { [key: string]: any } = {};
-      gradesData.forEach((grade: any) => {
-        gradesMap[grade.courseId] = grade;
-      });
+      console.log('[Grades Debug] Received data count:', gradesData.length);
+      console.log('[Grades Debug] Received data:', gradesData);
 
-      // Map all courses with student grades (if any)
-      const mapped: GradeData[] = sortedCourses.map((course: any) => {
-        const grade = gradesMap[course.id];
-        return {
-          id: grade?.id || course.id,
-          courseName: course.name,
-          status: grade
-            ? grade.grade === 'Pass'
-              ? 'PASS'
-              : grade.grade === 'Fail'
-              ? 'FAIL'
-              : 'NO GRADE'
-            : 'NO GRADE',
-          completedDate: grade?.updatedAt || null,
-          courseId: course.id,
-          studentId: user.id,
-          batchId: grade?.periodId || null,
-          files: grade?.files || [],
-        };
-      });
+      // Sort courses alphabetically (A1, A2, B1, B2, etc.)
+      const sortedGrades = gradesData.sort((a: any, b: any) =>
+        a.course.name.localeCompare(b.course.name)
+      );
+
+      // Map grades to the expected format
+      const mapped: GradeData[] = sortedGrades.map((grade: any) => ({
+        id: grade.id,
+        courseName: grade.course.name,
+        status:
+          grade.grade === "Pass"
+            ? "PASS"
+            : grade.grade === "Fail"
+            ? "FAIL"
+            : "NO GRADE",
+        completedDate: grade.updatedAt || null,
+        courseId: grade.courseId,
+        studentId: user.id,
+        batchId: grade.periodId || null,
+        files: grade.files || [],
+      }));
 
       setGradesData(mapped);
     } catch (err: any) {
-      console.error('[Grades Screen] Error fetching grades:', err);
-      setError(err.message || 'Failed to fetch grades');
+      console.error("[Grades Screen] Error fetching grades:", err);
+      setError(err.message || "Failed to fetch grades");
     } finally {
       setLoading(false);
     }
@@ -149,18 +188,18 @@ export const GradesScreen = (): React.JSX.Element => {
     try {
       await fetchGrades();
     } catch (error) {
-      console.error('Error refreshing grades:', error);
+      console.error("Error refreshing grades:", error);
     } finally {
       setRefreshing(false);
     }
   };
 
   const handleViewDetails = async (grade: GradeData) => {
-    if (grade.status === 'NO GRADE') {
+    if (grade.status === "NO GRADE") {
       Alert.alert(
-        'Not Available',
-        'Grade has not been graded or you have not completed the course yet.',
-        [{ text: 'OK', style: 'default' }]
+        "Not Available",
+        "Course has not been graded or you have not completed the course yet.",
+        [{ text: "OK", style: "default" }]
       );
       return;
     }
@@ -168,44 +207,46 @@ export const GradesScreen = (): React.JSX.Element => {
     try {
       // Check for outstanding balance
       console.log(
-        'Checking assessment for:',
+        "Checking assessment for:",
         grade.studentId,
         grade.courseId,
         grade.batchId
       );
 
       if (!grade.batchId) {
-        console.warn('[Grades Screen] No batchId found for grade:', grade);
+        console.warn("[Grades Screen] No batchId found for grade:", grade);
       }
 
       const assessmentData = await assessmentApi.getStudentAssessments(
         grade.studentId
       );
-      console.log('Assessment Data:', assessmentData);
+      console.log("Assessment Data:", assessmentData);
 
-      // Find assessment for this specific course and batch
-      const relevantAssessment = Array.isArray(assessmentData)
+      // Find the specific assessment for this course and batch
+      const specificAssessment = Array.isArray(assessmentData)
         ? assessmentData.find(
             (assessment: any) =>
               assessment.courseId === grade.courseId &&
-              assessment.academicPeriodId === grade.batchId
+              assessment.batchId === grade.batchId
           )
         : null;
 
-      if (relevantAssessment && relevantAssessment.remainingBalance > 0) {
+      console.log("Specific Assessment for this course:", specificAssessment);
+
+      if (specificAssessment && specificAssessment.remainingBalance > 0) {
         Alert.alert(
-          'Outstanding Balance',
-          'You have an outstanding balance for this course. Please clear your dues to access the certificate.',
-          [{ text: 'OK', style: 'default' }]
+          "Outstanding Balance",
+          `You have an outstanding balance of ₱${specificAssessment.remainingBalance.toLocaleString()} for this course. Please clear your dues to access the certificate.`,
+          [{ text: "OK", style: "default" }]
         );
         return;
       }
     } catch (err) {
-      console.error('[Grades Screen] Error checking assessment balance:', err);
+      console.error("[Grades Screen] Error checking assessment balance:", err);
       Alert.alert(
-        'Error',
-        'An error occurred while checking your assessment balance. Please try again later.',
-        [{ text: 'OK', style: 'default' }]
+        "Error",
+        "An error occurred while checking your assessment balance. Please try again later.",
+        [{ text: "OK", style: "default" }]
       );
       return;
     }
@@ -226,35 +267,37 @@ export const GradesScreen = (): React.JSX.Element => {
             await Linking.openURL(latestFile.url);
           } else {
             Alert.alert(
-              'Error',
-              'Cannot open this URL. Please try again later.',
-              [{ text: 'OK', style: 'default' }]
+              "Error",
+              "Cannot open this URL. Please try again later.",
+              [{ text: "OK", style: "default" }]
             );
           }
         } catch (error) {
-          console.error('[Grades Screen] Error opening URL:', error);
-          Alert.alert('Error', 'Failed to open certificate. Please try again.', [
-            { text: 'OK', style: 'default' },
-          ]);
+          console.error("[Grades Screen] Error opening URL:", error);
+          Alert.alert(
+            "Error",
+            "Failed to open certificate. Please try again.",
+            [{ text: "OK", style: "default" }]
+          );
         }
       } else {
-        Alert.alert('File Error', 'No file URL found.', [
-          { text: 'OK', style: 'default' },
+        Alert.alert("File Error", "No file URL found.", [
+          { text: "OK", style: "default" },
         ]);
       }
     } else {
       Alert.alert(
-        'No File Available',
-        'No grade file has been uploaded for this course.',
-        [{ text: 'OK', style: 'default' }]
+        "No File Available",
+        "No grade file has been uploaded for this course.",
+        [{ text: "OK", style: "default" }]
       );
     }
   };
 
   const isEnrollmentActive =
-    currentRoute === '/enrollment' ||
-    currentRoute === '/enrollment-status' ||
-    currentRoute === '/schedule';
+    currentRoute === "/enrollment" ||
+    currentRoute === "/enrollment-status" ||
+    currentRoute === "/schedule";
 
   return (
     <AppLayout
@@ -271,7 +314,7 @@ export const GradesScreen = (): React.JSX.Element => {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={['#de0000']}
+              colors={["#de0000"]}
               tintColor="#de0000"
             />
           }
@@ -288,11 +331,35 @@ export const GradesScreen = (): React.JSX.Element => {
               {/* Student Info */}
               {user && (
                 <Text style={styles.studentInfo}>
-                  {`${user.lastName?.toUpperCase() || ''}, ${
-                    user.firstName?.toUpperCase() || ''
-                  } ${user.middleName?.charAt(0)?.toUpperCase() || ''}.`}
+                  {`${user.lastName?.toUpperCase() || ""}, ${
+                    user.firstName?.toUpperCase() || ""
+                  } ${user.middleName?.charAt(0)?.toUpperCase() || ""}.`}
                 </Text>
               )}
+
+              {/* Academic Period Filter */}
+              <View style={styles.filterContainer}>
+                <Text style={styles.filterLabel}>Academic Period:</Text>
+                <View style={styles.pickerWrapper}>
+                  <Picker
+                    selectedValue={selectedPeriod || ""}
+                    onValueChange={(itemValue) =>
+                      setSelectedPeriod(itemValue || null)
+                    }
+                    enabled={!periodsLoading && academicPeriods.length > 0}
+                    style={styles.picker}
+                  >
+                    <Picker.Item label="All Periods" value="" />
+                    {academicPeriods.map((period) => (
+                      <Picker.Item
+                        key={period.id}
+                        label={period.batchName}
+                        value={period.id}
+                      />
+                    ))}
+                  </Picker>
+                </View>
+              </View>
 
               {loading ? (
                 <View style={styles.loadingContainer}>
