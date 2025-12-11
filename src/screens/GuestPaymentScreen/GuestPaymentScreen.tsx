@@ -134,6 +134,8 @@ export const GuestPaymentScreen = (): React.JSX.Element => {
   } = usePaymentStore();
 
   const [isFetchingStudent, setIsFetchingStudent] = useState(false);
+  const [guestEnrollments, setGuestEnrollments] = useState<any[]>([]);
+  const [selectedEnrollmentBalance, setSelectedEnrollmentBalance] = useState<number | null>(null);
   const [courses, setCourses] = useState<any[]>([]);
   const [batches, setBatches] = useState<any[]>([]);
 
@@ -197,12 +199,63 @@ export const GuestPaymentScreen = (): React.JSX.Element => {
     return feeTypeMap[feeType] || feeType.replace("_", " ");
   };
 
+  const handleStudentIdChange = (value: string) => {
+    updateFormField("student_id", value);
+
+    // Clear guest enrollments if student_id is changed/cleared
+    setGuestEnrollments([]);
+    updateFormField("courseId", null);
+    updateFormField("batchId", null);
+    setSelectedEnrollmentBalance(null);
+  };
+
   const handleStudentIdBlur = async () => {
     const studentId = formData.student_id;
     if (studentId) {
       setIsFetchingStudent(true);
       await validateAndFetchStudentByID(studentId);
       setIsFetchingStudent(false);
+
+      // Fetch guest enrollments with outstanding balances
+      try {
+        const apiUrl =
+          process.env.EXPO_PUBLIC_API_URL || "http://localhost:5555/api/v1";
+        const response = await fetch(
+          `${apiUrl}/enrollment/student/${studentId}/enrollments-with-balance`
+        );
+        const data = await response.json();
+        console.log("Guest enrollments fetched:", data); // Debug log
+        setGuestEnrollments(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("Error fetching guest enrollments:", err);
+        setGuestEnrollments([]);
+      }
+    }
+  };
+
+  // Handle course/batch selection
+  const handleCourseBatchChange = (value: string) => {
+    if (!value) {
+      updateFormField("courseId", null);
+      updateFormField("batchId", null);
+      setSelectedEnrollmentBalance(null);
+    } else {
+      const [courseId, batchId] = value.split("|");
+      updateFormField("courseId", courseId);
+      updateFormField("batchId", batchId);
+
+      // Find the selected enrollment and set its outstanding balance
+      const selectedEnrollment = guestEnrollments.find(
+        (e: any) => e.courseId === courseId && e.batchId === batchId
+      );
+
+      if (selectedEnrollment) {
+        const balance = parseFloat(selectedEnrollment.outstandingBalance);
+        setSelectedEnrollmentBalance(balance);
+
+        // Clear the amount field when course/batch changes
+        updateFormField("amount", "");
+      }
     }
   };
 
@@ -225,6 +278,25 @@ export const GuestPaymentScreen = (): React.JSX.Element => {
         [{ text: "OK" }]
       );
       return;
+    }
+
+    // Validate payment amount does not exceed outstanding balance
+    if (
+      selectedEnrollmentBalance !== null &&
+      formData.courseId &&
+      formData.batchId
+    ) {
+      const paymentAmount = parseFloat(formData.amount);
+      if (paymentAmount > selectedEnrollmentBalance) {
+        Alert.alert(
+          "Payment Amount Exceeds Balance",
+          `You cannot pay more than your outstanding balance of ₱${selectedEnrollmentBalance.toFixed(
+            2
+          )}. Please adjust the amount.`,
+          [{ text: "OK" }]
+        );
+        return;
+      }
     }
 
     const feeLabel = getFeeTypeLabel(formData.fee);
@@ -352,7 +424,7 @@ export const GuestPaymentScreen = (): React.JSX.Element => {
                     isFetchingStudent && styles.inputDisabled,
                   ]}
                   value={formData.student_id}
-                  onChangeText={(value) => updateFormField("student_id", value)}
+                  onChangeText={handleStudentIdChange}
                   onBlur={handleStudentIdBlur}
                   placeholder="Enter Student ID"
                   placeholderTextColor="#999"
@@ -420,64 +492,68 @@ export const GuestPaymentScreen = (): React.JSX.Element => {
             )}
 
             {/* Course & Batch selection for guest payments */}
-            <View style={styles.row}>
-              <View style={styles.halfWidth}>
-                <Text style={styles.label}>Course*</Text>
-                {courses.length > 0 ? (
-                  <Dropdown
-                    placeholder="Select course"
-                    label="Select Course"
-                    value={formData.courseId || ""}
-                    onValueChange={(value) =>
-                      updateFormField("courseId", value)
-                    }
-                    options={[
-                      { value: "", label: "Select course" },
-                      ...courses
-                        .filter((c: any) => !c.deletedAt)
-                        .map((c: any) => ({
-                          value: c.id,
-                          label: c.name,
-                        })),
-                    ]}
-                  />
-                ) : (
-                  <View style={styles.emptyStateContainer}>
-                    <Text style={styles.emptyStateText}>
-                      Loading courses...
+            {guestEnrollments.length > 0 && (
+              <View style={styles.fullWidth}>
+                <Text style={styles.label}>Course & Batch*</Text>
+                <Dropdown
+                  placeholder="Select course & batch"
+                  label="Select Course & Batch"
+                  value={
+                    formData.courseId && formData.batchId
+                      ? `${formData.courseId}|${formData.batchId}`
+                      : ""
+                  }
+                  onValueChange={handleCourseBatchChange}
+                  options={[
+                    { value: "", label: "Select course & batch" },
+                    ...guestEnrollments.map((e: any) => ({
+                      value: `${e.courseId}|${e.batchId}`,
+                      label: `${e.course} - ${e.batch}${
+                        e.year ? ` (${e.year})` : ""
+                      } - Outstanding: ₱${e.outstandingBalance}`,
+                    })),
+                  ]}
+                />
+              </View>
+            )}
+
+            {/* Show message if guest has no enrollments with outstanding balance */}
+            {formData.student_id &&
+              formData.first_name &&
+              guestEnrollments.length === 0 && (
+                <View style={styles.fullWidth}>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "flex-start",
+                      gap: 8,
+                      padding: 12,
+                      backgroundColor: "#e3f2fd",
+                      borderRadius: 8,
+                      marginBottom: 16,
+                    }}
+                  >
+                    <Icon
+                      name="info"
+                      size={16}
+                      color="#1976d2"
+                      style={{ marginTop: 1 }}
+                    />
+                    <Text
+                      style={{
+                        flex: 1,
+                        fontSize: 14,
+                        color: "#1976d2",
+                        lineHeight: 20,
+                      }}
+                    >
+                      You don't have any courses with outstanding balance. All
+                      your enrolled courses are fully paid or you have no active
+                      enrollments.
                     </Text>
                   </View>
-                )}
-              </View>
-              <View style={styles.halfWidth}>
-                <Text style={styles.label}>Batch/Period*</Text>
-                {batches.length > 0 ? (
-                  <Dropdown
-                    placeholder="Select batch"
-                    label="Select Batch/Period"
-                    value={formData.batchId || ""}
-                    onValueChange={(value) => updateFormField("batchId", value)}
-                    options={[
-                      { value: "", label: "Select batch" },
-                      ...batches
-                        .filter((b: any) => !b.deletedAt)
-                        .map((b: any) => ({
-                          value: b.id,
-                          label: `${b.batchName || b.name}${
-                            b.schoolYear ? ` (${b.schoolYear})` : ""
-                          }`,
-                        })),
-                    ]}
-                  />
-                ) : (
-                  <View style={styles.emptyStateContainer}>
-                    <Text style={styles.emptyStateText}>
-                      Loading batches...
-                    </Text>
-                  </View>
-                )}
-              </View>
-            </View>
+                </View>
+              )}
 
             {/* Email Address */}
             <View style={styles.fullWidth}>
@@ -538,6 +614,21 @@ export const GuestPaymentScreen = (): React.JSX.Element => {
               {formData.fee === "down_payment" && !amountError && (
                 <Text style={styles.hintText}>Minimum down payment: ₱3,000</Text>
               )}
+              {selectedEnrollmentBalance !== null &&
+                formData.courseId &&
+                formData.batchId && (
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      color: "#2196f3",
+                      marginTop: 4,
+                    }}
+                  >
+                    Outstanding balance: ₱
+                    {selectedEnrollmentBalance.toFixed(2)}. You can pay any
+                    amount up to this balance.
+                  </Text>
+                )}
             </View>
 
             {/* Submit Button */}
