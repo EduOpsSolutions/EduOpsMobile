@@ -8,9 +8,9 @@
       "developmentClient": true,
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_URL": "http://api.eduops.cloud/api/v1",
-        "EXPO_PUBLIC_API_BASE": "http://api.eduops.cloud/",
-        "EXPO_PUBLIC_CLIENT_URL": "http://eduops.cloud"
+        "EXPO_PUBLIC_API_URL": "https://api.eduops.cloud/api/v1",
+        "EXPO_PUBLIC_API_BASE": "https://api.eduops.cloud/",
+        "EXPO_PUBLIC_CLIENT_URL": "https://eduops.cloud"
       }
     },
     "preview": {
@@ -19,17 +19,17 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "http://api.eduops.cloud/api/v1",
-        "EXPO_PUBLIC_API_BASE": "http://api.eduops.cloud/",
-        "EXPO_PUBLIC_CLIENT_URL": "http://eduops.cloud"
+        "EXPO_PUBLIC_API_URL": "https://api.eduops.cloud/api/v1",
+        "EXPO_PUBLIC_API_BASE": "https://api.eduops.cloud/",
+        "EXPO_PUBLIC_CLIENT_URL": "https://eduops.cloud"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "http://api.eduops.cloud/api/v1",
-        "EXPO_PUBLIC_API_BASE": "http://api.eduops.cloud/",
-        "EXPO_PUBLIC_CLIENT_URL": "http://eduops.cloud"
+        "EXPO_PUBLIC_API_URL": "https://api.eduops.cloud/api/v1",
+        "EXPO_PUBLIC_API_BASE": "https://api.eduops.cloud/",
+        "EXPO_PUBLIC_CLIENT_URL": "https://eduops.cloud"
       }
     }
   },
