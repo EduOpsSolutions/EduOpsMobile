@@ -537,7 +537,7 @@ export const PaymentScreen = (): React.JSX.Element => {
             {isAuthenticated && user?.role === "student" && (
               <View style={styles.fullWidth}>
                 <Text style={styles.label}>Course & Batch*</Text>
-                {enrollments.length > 0 ? (
+                {enrollments.filter((e: any) => e.outstandingBalance > 0).length > 0 ? (
                   <Dropdown
                     placeholder="Select course & batch"
                     value={
@@ -548,12 +548,14 @@ export const PaymentScreen = (): React.JSX.Element => {
                     onValueChange={handleCourseBatchChange}
                     options={[
                       { value: "", label: "Select course & batch" },
-                      ...enrollments.map((e: any) => ({
-                        value: `${e.courseId}|${e.batchId}`,
-                        label: `${e.course} - ${e.batch}${
-                          e.year ? ` (${e.year})` : ""
-                        } - Outstanding: ₱${e.outstandingBalance}`,
-                      })),
+                      ...enrollments
+                        .filter((e: any) => e.outstandingBalance > 0)
+                        .map((e: any) => ({
+                          value: `${e.courseId}|${e.batchId}`,
+                          label: `${e.course} - ${e.batch}${
+                            e.year ? ` (${e.year})` : ""
+                          } - Outstanding: ₱${e.outstandingBalance.toFixed(2)}`,
+                        })),
                     ]}
                   />
                 ) : (
@@ -586,7 +588,7 @@ export const PaymentScreen = (): React.JSX.Element => {
             )}
 
             {/* Course & Batch selection for guest payments */}
-            {!isAuthenticated && guestEnrollments.length > 0 && (
+            {!isAuthenticated && guestEnrollments.filter((e: any) => e.outstandingBalance > 0).length > 0 && (
               <View style={styles.fullWidth}>
                 <Text style={styles.label}>Course & Batch*</Text>
                 <Dropdown
@@ -599,12 +601,14 @@ export const PaymentScreen = (): React.JSX.Element => {
                   onValueChange={handleCourseBatchChange}
                   options={[
                     { value: "", label: "Select course & batch" },
-                    ...guestEnrollments.map((e: any) => ({
-                      value: `${e.courseId}|${e.batchId}`,
-                      label: `${e.course} - ${e.batch}${
-                        e.year ? ` (${e.year})` : ""
-                      } - Outstanding: ₱${e.outstandingBalance}`,
-                    })),
+                    ...guestEnrollments
+                      .filter((e: any) => e.outstandingBalance > 0)
+                      .map((e: any) => ({
+                        value: `${e.courseId}|${e.batchId}`,
+                        label: `${e.course} - ${e.batch}${
+                          e.year ? ` (${e.year})` : ""
+                        } - Outstanding: ₱${e.outstandingBalance.toFixed(2)}`,
+                      })),
                   ]}
                 />
               </View>
@@ -614,7 +618,7 @@ export const PaymentScreen = (): React.JSX.Element => {
             {!isAuthenticated &&
               formData.student_id &&
               formData.first_name &&
-              guestEnrollments.length === 0 && (
+              guestEnrollments.filter((e: any) => e.outstandingBalance > 0).length === 0 && (
                 <View style={styles.fullWidth}>
                   <View
                     style={{
@@ -804,14 +808,45 @@ export const PaymentScreen = (): React.JSX.Element => {
                 )}
             </View>
 
+            {/* Payment Disabled Message for Non-positive Balance */}
+            {selectedEnrollmentBalance !== null &&
+              selectedEnrollmentBalance <= 0 &&
+              formData.courseId &&
+              formData.batchId && (
+                <View
+                  style={{
+                    backgroundColor: '#f0fdf4',
+                    padding: 12,
+                    borderRadius: 8,
+                    borderLeftWidth: 4,
+                    borderLeftColor: '#22c55e',
+                    marginBottom: 16,
+                  }}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
+                    <Icon name="check-circle" size={20} color="#16a34a" style={{ marginTop: 1 }} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 14, fontWeight: '600', color: '#166534', marginBottom: 4 }}>
+                        No Payment Required
+                      </Text>
+                      <Text style={{ fontSize: 13, color: '#166534', lineHeight: 18 }}>
+                        {selectedEnrollmentBalance < 0
+                          ? `You have a credit balance of ₱${Math.abs(selectedEnrollmentBalance).toFixed(2)}. No payment is needed for this course.`
+                          : 'This course is fully paid. No outstanding balance.'}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              )}
+
             {/* Submit Button */}
             <TouchableOpacity
               style={[
                 styles.submitButton,
-                (loading || !!nameError) && styles.submitButtonDisabled,
+                (loading || !!nameError || (selectedEnrollmentBalance !== null && selectedEnrollmentBalance <= 0)) && styles.submitButtonDisabled,
               ]}
               onPress={handleSubmit}
-              disabled={loading || !!nameError}
+              disabled={loading || !!nameError || (selectedEnrollmentBalance !== null && selectedEnrollmentBalance <= 0)}
             >
               {loading ? (
                 <View style={styles.loadingContainer}>
