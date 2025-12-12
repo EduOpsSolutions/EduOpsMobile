@@ -135,7 +135,7 @@ export const PaymentScreen = (): React.JSX.Element => {
             process.env.EXPO_PUBLIC_API_URL || "http://localhost:5555/api/v1";
           const token = useAuthStore.getState().token;
           const response = await fetch(
-            `${apiUrl}/enrollment/${user.id}/enrollments`,
+            `${apiUrl}/assessment/student/${user.id}`,
             {
               headers: {
                 Authorization: token ? `Bearer ${token}` : "",
@@ -145,7 +145,16 @@ export const PaymentScreen = (): React.JSX.Element => {
           );
           const data = await response.json();
           console.log("Enrollments fetched:", data); // Debug log
-          setEnrollments(Array.isArray(data) ? data : []);
+
+          // Map the assessment data to enrollment format with outstandingBalance
+          const mappedEnrollments = Array.isArray(data)
+            ? data.map((assessment: any) => ({
+                ...assessment,
+                outstandingBalance: assessment.remainingBalance || 0,
+              }))
+            : [];
+
+          setEnrollments(mappedEnrollments);
         } catch (err) {
           console.error("Error fetching enrollments:", err);
           setEnrollments([]);
@@ -241,11 +250,20 @@ export const PaymentScreen = (): React.JSX.Element => {
         const apiUrl =
           process.env.EXPO_PUBLIC_API_URL || "http://localhost:5555/api/v1";
         const response = await fetch(
-          `${apiUrl}/enrollment/student/${studentId}/enrollments-with-balance`
+          `${apiUrl}/assessment/student/${studentId}`
         );
         const data = await response.json();
         console.log("Guest enrollments fetched:", data); // Debug log
-        setGuestEnrollments(Array.isArray(data) ? data : []);
+
+        // Map the assessment data to enrollment format with outstandingBalance
+        const mappedEnrollments = Array.isArray(data)
+          ? data.map((assessment: any) => ({
+              ...assessment,
+              outstandingBalance: assessment.remainingBalance || 0,
+            }))
+          : [];
+
+        setGuestEnrollments(mappedEnrollments);
       } catch (err) {
         console.error("Error fetching guest enrollments:", err);
         setGuestEnrollments([]);

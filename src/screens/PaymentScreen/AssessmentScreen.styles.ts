@@ -406,7 +406,15 @@ export const styles = StyleSheet.create({
   assessmentItemLabel: {
     fontSize: 12,
     color: '#666',
+  },
+  assessmentItemLabelContainer: {
     flex: 1,
+  },
+  assessmentItemCreditText: {
+    fontSize: 11,
+    color: '#16a34a',
+    fontWeight: '600',
+    marginTop: 2,
   },
   assessmentItemBalance: {
     fontSize: 14,
@@ -453,6 +461,48 @@ export const styles = StyleSheet.create({
   },
   balancePaid: {
     color: '#388e3c',
+  },
+  creditRow: {
+    backgroundColor: '#f0f8ff',
+    borderRadius: 6,
+    padding: 8,
+    marginBottom: 8,
+  },
+  overpaymentRow: {
+    backgroundColor: '#f0fdf4',
+    borderLeftWidth: 4,
+    borderLeftColor: '#22c55e',
+  },
+  availableCreditRow: {
+    backgroundColor: '#eff6ff',
+    borderLeftWidth: 4,
+    borderLeftColor: '#3b82f6',
+  },
+  creditLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  creditAmount: {
+    fontSize: 13,
+    fontWeight: 'bold',
+  },
+  finalBalanceRow: {
+    backgroundColor: '#f0fdf4',
+    borderRadius: 6,
+    padding: 10,
+    marginTop: 12,
+    borderWidth: 2,
+    borderColor: '#22c55e',
+  },
+  finalBalanceLabel: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: '#166534',
+  },
+  finalBalanceAmount: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#16a34a',
   },
   proceedButtonDisabled: {
     backgroundColor: '#9e9e9e',
