@@ -39,6 +39,7 @@ export interface AssessmentSummary {
   totalPayments: number;
   remainingBalance: number;
   studentFees?: StudentFee[];
+  startAt?: string; // For sorting enrollments by date
 }
 
 export interface AssessmentDetails {
@@ -61,6 +62,8 @@ export interface AssessmentDetails {
   netAssessment: number;
   totalPayments: number;
   remainingBalance: number;
+  overpayment?: number;
+  availableCreditFromOthers?: number;
 }
 
 interface AssessmentState {
@@ -168,13 +171,59 @@ export const useAssessmentStore = create<AssessmentState>((set, get) => ({
     }
   },
 
-  selectAssessment: (assessment: AssessmentSummary) => {
+  selectAssessment: async (assessment: AssessmentSummary) => {
     // When selecting an assessment, fetch its details
-    get().fetchAssessmentDetails(
+    await get().fetchAssessmentDetails(
       assessment.studentId,
       assessment.courseId,
       assessment.batchId
     );
+
+    // After fetching details, calculate available credit from previous courses
+    const assessments = get().assessments;
+    const selectedAssessment = get().selectedAssessment;
+
+    if (!selectedAssessment) return;
+
+    // Sort all enrollments by startAt date
+    const sortedEnrollments = [...assessments].sort((a, b) => {
+      const dateA = a.startAt ? new Date(a.startAt).getTime() : 0;
+      const dateB = b.startAt ? new Date(b.startAt).getTime() : 0;
+      return dateA - dateB;
+    });
+
+    // Find the current course index
+    const currentIndex = sortedEnrollments.findIndex(
+      (e) => e.courseId === assessment.courseId && e.batchId === assessment.batchId
+    );
+
+    // Calculate available credit by consuming credits progressively
+    let runningCredit = 0;
+    for (let i = 0; i < currentIndex; i++) {
+      const course = sortedEnrollments[i];
+      const courseBalance = course.remainingBalance;
+
+      if (courseBalance < 0) {
+        // This course has overpayment, add to running credit
+        runningCredit += Math.abs(courseBalance);
+      } else if (courseBalance > 0) {
+        // This course has balance due, consume credit
+        runningCredit = Math.max(0, runningCredit - courseBalance);
+      }
+    }
+
+    // Calculate overpayment for current course
+    const currentBalance = selectedAssessment.remainingBalance;
+    const overpayment = currentBalance < 0 ? Math.abs(currentBalance) : 0;
+
+    // Update selected assessment with calculated values
+    set({
+      selectedAssessment: {
+        ...selectedAssessment,
+        overpayment,
+        availableCreditFromOthers: runningCredit,
+      },
+    });
   },
 
   clearSelectedAssessment: () => {

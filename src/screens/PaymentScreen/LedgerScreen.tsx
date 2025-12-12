@@ -270,7 +270,7 @@ export const LedgerScreen = (): React.JSX.Element => {
                   <>
                     <ActivityIndicator size="small" color="white" />
                     <Text style={styles.printButtonText}>
-                      Generating PDF...
+                      Exporting...
                     </Text>
                   </>
                 ) : (
