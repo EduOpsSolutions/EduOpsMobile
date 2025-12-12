@@ -515,31 +515,70 @@ export const AssessmentScreen = (): React.JSX.Element => {
                   ? 'No assessments found'
                   : `Your Assessments (${filteredAssessments.length})`}
               </Text>
-              {filteredAssessments.map((assessment, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={styles.assessmentItem}
-                  onPress={() => handleSelectAssessment(assessment)}
-                >
-                  <View style={styles.assessmentItemHeader}>
-                    <Text style={styles.assessmentItemTitle}>
-                      {assessment.course}
-                    </Text>
-                    <Text style={styles.assessmentItemSubtitle}>
-                      {assessment.batch} | {assessment.year}
-                    </Text>
-                  </View>
-                  <View style={styles.assessmentItemFooter}>
-                    <Text style={styles.assessmentItemLabel}>
-                      Remaining Balance:
-                    </Text>
-                    <Text style={styles.assessmentItemBalance}>
-                      ₱{formatAmount(assessment.remainingBalance)}
-                    </Text>
-                    <Icon name="chevron-right" size={24} color="#8B0E07" />
-                  </View>
-                </TouchableOpacity>
-              ))}
+              {filteredAssessments.map((assessment, index) => {
+                // Calculate available credit for this assessment in list view
+                const sortedEnrollments = [...filteredAssessments].sort((a, b) => {
+                  const dateA = a.startAt ? new Date(a.startAt).getTime() : 0;
+                  const dateB = b.startAt ? new Date(b.startAt).getTime() : 0;
+                  return dateA - dateB;
+                });
+
+                const currentIndex = sortedEnrollments.findIndex(
+                  (e) => e.courseId === assessment.courseId && e.batchId === assessment.batchId
+                );
+
+                // Calculate available credit by consuming credits progressively
+                let runningCredit = 0;
+                for (let i = 0; i < currentIndex; i++) {
+                  const course = sortedEnrollments[i];
+                  const courseBalance = course.remainingBalance;
+
+                  if (courseBalance < 0) {
+                    // This course has overpayment, add to running credit
+                    runningCredit += Math.abs(courseBalance);
+                  } else if (courseBalance > 0) {
+                    // This course has balance due, consume credit
+                    runningCredit = Math.max(0, runningCredit - courseBalance);
+                  }
+                }
+
+                const availableCredit = runningCredit;
+                const rawBalance = assessment.remainingBalance;
+                const balanceAfterCredit = rawBalance > 0 ? Math.max(0, rawBalance - availableCredit) : rawBalance;
+
+                return (
+                  <TouchableOpacity
+                    key={index}
+                    style={styles.assessmentItem}
+                    onPress={() => handleSelectAssessment(assessment)}
+                  >
+                    <View style={styles.assessmentItemHeader}>
+                      <Text style={styles.assessmentItemTitle}>
+                        {assessment.course}
+                      </Text>
+                      <Text style={styles.assessmentItemSubtitle}>
+                        {assessment.batch} | {assessment.year}
+                      </Text>
+                    </View>
+                    <View style={styles.assessmentItemFooter}>
+                      <View style={styles.assessmentItemLabelContainer}>
+                        <Text style={styles.assessmentItemLabel}>
+                          Remaining Balance:
+                        </Text>
+                        {availableCredit > 0 && rawBalance > 0 && (
+                          <Text style={styles.assessmentItemCreditText}>
+                            After Credits: ₱{formatAmount(balanceAfterCredit)}
+                          </Text>
+                        )}
+                      </View>
+                      <Text style={styles.assessmentItemBalance}>
+                        ₱{formatAmount(assessment.remainingBalance)}
+                      </Text>
+                      <Icon name="chevron-right" size={24} color="#8B0E07" />
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           )}
 
@@ -646,6 +685,31 @@ export const AssessmentScreen = (): React.JSX.Element => {
 
               {/* Summary Section */}
               <View style={styles.summarySection}>
+                {/* Overpayment (This Course) */}
+                {selectedAssessment.overpayment && selectedAssessment.overpayment > 0 && (
+                  <View style={[styles.summaryRow, styles.creditRow, styles.overpaymentRow]}>
+                    <Text style={[styles.summaryLabel, styles.creditLabel]}>
+                      Overpayment (This Course)
+                    </Text>
+                    <Text style={[styles.summaryAmount, styles.creditAmount]}>
+                      ₱{formatAmount(selectedAssessment.overpayment)}
+                    </Text>
+                  </View>
+                )}
+
+                {/* Available Credit from Previous Courses */}
+                {selectedAssessment.availableCreditFromOthers &&
+                 selectedAssessment.availableCreditFromOthers > 0 && (
+                  <View style={[styles.summaryRow, styles.creditRow, styles.availableCreditRow]}>
+                    <Text style={[styles.summaryLabel, styles.creditLabel]}>
+                      Available Credit from Previous Courses
+                    </Text>
+                    <Text style={[styles.summaryAmount, styles.creditAmount]}>
+                      ₱{formatAmount(selectedAssessment.availableCreditFromOthers)}
+                    </Text>
+                  </View>
+                )}
+
                 <View style={styles.summaryRow}>
                   <Text style={styles.summaryLabel}>Net Assessment</Text>
                   <Text style={styles.summaryAmount}>
@@ -671,6 +735,20 @@ export const AssessmentScreen = (): React.JSX.Element => {
                     ₱{formatAmount(selectedAssessment.remainingBalance)}
                   </Text>
                 </View>
+
+                {/* Balance After Applying Credits */}
+                {selectedAssessment.availableCreditFromOthers &&
+                 selectedAssessment.availableCreditFromOthers > 0 &&
+                 selectedAssessment.remainingBalance > 0 && (
+                  <View style={[styles.summaryRow, styles.finalBalanceRow]}>
+                    <Text style={[styles.balanceLabel, styles.finalBalanceLabel]}>
+                      Balance After Applying Credits
+                    </Text>
+                    <Text style={[styles.balanceAmount, styles.finalBalanceAmount]}>
+                      ₱{formatAmount(Math.max(0, selectedAssessment.remainingBalance - selectedAssessment.availableCreditFromOthers))}
+                    </Text>
+                  </View>
+                )}
               </View>
 
               {/* Proceed Button */}
