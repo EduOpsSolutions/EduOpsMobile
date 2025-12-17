@@ -119,7 +119,7 @@ export const DocumentDropdown: React.FC<DocumentDropdownProps> = ({
               currentRoute === "/document" && styles.activeDropdownText,
             ]}
           >
-            My Documents
+            Documents
           </Text>
         </TouchableOpacity>
 
