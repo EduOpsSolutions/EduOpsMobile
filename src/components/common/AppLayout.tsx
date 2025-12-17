@@ -11,6 +11,7 @@ interface AppLayoutProps {
   showNotifications?: boolean;
   enrollmentActive?: boolean;
   paymentActive?: boolean;
+  documentActive?: boolean;
   scrollable?: boolean;
 }
 
@@ -25,6 +26,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   showNotifications = true,
   enrollmentActive = false,
   paymentActive = false,
+  documentActive = false,
   scrollable = false,
 }) => {
   const ContentWrapper = scrollable ? ScrollView : View;
@@ -50,6 +52,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
         <BottomNavigation
           enrollmentActive={enrollmentActive}
           paymentActive={paymentActive}
+          documentActive={documentActive}
         />
       )}
     </SafeAreaView>
