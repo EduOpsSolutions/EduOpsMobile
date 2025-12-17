@@ -5,15 +5,18 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useRouter, useSegments } from 'expo-router';
 import { EnrollmentDropdown } from '../../components/EnrollmentDropdown';
 import { PaymentDropdown } from '../../components/PaymentDropdown';
+import { DocumentDropdown } from '../../components/DocumentDropdown';
 
 interface BottomNavigationProps {
   enrollmentActive?: boolean;
   paymentActive?: boolean;
+  documentActive?: boolean;
 }
 
 export const BottomNavigation: React.FC<BottomNavigationProps> = ({
   enrollmentActive = false,
   paymentActive = false,
+  documentActive = false,
 }) => {
   const router = useRouter();
   const segments = useSegments();
@@ -32,12 +35,6 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
       icon: 'grade',
       label: 'Grades',
       route: '/grades',
-    },
-    {
-      id: 'documents',
-      icon: 'description',
-      label: 'Documents',
-      route: '/document',
     },
   ];
 
@@ -102,25 +99,8 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
       {/* Payment Dropdown */}
       <PaymentDropdown isActive={paymentActive} />
 
-      {/* Documents */}
-      <TouchableOpacity
-        style={styles.navItem}
-        onPress={() => handleNavigation('/document')}
-      >
-        <Icon
-          name="description"
-          size={24}
-          color={isActiveRoute('/document') ? '#de0000' : '#666'}
-        />
-        <Text
-          style={[
-            styles.navText,
-            isActiveRoute('/document') && styles.activeNavText,
-          ]}
-        >
-          Documents
-        </Text>
-      </TouchableOpacity>
+      {/* Document Dropdown */}
+      <DocumentDropdown isActive={documentActive} />
     </View>
   );
 };
