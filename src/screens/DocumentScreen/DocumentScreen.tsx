@@ -191,6 +191,7 @@ export const DocumentScreen = (): React.JSX.Element => {
       showNotifications={true}
       enrollmentActive={false}
       paymentActive={false}
+      documentActive={true}
     >
       {/* Main Content */}
       <View style={styles.mainContent}>

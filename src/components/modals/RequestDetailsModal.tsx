@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
@@ -12,8 +12,11 @@ import {
   Clipboard,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import * as FileSystem from "expo-file-system";
+import * as Sharing from "expo-sharing";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { router } from "expo-router";
+import QRCode from "react-native-qrcode-svg";
 import { DocumentRequest } from "../../types/document";
 import documentApi from "../../utils/documentApi";
 import { usePaymentStore } from "../../stores/paymentStore";
@@ -42,6 +45,7 @@ export const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({
 }) => {
   const [uploadingProof, setUploadingProof] = useState(false);
   const [copiedSignature, setCopiedSignature] = useState(false);
+  const qrCodeRef = useRef<any>(null);
 
   if (!request) return null;
 
@@ -228,6 +232,59 @@ export const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({
         Alert.alert("Error", "Failed to copy signature");
       }
     }
+  };
+
+  const handleDownloadQRCode = async () => {
+    if (!qrCodeRef.current || !request.validationSignature) return;
+
+    try {
+      // Get the QR code as a base64 image
+      qrCodeRef.current.toDataURL(async (dataURL: string) => {
+        try {
+          const filename = FileSystem.documentDirectory + `qr-code-${request.validationSignature}.png`;
+
+          // Save the base64 image to file
+          await FileSystem.writeAsStringAsync(filename, dataURL, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+
+          // Share the file
+          if (await Sharing.isAvailableAsync()) {
+            await Sharing.shareAsync(filename, {
+              mimeType: 'image/png',
+              dialogTitle: 'Save QR Code',
+              UTI: 'public.png',
+            });
+            Alert.alert("Success", "QR code downloaded successfully");
+          } else {
+            Alert.alert("Error", "Sharing is not available on this device");
+          }
+        } catch (error) {
+          console.error("Error saving QR code:", error);
+          Alert.alert("Error", "Failed to download QR code");
+        }
+      });
+    } catch (error) {
+      console.error("Error generating QR code:", error);
+      Alert.alert("Error", "Failed to generate QR code");
+    }
+  };
+
+  const handleOpenValidationPage = () => {
+    if (!request.validationSignature) return;
+
+    const clientUrl = process.env.EXPO_PUBLIC_CLIENT_URL || 'https://eduops.cloud';
+    const validationUrl = `${clientUrl}/validate-document?signature=${request.validationSignature}`;
+
+    Linking.canOpenURL(validationUrl).then((supported) => {
+      if (supported) {
+        Linking.openURL(validationUrl);
+      } else {
+        Alert.alert('Error', 'Cannot open validation page');
+      }
+    }).catch(() => {
+      Alert.alert('Error', 'Failed to open validation page');
+    });
   };
 
   const hasProofOfPayment = !!request.proofOfPayment;
@@ -432,7 +489,7 @@ export const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Completed Document</Text>
 
-                {/* File Signature */}
+                {/* File Signature and QR Code */}
                 {request.validationSignature && (
                   <View style={styles.signatureCard}>
                     <View style={styles.signatureHeader}>
@@ -464,6 +521,41 @@ export const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({
                       <Text style={styles.signatureHelp}>
                         Use this signature to verify document authenticity
                       </Text>
+
+                      {/* QR Code Section */}
+                      <View style={styles.qrCodeSection}>
+                        <Text style={styles.qrCodeLabel}>Validation QR Code:</Text>
+                        <View style={styles.qrCodeContainer}>
+                          <View style={styles.qrCodeWrapper}>
+                            <QRCode
+                              value={`${process.env.EXPO_PUBLIC_CLIENT_URL || 'https://eduops.cloud'}/validate-document?signature=${request.validationSignature}`}
+                              size={160}
+                              color="#000000"
+                              backgroundColor="#ffffff"
+                              getRef={(ref) => (qrCodeRef.current = ref)}
+                            />
+                          </View>
+                          <View style={styles.qrCodeActions}>
+                            <TouchableOpacity
+                              style={styles.qrActionButton}
+                              onPress={handleDownloadQRCode}
+                            >
+                              <Icon name="download" size={18} color="#2563eb" />
+                              <Text style={styles.qrActionButtonText}>Download QR</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              style={styles.qrActionButton}
+                              onPress={handleOpenValidationPage}
+                            >
+                              <Icon name="open-in-browser" size={18} color="#2563eb" />
+                              <Text style={styles.qrActionButtonText}>Validate Online</Text>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                        <Text style={styles.qrCodeHelp}>
+                          Scan this QR code to verify the document online
+                        </Text>
+                      </View>
                     </View>
                   </View>
                 )}
@@ -962,5 +1054,64 @@ const styles = StyleSheet.create({
     color: "#6b7280",
     textAlign: "center",
     marginTop: 6,
+  },
+  // QR Code Styles
+  qrCodeSection: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: "#86efac",
+  },
+  qrCodeLabel: {
+    fontSize: 11,
+    color: "#6b7280",
+    marginBottom: 12,
+    fontWeight: "600",
+  },
+  qrCodeContainer: {
+    alignItems: "center",
+    gap: 12,
+  },
+  qrCodeWrapper: {
+    padding: 16,
+    backgroundColor: "white",
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: "#86efac",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  qrCodeActions: {
+    flexDirection: "row",
+    gap: 12,
+    width: "100%",
+  },
+  qrActionButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#2563eb",
+    backgroundColor: "#eff6ff",
+  },
+  qrActionButtonText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#2563eb",
+  },
+  qrCodeHelp: {
+    fontSize: 10,
+    color: "#6b7280",
+    fontStyle: "italic",
+    textAlign: "center",
+    marginTop: 4,
   },
 });
